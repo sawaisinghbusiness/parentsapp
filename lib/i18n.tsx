@@ -64,6 +64,16 @@ const TEXT = {
   "att.Leave": { hi: "छुट्टी पर", en: "On leave" },
   "att.HalfDay": { hi: "आधा दिन", en: "Half day" },
 
+  "att.thisMonth": { hi: "इस महीने की हाज़िरी", en: "This month" },
+  "att.session": { hi: "सत्र में अब तक", en: "Session so far" },
+  "att.days": { hi: "दिन", en: "days" },
+  "att.noneMarked": { hi: "इस महीने अभी हाज़िरी नहीं लगी।", en: "No attendance marked this month yet." },
+  "att.prev": { hi: "पिछला महीना", en: "Previous month" },
+  "att.next": { hi: "अगला महीना", en: "Next month" },
+  "att.holidays": { hi: "छुट्टियाँ", en: "Holidays" },
+  "att.sunday": { hi: "रविवार", en: "Sunday" },
+  "att.note": { hi: "प्रतिशत उन्हीं दिनों से निकलता है जिन दिन हाज़िरी लगी। आधा दिन = ½।", en: "Percent counts only the days attendance was taken. Half day = ½." },
+
   // more
   "more.language": { hi: "भाषा", en: "Language" },
   "more.logout": { hi: "लॉग आउट", en: "Sign out" },
