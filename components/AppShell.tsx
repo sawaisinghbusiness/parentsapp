@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { BookOpen, CalendarCheck, Home, IndianRupee, Menu } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { useT, type TextKey } from "@/lib/i18n";
-import { Avatar, OfflineNote, Skeleton } from "./ui";
+import { Avatar, ErrorCard, OfflineNote, Skeleton } from "./ui";
 
 const TABS: { href: string; key: TextKey; icon: typeof Home }[] = [
   { href: "/", key: "tab.home", icon: Home },
@@ -21,7 +21,7 @@ const norm = (p: string) => (p.endsWith("/") ? p : p + "/");
 /** Dark top bar with the school and the child being shown, the screen, then the tab bar. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = norm(usePathname() || "/");
-  const { me, child, pick, stale } = useParent();
+  const { me, child, pick, stale, error, reload } = useParent();
   const { t } = useT();
   const many = (me?.children.length || 0) > 1;
 
@@ -87,7 +87,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <main className="flex-1 space-y-3 px-3 pb-28 pt-3">
         <OfflineNote show={stale && !!me} />
-        {children}
+        {error && error.status !== 401 ? <ErrorCard offline={error.status === 0} onRetry={reload} /> : children}
       </main>
 
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-200 bg-white shadow-bar" aria-label="Main">

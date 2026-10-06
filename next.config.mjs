@@ -1,17 +1,18 @@
 /**
- * Built as plain static files (`out/`) for a Render Static Site: it never sleeps and uses no
- * instance hours. On Render, a rewrite rule sends /api/* to the backend, so the sign-in cookie
- * stays on this site's own domain. In development `next dev` does the same with the rewrite below.
+ * /api/* is always forwarded to the backend, so the sign-in cookie stays on this site's own domain.
+ *  - Vercel and `next dev`: Next's own rewrite below (set BACKEND_URL in Vercel's environment variables).
+ *  - Render Static Site: built as plain files in `out/`, with a Render rewrite rule doing the forwarding.
  */
-const BACKEND = process.env.BACKEND_URL || "http://localhost:4000";
-const isDev = process.env.NODE_ENV !== "production";
+const BACKEND = (process.env.BACKEND_URL || "http://localhost:4000").replace(/\/+$/, "");
+const staticExport = process.env.NODE_ENV === "production" && !process.env.VERCEL;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  ...(isDev
-    ? { rewrites: async () => [{ source: "/api/:path*", destination: `${BACKEND}/api/:path*` }] }
-    : { output: "export", trailingSlash: true }),
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  ...(staticExport
+    ? { output: "export", trailingSlash: true }
+    : { rewrites: async () => [{ source: "/api/:path*", destination: `${BACKEND}/api/:path*` }] }),
   images: { unoptimized: true },
 };
 
