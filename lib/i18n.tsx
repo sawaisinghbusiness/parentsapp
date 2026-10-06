@@ -113,3 +113,10 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useT = () => useContext(Ctx);
+
+/** Text kept next to its own feature: `const L = useL(); L({ hi: "…", en: "…" })`. */
+export type Bi = { hi: string; en: string };
+export function useL() {
+  const { lang } = useContext(Ctx);
+  return useCallback((b: Bi) => b[lang], [lang]);
+}
