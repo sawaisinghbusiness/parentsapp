@@ -7,10 +7,10 @@ import { M } from "@/lib/text/more";
 /**
  * The child's ID card on the phone. Same look as the printed card in the ERP
  * (components/students/IdCardPrint.tsx) in layout: school band, photo over the band, details below.
- * The band takes the app's deep sky so the card matches the rest of the app.
+ * The band takes the app's deep violet so the card matches the rest of the app.
  */
 
-const BAND = "#0369A1";
+const BAND = "#5A3CC9";
 
 export interface IdCardData {
   child: {

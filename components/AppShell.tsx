@@ -4,39 +4,55 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { BookOpen, CalendarCheck, ChevronDown, ChevronLeft, Home, IndianRupee, UserRound } from "lucide-react";
+import { CalendarDays, ChevronLeft, Home, IndianRupee, Plus, UserRound, type LucideIcon } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { useL, type Bi } from "@/lib/i18n";
 import { Avatar, ErrorCard, OfflineNote } from "./ui";
 import { ChildSheet } from "./ChildSheet";
 
-const TABS: { href: string; text: Bi; icon: typeof Home }[] = [
+const TABS: { href: string; text: Bi; icon: LucideIcon }[] = [
   { href: "/", text: { hi: "होम", en: "Home" }, icon: Home },
+  { href: "/calendar/", text: { hi: "कैलेंडर", en: "Calendar" }, icon: CalendarDays },
   { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: IndianRupee },
-  { href: "/study/", text: { hi: "पढ़ाई", en: "Study" }, icon: BookOpen },
-  { href: "/attendance/", text: { hi: "हाज़िरी", en: "Attendance" }, icon: CalendarCheck },
-  { href: "/more/", text: { hi: "प्रोफ़ाइल", en: "Profile" }, icon: UserRound },
+  { href: "/profile/", text: { hi: "प्रोफ़ाइल", en: "Profile" }, icon: UserRound },
 ];
 
-/** Title of each screen, where Back goes, and whether it shows one child's data (then the child can be switched). */
-const PAGES: Record<string, { title: Bi; back?: string; perChild?: boolean }> = {
+interface PageInfo {
+  title: Bi;
+  /** Where Back goes; tab screens have none. */
+  back?: string;
+  /** The tab that stays lit on this screen. */
+  tab?: string;
+  /** Shows one child's data, so the child can be switched from the top bar. */
+  perChild?: boolean;
+  /** A + on the right, e.g. Leave → Apply. */
+  action?: { href: string; text: Bi };
+}
+
+const PAGES: Record<string, PageInfo> = {
+  "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true },
   "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true },
-  "/study/": { title: { hi: "पढ़ाई", en: "Study" }, perChild: true },
-  "/attendance/": { title: { hi: "हाज़िरी", en: "Attendance" }, perChild: true },
-  "/more/": { title: { hi: "प्रोफ़ाइल", en: "Profile" } },
-  "/more/notices/": { title: { hi: "सूचनाएँ", en: "Notices" }, back: "/" },
-  "/more/leave/": { title: { hi: "छुट्टी की अर्ज़ी", en: "Leave application" }, back: "/", perChild: true },
-  "/more/bus/": { title: { hi: "बस", en: "School bus" }, back: "/", perChild: true },
-  "/more/id-card/": { title: { hi: "आईडी कार्ड", en: "ID card" }, back: "/", perChild: true },
-  "/more/report-card/": { title: { hi: "रिज़ल्ट", en: "Result" }, back: "/", perChild: true },
+  "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true },
+  "/profile/": { title: { hi: "प्रोफ़ाइल", en: "Profile" } },
+  "/id-card/": { title: { hi: "आईडी कार्ड", en: "ID Card" }, back: "/profile/", tab: "/profile/", perChild: true },
+  "/exam/": { title: { hi: "परीक्षा", en: "Exam" }, back: "/", perChild: true },
+  "/exam/detail/": { title: { hi: "रिज़ल्ट", en: "Result" }, back: "/exam/?tab=result", perChild: true },
+  "/leave/": { title: { hi: "छुट्टी", en: "Leave" }, back: "/", perChild: true, action: { href: "/leave/apply/", text: { hi: "छुट्टी की अर्ज़ी", en: "Apply leave" } } },
+  "/leave/apply/": { title: { hi: "छुट्टी की अर्ज़ी", en: "Apply Leave" }, back: "/leave/", perChild: true },
+  "/homework/": { title: { hi: "होमवर्क", en: "Homework" }, back: "/", perChild: true },
+  "/events/": { title: { hi: "कार्यक्रम", en: "Events" }, back: "/" },
+  "/events/album/": { title: { hi: "फ़ोटो", en: "Photos" }, back: "/events/" },
+  "/notice/": { title: { hi: "सूचनाएँ", en: "Notice" }, back: "/" },
+  "/bus/": { title: { hi: "स्कूल बस", en: "School Bus" }, back: "/", perChild: true },
+  "/search/": { title: { hi: "खोजें", en: "Search" }, back: "/" },
 };
 
 const norm = (p: string) => (p.endsWith("/") ? p : p + "/");
 
 /**
- * Home draws its own header. Every other screen gets one slim bar: Back (on inner screens), the
- * screen's name, and — only where the screen is about one child and there is more than one —
- * a small button to switch child. The tab bar sits at the bottom.
+ * Home draws its own header. Every other screen gets the kit's bar: Back on the left, the name in
+ * the middle, and on the right either the screen's + action or (for one child's data, when there
+ * is more than one child) that child's photo to switch.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = norm(usePathname() || "/");
@@ -46,35 +62,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const page = PAGES[path];
   const isHome = path === "/";
   const canSwitch = !!page?.perChild && (me?.children.length || 0) > 1 && !!child;
+  const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] max-w-[560px] flex-col">
+    <div className="mx-auto flex min-h-[100dvh] max-w-[560px] flex-col bg-white">
       {!isHome && (
-        <header className="pt-safe sticky top-0 z-20 bg-canvas text-ink-900">
-          <div className="flex h-16 items-center gap-1 px-2">
+        <header className="pt-safe sticky top-0 z-20 bg-white/95 backdrop-blur-sm">
+          <div className="grid h-14 grid-cols-[48px_1fr_48px] items-center px-1.5">
             {page?.back ? (
-              <Link href={page.back} className="grid h-11 w-11 place-items-center rounded-full text-ink-800 active:bg-ink-200/60" aria-label={L({ hi: "वापस", en: "Back" })}>
+              <Link href={page.back} className="grid h-11 w-11 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={L({ hi: "वापस", en: "Back" })}>
                 <ChevronLeft className="h-6 w-6" aria-hidden />
               </Link>
             ) : (
-              <span className="w-3" />
+              <span />
             )}
-            <h1 className="min-w-0 flex-1 truncate pt-0.5 text-[24px] font-semibold tracking-tight text-ink-900">{page ? L(page.title) : ""}</h1>
-            {canSwitch && (
-              <button onClick={() => setSwitching(true)} className="flex min-h-[44px] items-center gap-2 pr-2 text-[15px] font-semibold text-ink-800" aria-label={L({ hi: "बच्चा बदलें", en: "Switch child" })}>
-                <Avatar name={child!.name} url={child!.photoUrl} size={28} />
-                {child!.name.split(" ")[0]}
-                <ChevronDown className="-ml-1 h-4 w-4 text-ink-500" aria-hidden />
-              </button>
-            )}
+            <h1 className="truncate text-center text-[18px] font-bold">{page ? L(page.title) : ""}</h1>
+            <span className="flex justify-end">
+              {page?.action ? (
+                <Link href={page.action.href} className="grid h-11 w-11 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={L(page.action.text)}>
+                  <Plus className="h-6 w-6" aria-hidden />
+                </Link>
+              ) : canSwitch ? (
+                <button onClick={() => setSwitching(true)} className="grid h-11 w-11 place-items-center rounded-full active:bg-ink-100" aria-label={`${L({ hi: "बच्चा बदलें", en: "Switch child" })}: ${child!.name}`}>
+                  <Avatar name={child!.name} url={child!.photoUrl} size={32} tint={me!.children.findIndex((c) => c.id === child!.id)} />
+                </button>
+              ) : null}
+            </span>
           </div>
         </header>
       )}
 
-      <main className={clsx("flex-1 pb-28", !isHome && "space-y-3 px-3 pt-3")}>
+      <main className={clsx("flex-1 pb-28", !isHome && "space-y-3.5 px-4 pt-1")}>
         {!isHome && <OfflineNote show={stale && !!me} />}
         {error && error.status !== 401 ? (
-          <div className={clsx(isHome && "px-3 pt-6")}>
+          <div className={clsx(isHome && "px-4 pt-6")}>
             <ErrorCard offline={error.status === 0} onRetry={reload} />
           </div>
         ) : (
@@ -82,14 +103,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </main>
 
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-200 bg-white" aria-label="Main">
-        <ul className="grid grid-cols-5">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-100 bg-white" aria-label="Main">
+        <ul className="grid grid-cols-4">
           {TABS.map(({ href, text, icon: Icon }) => {
-            const on = href === "/" ? path === "/" : path.startsWith(href) && !(href === "/more/" && PAGES[path]?.back);
+            const on = lit === href;
             return (
               <li key={href}>
-                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[64px] flex-col items-center justify-center gap-1 text-[13px]", on ? "font-semibold text-brand-700" : "font-medium text-ink-500")}>
-                  <Icon className="h-[23px] w-[23px]" strokeWidth={on ? 2.3 : 1.8} aria-hidden />
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[62px] flex-col items-center justify-center gap-1 text-[12px]", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
+                  <Icon className="h-[23px] w-[23px]" strokeWidth={on ? 2 : 1.7} fill={on && Icon !== IndianRupee ? "#E7E1FD" : "none"} aria-hidden />
                   {L(text)}
                 </Link>
               </li>

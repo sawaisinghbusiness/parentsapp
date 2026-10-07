@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 
 export type Lang = "hi" | "en";
 
-/** Hindi first. Short, plain words a parent would say; English for those who prefer it. */
+/** English by default, Hindi from Profile. Short, plain words a parent would say. */
 const TEXT = {
   // tabs
   "tab.home": { hi: "होम", en: "Home" },
@@ -83,16 +83,16 @@ const TEXT = {
 export type TextKey = keyof typeof TEXT;
 
 const Ctx = createContext<{ lang: Lang; setLang: (l: Lang) => void; t: (k: TextKey) => string }>({
-  lang: "hi",
+  lang: "en",
   setLang: () => {},
-  t: (k) => TEXT[k].hi,
+  t: (k) => TEXT[k].en,
 });
 
 export function LangProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("hi");
+  const [lang, setLangState] = useState<Lang>("en");
   useEffect(() => {
     try {
-      if (localStorage.getItem("pa:lang") === "en") setLangState("en");
+      if (localStorage.getItem("pa:lang") === "hi") setLangState("hi");
     } catch {
       /* ignore */
     }

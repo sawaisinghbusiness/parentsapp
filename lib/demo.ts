@@ -30,7 +30,7 @@ const schoolDay = (iso: string) => (weekday(iso) === 0 ? addDays(iso, -1) : iso)
 const SCHOOL = {
   name: "Mother Teresa Nobles Academy",
   shortName: "MTNA",
-  logoUrl: "/icon.svg",
+  logoUrl: null,
   address: "Nehru Nagar, Barmer",
   officePhone: "94600 62543",
   upiId: "mtnabarmer@sbi",
@@ -56,12 +56,14 @@ interface Store {
   phone: string;
   leave: Record<string, any[]>;
   claims: Record<string, any[]>;
+  requests: Record<string, any[]>;
 }
 function load(): Store {
+  const blank = { phone: "9588894289", leave: {}, claims: {}, requests: {} };
   try {
-    return { phone: "9588894289", leave: {}, claims: {}, ...JSON.parse(localStorage.getItem(STORE) || "{}") };
+    return { ...blank, ...JSON.parse(localStorage.getItem(STORE) || "{}") };
   } catch {
-    return { phone: "9588894289", leave: {}, claims: {} };
+    return blank;
   }
 }
 function save(s: Store) {
@@ -112,10 +114,10 @@ function feesFor(kid: Kid, s: Store) {
   const claims = (s.claims[kid.id] || []).slice().reverse();
   if (kid.id === "demo-laxman") {
     const instalments = [
-      { name: "Quarter 1", due: "2026-04-10", amount: 8500, paid: 8500, outstanding: 0, overdue: false, fine: 0 },
-      { name: "Quarter 2", due: "2026-07-10", amount: 5500, paid: 0, outstanding: 5500, overdue: true, fine: 500 },
-      { name: "Quarter 3", due: "2026-10-10", amount: 4500, paid: 0, outstanding: 4500, overdue: t > "2026-10-10", fine: 0 },
-      { name: "Quarter 4", due: "2027-01-10", amount: 5500, paid: 0, outstanding: 5500, overdue: false, fine: 0 },
+      { name: "Quarter 1", due: "2026-04-10", amount: 8500, paid: 8500, outstanding: 0, overdue: false, fine: 0, paidOn: "2026-04-08", heads: [{ key: "tuition_fee", amount: 4500 }, { key: "annual_fee", amount: 4000 }] },
+      { name: "Quarter 2", due: "2026-07-10", amount: 5500, paid: 0, outstanding: 5500, overdue: true, fine: 500, paidOn: null, heads: [{ key: "tuition_fee", amount: 4500 }, { key: "exam_fee", amount: 1000 }] },
+      { name: "Quarter 3", due: "2026-10-10", amount: 4500, paid: 0, outstanding: 4500, overdue: t > "2026-10-10", fine: 0, paidOn: null, heads: [{ key: "tuition_fee", amount: 4500 }] },
+      { name: "Quarter 4", due: "2027-01-10", amount: 5500, paid: 0, outstanding: 5500, overdue: false, fine: 0, paidOn: null, heads: [{ key: "tuition_fee", amount: 4500 }, { key: "exam_fee", amount: 1000 }] },
     ];
     const dueNow = instalments.filter((i) => i.overdue).reduce((a, i) => a + i.outstanding, 0);
     const fine = instalments.reduce((a, i) => a + (i.overdue ? i.fine : 0), 0);
@@ -136,15 +138,15 @@ function feesFor(kid: Kid, s: Store) {
     asOf: t,
     available: true,
     pay: { upiId: SCHOOL.upiId, upiName: SCHOOL.upiName, officePhone: SCHOOL.officePhone },
-    session: { total: 42000, paid: 25500, balance: 16500 },
+    session: { total: 43500, paid: 25500, balance: 18000 },
     dueNow: 0,
     fine: 0,
-    options: { dueNow: 0, full: 16500 },
+    options: { dueNow: 0, full: 18000 },
     instalments: [
-      { name: "Quarter 1", due: "2026-04-10", amount: 14500, paid: 14500, outstanding: 0, overdue: false, fine: 0 },
-      { name: "Quarter 2", due: "2026-07-10", amount: 11000, paid: 11000, outstanding: 0, overdue: false, fine: 0 },
-      { name: "Quarter 3", due: "2026-10-10", amount: 8500, paid: 0, outstanding: 8500, overdue: false, fine: 0 },
-      { name: "Quarter 4", due: "2027-01-10", amount: 8000, paid: 0, outstanding: 8000, overdue: false, fine: 0 },
+      { name: "Quarter 1", due: "2026-04-10", amount: 14500, paid: 14500, outstanding: 0, overdue: false, fine: 0, paidOn: "2026-04-07", heads: [{ key: "tuition_fee", amount: 5500 }, { key: "annual_fee", amount: 5000 }, { key: "transport_fee", amount: 3000 }, { key: "computer_fee", amount: 250 }, { key: "admission_fee", amount: 750 }] },
+      { name: "Quarter 2", due: "2026-07-10", amount: 11000, paid: 11000, outstanding: 0, overdue: false, fine: 0, paidOn: "2026-07-06", heads: [{ key: "tuition_fee", amount: 5500 }, { key: "exam_fee", amount: 1000 }, { key: "transport_fee", amount: 3000 }, { key: "computer_fee", amount: 250 }, { key: "annual_fee", amount: 1250 }] },
+      { name: "Quarter 3", due: "2026-10-10", amount: 8500, paid: 0, outstanding: 8500, overdue: false, fine: 0, paidOn: null, heads: [{ key: "tuition_fee", amount: 5500 }, { key: "transport_fee", amount: 3000 }, { key: "computer_fee", amount: 250 }, { key: "concession", amount: -250 }] },
+      { name: "Quarter 4", due: "2027-01-10", amount: 9500, paid: 0, outstanding: 9500, overdue: false, fine: 0, paidOn: null, heads: [{ key: "tuition_fee", amount: 5500 }, { key: "exam_fee", amount: 1000 }, { key: "transport_fee", amount: 3000 }, { key: "computer_fee", amount: 250 }, { key: "concession", amount: -250 }] },
     ],
     receipts: [
       { id: "r3", receiptNo: "MTNA/2026-27/00671", amount: 11000, mode: "UPI / QR", date: "2026-07-06", instalments: "Quarter 2", heads: [{ key: "tuition_fee", amount: 5500 }, { key: "exam_fee", amount: 1000 }, { key: "transport_fee", amount: 3000 }, { key: "computer_fee", amount: 250 }, { key: "annual_fee", amount: 1250 }], ref: "618822004517" },
@@ -154,30 +156,31 @@ function feesFor(kid: Kid, s: Store) {
   };
 }
 
-const HW: Record<string, [number, string, string, string, number | null][]> = {
-  // [days ago, subject, title, details, due in days]
+type HwStatus = "pending" | "checked" | "not_submitted";
+const HW: Record<string, [number, string, string, string, number | null, HwStatus][]> = {
+  // [days ago, subject, title, details, due in days, what the teacher marked]
   "demo-laxman": [
-    [0, "Hindi", "अ से अः तक दो बार लिखें", "", 1],
-    [0, "Maths", "1 से 50 तक गिनती लिखें", "कॉपी में साफ़-साफ़ लिखें।", 1],
-    [1, "English", "Write A to Z in capital letters", "", null],
-    [2, "Drawing", "Draw and colour a mango", "Use crayons.", 3],
-    [5, "EVS", "Name 5 fruits and 5 vegetables", "Paste pictures if you can.", null],
+    [0, "Hindi", "अ से अः तक दो बार लिखें", "", 1, "pending"],
+    [0, "Maths", "1 से 50 तक गिनती लिखें", "कॉपी में साफ़-साफ़ लिखें।", 1, "pending"],
+    [1, "English", "Write A to Z in capital letters", "", null, "checked"],
+    [2, "Drawing", "Draw and colour a mango", "Use crayons.", 3, "pending"],
+    [5, "EVS", "Name 5 fruits and 5 vegetables", "Paste pictures if you can.", null, "checked"],
   ],
   "demo-priya": [
-    [0, "Maths", "Exercise 4.2 — Q 1 to 10", "Show all steps.", 1],
-    [0, "Hindi", "पाठ 6 के प्रश्न-उत्तर याद करें", "", 2],
-    [1, "English", "Write a paragraph on 'My School'", "About 100 words.", 2],
-    [1, "Science", "Draw the parts of a plant", "Label root, stem, leaf, flower.", 3],
-    [3, "Social Studies", "Map work: mark 5 rivers of India", "", null],
-    [6, "Computer", "Learn the parts of a computer", "", null],
+    [0, "Maths", "Exercise 4.2 — Q 1 to 10", "Show all steps.", 1, "pending"],
+    [0, "Hindi", "पाठ 6 के प्रश्न-उत्तर याद करें", "", 2, "pending"],
+    [1, "English", "Write a paragraph on 'My School'", "About 100 words.", 2, "checked"],
+    [1, "Science", "Draw the parts of a plant", "Label root, stem, leaf, flower.", 3, "checked"],
+    [3, "Social Studies", "Map work: mark 5 rivers of India", "", null, "not_submitted"],
+    [6, "Computer", "Learn the parts of a computer", "", null, "checked"],
   ],
 };
 
 function homework(kid: Kid) {
   const t = today();
-  const items = HW[kid.id].map(([ago, subject, title, details, due], i) => {
+  const items = HW[kid.id].map(([ago, subject, title, details, due, status], i) => {
     const on = schoolDay(addDays(t, -ago));
-    return { id: `${kid.id}-hw-${i}`, subject, title, details, assignedOn: on, dueDate: due === null ? null : addDays(on, due) };
+    return { id: `${kid.id}-hw-${i}`, subject, title, details, assignedOn: on, dueDate: due === null ? null : addDays(on, due), status };
   });
   return { setupNeeded: false, today: t, items, nextBefore: null };
 }
@@ -270,39 +273,52 @@ const GRADES = [
 ].map(([grade, min]) => ({ grade: grade as string, min: min as number }));
 const gradeOf = (pct: number) => GRADES.find((g) => pct >= g.min)!.grade;
 
-function reportCard(kid: Kid) {
-  const exams = [{ id: "half-yearly", title: "Half Yearly Exam", startDate: "2026-09-15", endDate: "2026-09-26" }];
-  const parts = [
-    { key: "theory", name: "Theory", max: 80 },
-    { key: "internal", name: "Internal", max: 20 },
-  ];
-  const rows: [string, number, number][] =
-    kid.id === "demo-priya"
-      ? [
-          ["English", 68, 18],
-          ["Hindi", 72, 19],
-          ["Maths", 75, 18],
-          ["Science", 64, 17],
-          ["Social Studies", 61, 16],
-          ["Sanskrit", 70, 19],
-        ]
-      : [
-          ["English", 74, 19],
-          ["Hindi", 70, 18],
-          ["Maths", 77, 20],
-          ["EVS", 69, 18],
-        ];
-  const subjects = rows.map(([subject, th, inn]) => {
-    const total = th + inn;
-    return { subject, marks: { theory: th, internal: inn }, absent: false, total, grade: gradeOf(total), passed: total >= 33, entered: true };
+const EXAMS = [
+  { id: "unit-1", title: "Unit Test 1", startDate: "2026-07-20", endDate: "2026-07-25", max: 50, parts: [{ key: "marks", name: "Marks", max: 50 }] },
+  {
+    id: "half-yearly",
+    title: "Half Yearly Exam",
+    startDate: "2026-09-15",
+    endDate: "2026-09-26",
+    max: 100,
+    parts: [
+      { key: "theory", name: "Theory", max: 80 },
+      { key: "internal", name: "Internal", max: 20 },
+    ],
+  },
+];
+
+const MARKS: Record<string, Record<string, [string, ...number[]][]>> = {
+  "demo-priya": {
+    "unit-1": [["English", 42], ["Hindi", 44], ["Maths", 47], ["Science", 40], ["Social Studies", 38], ["Sanskrit", 45]],
+    "half-yearly": [["English", 68, 18], ["Hindi", 72, 19], ["Maths", 75, 18], ["Science", 64, 17], ["Social Studies", 61, 16], ["Sanskrit", 70, 19]],
+  },
+  "demo-laxman": {
+    "unit-1": [["English", 44], ["Hindi", 41], ["Maths", 46], ["EVS", 43]],
+    "half-yearly": [["English", 74, 19], ["Hindi", 70, 18], ["Maths", 77, 20], ["EVS", 69, 18]],
+  },
+};
+
+const REMARK: Record<string, string> = {
+  "demo-priya": "Good in maths. Reading speed in English can improve.",
+  "demo-laxman": "Very cheerful in class. Practise writing letters neatly.",
+};
+
+function reportCard(kid: Kid, examId: string | null) {
+  const exam = EXAMS.find((e) => e.id === examId) || EXAMS[EXAMS.length - 1];
+  const subjects = MARKS[kid.id][exam.id].map(([subject, ...m]) => {
+    const marks = Object.fromEntries(exam.parts.map((p, i) => [p.key, m[i]]));
+    const total = m.reduce((a, b) => a + b, 0);
+    const pct = (total / exam.max) * 100;
+    return { subject, marks, absent: false, total, grade: gradeOf(pct), passed: pct >= 33, entered: true };
   });
   const grand = subjects.reduce((a, s) => a + s.total, 0);
-  const outOf = subjects.length * 100;
+  const outOf = subjects.length * exam.max;
   const percent = Math.round((grand / outOf) * 1000) / 10;
   return {
-    exams,
+    exams: EXAMS.map(({ id, title, startDate, endDate }) => ({ id, title, startDate, endDate })),
     card: {
-      exam: { id: "half-yearly", title: "Half Yearly Exam", max: 100, parts, startDate: "2026-09-15", endDate: "2026-09-26" },
+      exam: { id: exam.id, title: exam.title, max: exam.max, parts: exam.parts, startDate: exam.startDate, endDate: exam.endDate },
       subjects,
       grand,
       outOf,
@@ -310,11 +326,61 @@ function reportCard(kid: Kid) {
       grade: gradeOf(percent),
       result: "Pass",
       complete: true,
-      rank: kid.id === "demo-priya" ? 4 : 2,
-      attendance: { present: 118, days: 128 },
+      rank: kid.id === "demo-priya" ? (exam.id === "unit-1" ? 6 : 4) : 2,
+      classSize: kid.id === "demo-priya" ? 38 : 24,
+      remark: exam.id === "half-yearly" ? REMARK[kid.id] : null,
+      attendance: exam.id === "half-yearly" ? { present: 118, days: 128 } : null,
     },
     grades: { scale: GRADES, passPercent: 33 },
   };
+}
+
+/** The next exam's papers: syllabus, marks, date and time. */
+function examSchedule(kid: Kid) {
+  const t = today();
+  let day = addDays(t, 14);
+  const subjects = MARKS[kid.id]["half-yearly"].map(([s]) => s);
+  const syllabus: Record<string, string> = {
+    English: "Lessons 6–10, grammar",
+    Hindi: "पाठ 7–12",
+    Maths: "Chapters 6–9",
+    Science: "Chapters 7–11",
+    "Social Studies": "Chapters 6–10, map work",
+    Sanskrit: "पाठ 5–8",
+    EVS: "Chapters 6–10",
+  };
+  const papers = subjects.map((subject) => {
+    if (weekday(day) === 0) day = addDays(day, 1);
+    const row = { subject, syllabus: syllabus[subject] || "", max: 50, pass: 17, date: day, start: "08:00", end: subject === "Sanskrit" || subject === "EVS" ? "10:00" : "10:30" };
+    day = addDays(day, 1);
+    return row;
+  });
+  return { exam: { title: "Unit Test 2", startDate: papers[0].date, endDate: papers[papers.length - 1].date }, papers };
+}
+
+/** School events with their photos. A real school uploads photos; the demo draws scenes. */
+function events() {
+  const t = today();
+  const pics = (scenes: string[], n: number, videoAt: number[] = []) =>
+    Array.from({ length: n }, (_, i) => ({ id: `p${i}`, url: null, scene: scenes[i % scenes.length], video: videoAt.includes(i) }));
+  return [
+    { id: "sports", title: "Sports Day", date: addDays(t, 7), scene: "sports", photos: [] as ReturnType<typeof pics> },
+    { id: "mela", title: "Dussehra Mela", date: addDays(t, 12), scene: "mela", photos: [] as ReturnType<typeof pics> },
+    { id: "teachers", title: "Teachers' Day", date: "2026-09-05", scene: "teach", photos: pics(["teach", "stage", "teach"], 9, [4]) },
+    { id: "independence", title: "Independence Day", date: "2026-08-15", scene: "flag", photos: pics(["flag", "march"], 18, [1, 7]) },
+    { id: "annual", title: "Annual Function", date: "2025-12-12", scene: "stage", photos: pics(["stage", "march", "stage"], 12, [2]) },
+    { id: "diwali", title: "Diwali Celebration", date: "2025-10-30", scene: "diya", photos: pics(["diya", "mela"], 8) },
+  ].map((e) => ({ ...e, coverUrl: null, upcoming: e.date >= t, photoCount: e.photos.filter((p) => !p.video).length, videoCount: e.photos.filter((p) => p.video).length }));
+}
+
+/** Leave this child already had this session, shown until the parent sends their own. */
+function seededLeave(kid: Kid): any[] {
+  if (kid.id !== "demo-priya") return [];
+  return [
+    { id: "leave-s1", from: "2026-09-18", to: "2026-09-19", days: 2, type: "family", halfDay: false, reason: "Cousin's wedding in Balotra.", status: "approved", decidedBy: "Rakesh Bishnoi", decidedAt: "2026-09-16T10:00:00Z", createdAt: "2026-09-15T18:00:00Z" },
+    { id: "leave-s2", from: "2026-09-07", to: "2026-09-07", days: 0.5, type: "sick", halfDay: true, reason: "Stomach ache in the morning.", status: "approved", decidedBy: "Rakesh Bishnoi", decidedAt: "2026-09-07T08:00:00Z", createdAt: "2026-09-07T06:30:00Z" },
+    { id: "leave-s3", from: "2026-09-02", to: "2026-09-02", days: 1, type: "casual", halfDay: false, reason: "Going to the village for a puja.", status: "rejected", decidedBy: "Rakesh Bishnoi", decidedAt: "2026-09-01T12:00:00Z", createdAt: "2026-09-01T09:00:00Z" },
+  ];
 }
 
 function leaveRules() {
@@ -335,7 +401,7 @@ export async function demoApi(path: string, method: string, body: any): Promise<
   const s = load();
 
   try {
-    if (p === "/school") return { name: SCHOOL.name, shortName: SCHOOL.shortName, logoUrl: SCHOOL.logoUrl, officePhone: SCHOOL.officePhone };
+    if (p === "/school") return { name: SCHOOL.name, shortName: SCHOOL.shortName, logoUrl: SCHOOL.logoUrl, officePhone: SCHOOL.officePhone, address: SCHOOL.address };
     if (p === "/otp" && method === "POST") {
       if (!/^[6-9]\d{9}$/.test(String(body?.mobile || ""))) throw new DemoError(400, "Enter your 10-digit mobile number.");
       return { success: true };
@@ -355,6 +421,14 @@ export async function demoApi(path: string, method: string, body: any): Promise<
     if (!signedIn()) throw new DemoError(401, "Please sign in again.");
 
     if (p === "/me") return { phone: s.phone, children: KIDS.map(childPublic), school: SCHOOL };
+
+    // School-wide: the same for every child.
+    if (p === "/events") return { events: events().map(({ photos, ...e }) => e) };
+    if (p === "/events/album") {
+      const e = events().find((x) => x.id === u.searchParams.get("id"));
+      if (!e) throw new DemoError(404, "Event not found.");
+      return e;
+    }
 
     const cancel = /^\/leave\/(.+)$/.exec(p);
     if (cancel && method === "DELETE") {
@@ -379,7 +453,7 @@ export async function demoApi(path: string, method: string, body: any): Promise<
         const att = month.days.find((d) => d.date === t);
         const f = feesFor(kid, s);
         const hw = homework(kid).items.filter((h) => h.assignedOn === schoolDay(t) || (h.dueDate && h.dueDate >= t));
-        const rc = reportCard(kid).card;
+        const rc = reportCard(kid, null).card;
         return {
           date: t,
           child: childPublic(kid),
@@ -389,6 +463,9 @@ export async function demoApi(path: string, method: string, body: any): Promise<
           fees: { dueNow: f.dueNow, fine: f.fine, balance: f.session.balance, next: f.instalments.filter((i) => i.due > t && i.outstanding > 0).map((i) => ({ name: i.name, due: i.due, amount: i.outstanding }))[0] || null },
           homework: hw,
           notice: notices(kid)[0],
+          events: events()
+            .filter((e) => e.upcoming)
+            .map(({ photos, ...e }) => e),
         };
       }
       case "/attendance": {
@@ -429,15 +506,17 @@ export async function demoApi(path: string, method: string, body: any): Promise<
           if (to < from) throw new DemoError(400, "The last day cannot be before the first day.");
           if (from < r.minFrom) throw new DemoError(400, "Leave can start at most 7 days back.");
           if (reason.length < 3) throw new DemoError(400, "Write the reason for leave.");
-          const list = (s.leave[kid.id] ||= []);
+          const list = (s.leave[kid.id] ||= seededLeave(kid));
           if (list.some((x: any) => x.status !== "rejected" && x.from <= to && x.to >= from)) throw new DemoError(400, "You have already applied for leave on these days.");
-          const days = Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1;
-          const row = { id: `leave-${Date.now()}`, from, to, days, reason, status: "pending", decidedBy: null, decidedAt: null, createdAt: new Date().toISOString() };
+          const halfDay = !!body?.halfDay && from === to;
+          const days = halfDay ? 0.5 : Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1;
+          const type = ["sick", "family", "casual", "other"].includes(body?.type) ? body.type : "other";
+          const row = { id: `leave-${Date.now()}`, from, to, days, type, halfDay, reason, status: "pending", decidedBy: null, decidedAt: null, createdAt: new Date().toISOString() };
           list.unshift(row);
           save(s);
           return { success: true, request: row };
         }
-        return { setupNeeded: false, rules: leaveRules(), requests: s.leave[kid.id] || [] };
+        return { setupNeeded: false, rules: leaveRules(), requests: s.leave[kid.id] || seededLeave(kid) };
       }
       case "/bus":
         return busFor(kid);
@@ -448,7 +527,17 @@ export async function demoApi(path: string, method: string, body: any): Promise<
           session: "2026-27",
         };
       case "/report-card":
-        return reportCard(kid);
+        return reportCard(kid, u.searchParams.get("exam"));
+      case "/exams/schedule":
+        return examSchedule(kid);
+      case "/profile/request": {
+        if (method !== "POST") break;
+        const message = String(body?.message || "").trim();
+        if (message.length < 3) throw new DemoError(400, "Write what needs to change.");
+        (s.requests[kid.id] ||= []).unshift({ id: `req-${Date.now()}`, message, status: "pending", sentAt: new Date().toISOString() });
+        save(s);
+        return { success: true };
+      }
     }
 
     throw new DemoError(404, "Not found");

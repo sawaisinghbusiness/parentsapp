@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import clsx from "clsx";
-import { Check, Copy, X } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { useL } from "@/lib/i18n";
 import { rupees } from "@/lib/format";
 import { F } from "@/lib/text/fees";
+import { Sheet } from "@/components/ui";
 
 export interface PayInfo {
   studentId: string;
@@ -19,18 +19,30 @@ export interface PayInfo {
   dueNow: number;
   full: number;
   fineIncluded: boolean;
+  /** Fee detail's own total, offered first when it is neither "due now" nor "full". */
+  suggest?: number;
 }
 
-type Choice = "due" | "full" | "other";
+type Choice = "due" | "full" | "this" | "other";
+
+/** Each app opens straight to the payment; "any app" lets the phone ask which one. */
+const APPS = [
+  { key: "any", name: { hi: "कोई भी UPI ऐप", en: "Any UPI app" }, mark: "₹", bg: "#6C4FE0", scheme: "upi://pay" },
+  { key: "phonepe", name: { hi: "PhonePe", en: "PhonePe" }, mark: "Pe", bg: "#5F259F", scheme: "phonepe://pay" },
+  { key: "gpay", name: { hi: "Google Pay", en: "Google Pay" }, mark: "G", bg: "#1A73E8", scheme: "tez://upi/pay" },
+  { key: "paytm", name: { hi: "Paytm", en: "Paytm" }, mark: "Pt", bg: "#00B9F1", scheme: "paytmmp://pay" },
+] as const;
 
 /**
- * Bottom sheet: pick the amount → pay in any UPI app → type the UTR → the school checks it.
+ * Bottom sheet: pick the amount → pay in a UPI app → type the UTR → the school checks it.
  * Nothing here is money yet; the office verifies the UTR against the bank and makes the receipt.
  */
 export function PaySheet({ info, onClose, onSent }: { info: PayInfo; onClose: () => void; onSent: () => void }) {
   const L = useL();
-  const [choice, setChoice] = useState<Choice>(info.dueNow > 0 ? "due" : "full");
+  const suggest = info.suggest && info.suggest !== info.dueNow && info.suggest !== info.full && info.suggest <= info.full ? info.suggest : 0;
+  const [choice, setChoice] = useState<Choice>(suggest ? "this" : info.dueNow > 0 ? "due" : "full");
   const [other, setOther] = useState("");
+  const [app, setApp] = useState<(typeof APPS)[number]["key"]>("any");
   const [utr, setUtr] = useState("");
   const [paidOn, setPaidOn] = useState(info.asOf);
   const [sent, setSent] = useState("");
@@ -38,22 +50,12 @@ export function PaySheet({ info, onClose, onSent }: { info: PayInfo; onClose: ()
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", esc);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", esc);
-    };
-  }, [onClose]);
-
-  const amount = choice === "due" ? info.dueNow : choice === "full" ? info.full : Math.floor(Number(other.replace(/\D/g, "")) || 0);
+  const amount = choice === "due" ? info.dueNow : choice === "full" ? info.full : choice === "this" ? suggest : Math.floor(Number(other.replace(/\D/g, "")) || 0);
   const amountOk = amount >= 1 && amount <= info.full;
   // UPI note: shows on the school's bank statement, so the office can match it to the child.
   const note = `Fee ${info.srNo} ${info.childName}`.slice(0, 50);
-  const upiLink = `upi://pay?pa=${encodeURIComponent(info.upiId)}&pn=${encodeURIComponent(info.upiName)}&am=${amount}.00&cu=INR&tn=${encodeURIComponent(note)}`;
+  const query = `pa=${encodeURIComponent(info.upiId)}&pn=${encodeURIComponent(info.upiName)}&am=${amount}.00&cu=INR&tn=${encodeURIComponent(note)}`;
+  const link = `${APPS.find((a) => a.key === app)!.scheme}?${query}`;
 
   async function copy() {
     try {
@@ -84,127 +86,120 @@ export function PaySheet({ info, onClose, onSent }: { info: PayInfo; onClose: ()
   }
 
   const opts: { key: Choice; label: string; value?: number }[] = [
+    ...(suggest ? [{ key: "this" as const, label: L({ hi: "यह किस्त", en: "This instalment" }), value: suggest }] : []),
     ...(info.dueNow > 0 ? [{ key: "due" as const, label: L(F.optDue), value: info.dueNow }] : []),
     ...(info.full > info.dueNow ? [{ key: "full" as const, label: L(F.optFull), value: info.full }] : []),
     { key: "other", label: L(F.optOther) },
   ];
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={L(F.payUpi)}>
-      <button className="absolute inset-0 animate-fadeIn bg-night-950/50" onClick={onClose} aria-label={L(F.close)} />
-      <div className="pb-safe relative max-h-[92dvh] w-full max-w-[560px] animate-slide-up overflow-y-auto rounded-t-3xl bg-white">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ink-100 bg-white px-5 py-3">
-          <h2 className="text-lg font-bold">{L(F.payUpi)}</h2>
-          <button onClick={onClose} className="-mr-2 grid h-11 w-11 place-items-center rounded-xl text-ink-500" aria-label={L(F.close)}>
-            <X className="h-6 w-6" aria-hidden />
+  return (
+    <Sheet title={sent ? L({ hi: "भेज दिया", en: "Sent" }) : amountOk ? `${L({ hi: "भरें", en: "Pay" })} ${rupees(amount)}` : L(F.payUpi)} onClose={onClose}>
+      {sent ? (
+        <div className="space-y-4 pt-2">
+          <p className="flex items-center gap-2 text-xl font-bold">
+            <Check className="h-6 w-6 text-jade-600" strokeWidth={2.5} aria-hidden /> {sent}
+          </p>
+          <p className="text-ink-700">{L(F.thanks)}</p>
+          <button onClick={onClose} className="btn-primary w-full">
+            {L(F.close)}
           </button>
         </div>
+      ) : (
+        <div className="space-y-5">
+          <p className="text-[13px] text-ink-500">
+            {L({ hi: "किसे:", en: "To" })} <span className="font-semibold text-ink-900">{info.upiName}</span> · {info.upiId}
+          </p>
 
-        {sent ? (
-          <div className="space-y-4 px-5 py-6">
-            <p className="flex items-center gap-2 text-xl font-bold text-ink-900">
-              <Check className="h-6 w-6 text-jade-600" strokeWidth={2.5} aria-hidden /> {sent}
-            </p>
-            <p className="text-ink-700">{L(F.thanks)}</p>
-            <button onClick={onClose} className="btn-primary w-full">
-              {L(F.close)}
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6 px-5 pb-6 pt-4">
-            {/* Amount */}
-            <fieldset>
-              <legend className="mb-2 font-semibold text-ink-800">{L(F.howMuch)}</legend>
-              <div className="space-y-2">
-                {opts.map((o) => (
-                  <label key={o.key} className={clsx("flex min-h-[56px] cursor-pointer items-center gap-3 rounded-xl border px-4 py-2", choice === o.key ? "border-brand-600 ring-1 ring-brand-600" : "border-ink-200")}>
-                    <input type="radio" name="amt" checked={choice === o.key} onChange={() => setChoice(o.key)} className="h-5 w-5 accent-brand-600" />
-                    <span className="flex-1">
-                      <span className="block font-medium text-ink-900">{o.label}</span>
-                      {o.value !== undefined && info.fineIncluded && <span className="block text-xs text-ink-500">{L(F.incFine)}</span>}
-                    </span>
-                    {o.value !== undefined && <span className="tnum font-bold text-ink-900">{rupees(o.value)}</span>}
-                  </label>
-                ))}
-              </div>
-              {choice === "other" && (
-                <div className="mt-2 flex items-center overflow-hidden rounded-xl border border-ink-300 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
-                  <span className="px-3 text-lg font-semibold text-ink-500">₹</span>
-                  <input
-                    inputMode="numeric"
-                    value={other}
-                    onChange={(e) => setOther(e.target.value.replace(/\D/g, "").slice(0, 7))}
-                    placeholder={L(F.enterAmount)}
-                    className="tnum min-h-[52px] w-full pr-3 text-lg font-semibold outline-none"
-                    autoFocus
-                  />
-                </div>
-              )}
-            </fieldset>
-
-            {/* Step 1: pay */}
-            <section className="space-y-3">
-              <h3 className="font-semibold text-ink-800">{L(F.step1)}</h3>
-              <p className="text-sm text-ink-600">
-                {L(F.checkName)} <span className="font-semibold text-ink-900">{info.upiName}</span>
-              </p>
-              <a href={amountOk ? upiLink : undefined} aria-disabled={!amountOk} className={clsx("btn-primary w-full", !amountOk && "pointer-events-none opacity-50")}>
-                {L(F.openApp)} {amountOk ? `· ${rupees(amount)}` : ""}
-              </a>
-              <p className="text-sm text-ink-600">{L(F.orCopy)}</p>
-              <div className="flex items-center gap-2 rounded-xl border border-ink-200 bg-ink-50 py-1 pl-4 pr-1">
-                <span className="min-w-0 flex-1 truncate font-semibold text-ink-900">{info.upiId}</span>
-                <button type="button" onClick={copy} className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-white px-3 text-sm font-semibold text-brand-700 ring-1 ring-ink-200">
-                  {copied ? <Check className="h-4 w-4 text-jade-600" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
-                  {copied ? L(F.copied) : L(F.copy)}
-                </button>
-              </div>
-            </section>
-
-            {/* Step 2: tell the school */}
-            <form onSubmit={send} className="space-y-3" noValidate>
-              <h3 className="font-semibold text-ink-800">{L(F.step2)}</h3>
-              <div>
-                <label htmlFor="utr" className="mb-1.5 block text-sm font-medium text-ink-700">
-                  {L(F.utr)}
+          <fieldset>
+            <legend className="mb-2 text-[15px] font-semibold">{L(F.howMuch)}</legend>
+            <div className="space-y-2">
+              {opts.map((o) => (
+                <label key={o.key} className={clsx("flex min-h-[54px] cursor-pointer items-center gap-3 rounded-xl px-3.5 py-2", choice === o.key ? "bg-brand-50 ring-1 ring-brand-600" : "bg-ink-50")}>
+                  <span className="radio min-h-0">
+                    <input type="radio" name="amt" checked={choice === o.key} onChange={() => setChoice(o.key)} />
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-[15px] font-medium">{o.label}</span>
+                    {o.value !== undefined && o.key !== "this" && info.fineIncluded && <span className="block text-[12px] text-ink-500">{L(F.incFine)}</span>}
+                  </span>
+                  {o.value !== undefined && <span className="tnum font-bold">{rupees(o.value)}</span>}
                 </label>
+              ))}
+            </div>
+            {choice === "other" && (
+              <div className="field-box mt-2">
+                <span className="text-lg font-semibold text-ink-500">₹</span>
+                <input inputMode="numeric" value={other} onChange={(e) => setOther(e.target.value.replace(/\D/g, "").slice(0, 7))} placeholder={L(F.enterAmount)} className="tnum text-lg font-semibold" autoFocus />
+              </div>
+            )}
+          </fieldset>
+
+          <fieldset>
+            <legend className="mb-2 text-[15px] font-semibold">{L(F.step1)}</legend>
+            <div className="space-y-2">
+              {APPS.map((a) => (
+                <label key={a.key} className="flex min-h-[54px] cursor-pointer items-center gap-3 rounded-xl bg-ink-50 px-3">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] text-[12px] font-bold text-white" style={{ background: a.bg }} aria-hidden>
+                    {a.mark}
+                  </span>
+                  <span className="flex-1 text-[15px] font-semibold">{L(a.name)}</span>
+                  <span className="radio min-h-0">
+                    <input type="radio" name="app" checked={app === a.key} onChange={() => setApp(a.key)} />
+                  </span>
+                </label>
+              ))}
+            </div>
+            <a href={amountOk ? link : undefined} aria-disabled={!amountOk} className={clsx("btn-primary mt-3 w-full", !amountOk && "pointer-events-none opacity-50")}>
+              {L(F.openApp)} {amountOk ? `· ${rupees(amount)}` : ""}
+            </a>
+            <p className="mt-3 text-[13px] text-ink-500">{L(F.orCopy)}</p>
+            <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-ink-50 py-1 pl-3.5 pr-1">
+              <span className="min-w-0 flex-1 truncate font-semibold">{info.upiId}</span>
+              <button type="button" onClick={copy} className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-white px-3 text-[14px] font-semibold text-brand-600 ring-1 ring-ink-200">
+                {copied ? <Check className="h-4 w-4 text-jade-600" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
+                {copied ? L(F.copied) : L(F.copy)}
+              </button>
+            </div>
+          </fieldset>
+
+          <form onSubmit={send} className="space-y-3" noValidate>
+            <h3 className="text-[15px] font-semibold">{L(F.step2)}</h3>
+            <div>
+              <label className="field-box">
+                <small>{L(F.utr)}</small>
                 <input
-                  id="utr"
                   value={utr}
                   onChange={(e) => setUtr(e.target.value.replace(/[^0-9a-zA-Z\s-]/g, "").slice(0, 26))}
                   inputMode="numeric"
                   autoComplete="off"
                   autoCapitalize="characters"
-                  className="field tnum tracking-wider"
+                  className="tnum tracking-wider"
                   placeholder="6xxxxxxxxxxx"
                 />
-                <p className="mt-1 text-xs text-ink-500">{L(F.utrHelp)}</p>
+              </label>
+              <p className="mt-1 text-[12px] text-ink-500">{L(F.utrHelp)}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <label className="field-box">
+                <small>{L(F.paidOn)}</small>
+                <input type="date" value={paidOn} max={info.asOf} onChange={(e) => setPaidOn(e.target.value)} />
+              </label>
+              <div className="field-box bg-ink-50">
+                <small>{L(F.amountPaid)}</small>
+                <span className="tnum pt-4 font-bold">{amountOk ? rupees(amount) : "—"}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="paidOn" className="mb-1.5 block text-sm font-medium text-ink-700">
-                    {L(F.paidOn)}
-                  </label>
-                  <input id="paidOn" type="date" value={paidOn} max={info.asOf} onChange={(e) => setPaidOn(e.target.value)} className="field" />
-                </div>
-                <div>
-                  <p className="mb-1.5 text-sm font-medium text-ink-700">{L(F.amountPaid)}</p>
-                  <p className="tnum flex min-h-[52px] items-center rounded-xl bg-ink-50 px-4 text-lg font-bold text-ink-900">{amountOk ? rupees(amount) : "—"}</p>
-                </div>
-              </div>
-              {error && (
-                <p className="font-medium text-rose-700" role="alert">
-                  {error}
-                </p>
-              )}
-              <button type="submit" disabled={busy || !amountOk} className="btn-primary w-full">
-                {busy ? "…" : L(F.send)}
-              </button>
-            </form>
-          </div>
-        )}
-      </div>
-    </div>,
-    document.body
+            </div>
+            {error && (
+              <p className="font-medium text-rose-700" role="alert">
+                {error}
+              </p>
+            )}
+            <button type="submit" disabled={busy || !amountOk} className="btn-primary w-full">
+              {busy ? "…" : L(F.send)}
+            </button>
+          </form>
+        </div>
+      )}
+    </Sheet>
   );
 }

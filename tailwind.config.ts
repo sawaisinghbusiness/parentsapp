@@ -1,98 +1,101 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Same colours as the ERP (SMS BARMER/tailwind.config.ts), so the school sees one product.
- * Colour carries meaning only: jade = present / paid, red = absent / due, marigold = needs attention.
+ * Our own violet (deeper than the kit's lavender) on white. Colour carries meaning only:
+ * jade = present / paid, red = absent / unpaid, marigold = waiting / leave, violet = the app and holidays.
  */
-// Grey with a slight sky bias, so it sits with the brand instead of reading as a default.
+// Grey with a slight violet bias, so it sits with the brand instead of reading as a default.
 const ink = {
-  50: "#F7FAFC",
-  100: "#EEF3F7",
-  200: "#E3EAF1",
-  300: "#CDD8E2",
-  400: "#94A3B2",
-  500: "#64748B",
-  600: "#4A5868",
-  700: "#334252",
-  800: "#1C2A37",
-  900: "#0F1B26",
-  950: "#0A121A",
+  50: "#F7F6FA",
+  100: "#ECEAF2",
+  200: "#DDD9E8",
+  300: "#C9C4D8",
+  400: "#8E8AA3",
+  500: "#625D77",
+  600: "#4E4963",
+  700: "#3B3650",
+  800: "#2A2540",
+  900: "#1F1B2E",
+  950: "#16131F",
 };
 
 // Present / paid.
 const jade = {
-  50: "#EFFAF4",
-  100: "#D9F2E4",
-  200: "#B4E4C9",
-  500: "#1FA866",
-  600: "#15965B",
-  700: "#117A4A",
-  800: "#0E623C",
+  50: "#EAF7EE",
+  100: "#D3F0DC",
+  200: "#A9E0BA",
+  500: "#1DAF55",
+  600: "#16A34A",
+  700: "#128A3E",
+  800: "#0F6E33",
 };
 
-// Leave / half day / needs attention.
+// Waiting / leave / half day.
 const marigold = {
-  50: "#FFF8EB",
-  100: "#FCEFD2",
-  300: "#E3B65A",
-  400: "#D99E1F",
-  500: "#C98200",
-  600: "#A86C00",
-  700: "#875700",
+  50: "#FEF6E7",
+  100: "#FCEBC8",
+  300: "#F2C46D",
+  400: "#E9A23B",
+  500: "#D97706",
+  600: "#B86405",
+  700: "#924F04",
 };
 
-// School sky blue: the app's identity (hero block, buttons, active tab), solid not pastel.
-const sky = {
-  50: "#F0F9FF",
-  100: "#E0F2FE",
-  200: "#BAE6FD",
-  500: "#0EA5E9",
-  600: "#0284C7",
-  700: "#0369A1",
-  800: "#075985",
+// The app's own violet.
+const brand = {
+  50: "#F3F0FE",
+  100: "#E7E1FD",
+  200: "#CFC6F8",
+  300: "#B9AAF5",
+  400: "#9580EC",
+  500: "#7C62E8",
+  600: "#6C4FE0",
+  700: "#5A3CC9",
+  800: "#3F2A94",
+  900: "#2C1E68",
 };
 
 const night = {
-  300: "#A9ADBA",
-  400: "#858A99",
-  500: "#62677A",
-  600: "#454957",
-  700: "#2E313B",
-  800: "#22242C",
-  850: "#1B1D23",
-  900: "#141519",
-  950: "#0D0E11",
+  300: "#A9A4BA",
+  400: "#858099",
+  500: "#625D77",
+  600: "#45405A",
+  700: "#2E2A3D",
+  800: "#221F2E",
+  850: "#1B1824",
+  900: "#16131F",
+  950: "#0E0C14",
 };
 
-// Absent / due.
+// Absent / unpaid.
 const rose = {
-  50: "#FDF1F0",
-  100: "#FADFDC",
-  500: "#E04B40",
-  600: "#D33A2F",
-  700: "#B02E25",
+  50: "#FDECEC",
+  100: "#FAD7D7",
+  500: "#E23B3B",
+  600: "#DC2626",
+  700: "#B91C1C",
 };
 
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
     extend: {
-      colors: { slate: ink, ink, jade, emerald: jade, marigold, brand: sky, night, rose, red: rose, canvas: "#F2F6FA" },
+      colors: { slate: ink, ink, jade, emerald: jade, marigold, brand, night, rose, red: rose, canvas: "#FFFFFF" },
       fontFamily: {
-        // Figtree for Latin and numbers (geometric, like Groww); Hind fills in Devanagari.
+        // Figtree for Latin and numbers; Hind fills in Devanagari.
         sans: ["Figtree", "Hind", "'Noto Sans Devanagari'", "system-ui", "sans-serif"],
       },
       fontSize: {
-        // Parents read on small phones, often outdoors: the floor is 14px, body is 17px.
-        xs: ["0.875rem", { lineHeight: "1.25rem" }],
-        sm: ["0.9375rem", { lineHeight: "1.375rem" }],
-        base: ["1.0625rem", { lineHeight: "1.625rem" }],
+        // Parents read on small phones, often outdoors: the floor is 13px, body is 16px.
+        xs: ["0.8125rem", { lineHeight: "1.2rem" }],
+        sm: ["0.875rem", { lineHeight: "1.3rem" }],
+        base: ["1rem", { lineHeight: "1.5rem" }],
       },
-      // Soft but not bubbly: buttons and fields 10px, white groups 14px, the hero block 18px.
-      borderRadius: { xl: "0.625rem", "2xl": "0.875rem", "3xl": "1.125rem" },
+      // Kit corners: fields and buttons 12px, row cards 14px, banners 16px.
+      borderRadius: { xl: "0.75rem", "2xl": "0.875rem", "3xl": "1rem" },
       boxShadow: {
-        card: "0 1px 2px rgb(21 24 58 / 0.05), 0 10px 26px -16px rgb(21 24 58 / 0.18)",
-        bar: "0 -1px 0 rgb(21 24 58 / 0.06), 0 -8px 24px -12px rgb(21 24 58 / 0.12)",
+        card: "0 1px 2px rgb(31 27 46 / 0.05), 0 10px 26px -16px rgb(31 27 46 / 0.18)",
+        bar: "0 -1px 0 rgb(31 27 46 / 0.06)",
       },
       keyframes: {
         fadeIn: { from: { opacity: "0" }, to: { opacity: "1" } },

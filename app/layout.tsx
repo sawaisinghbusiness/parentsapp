@@ -22,12 +22,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#F2F6FA",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="hi">
+    <html lang="en">
       <body>
         <LangProvider>{children}</LangProvider>
       </body>

@@ -31,7 +31,7 @@ export function ChildSheet({ onClose }: { onClose: () => void }) {
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-ink-200" aria-hidden />
         <p className="px-1 pb-2 text-lg font-bold text-ink-900">{L({ hi: "किस बच्चे की जानकारी देखनी है?", en: "Whose details do you want to see?" })}</p>
         <ul className="divide-y divide-ink-100">
-          {me.children.map((c) => {
+          {me.children.map((c, i) => {
             const on = c.id === child?.id;
             return (
               <li key={c.id}>
@@ -42,7 +42,7 @@ export function ChildSheet({ onClose }: { onClose: () => void }) {
                   }}
                   className="flex min-h-[72px] w-full items-center gap-3 px-1 py-2 text-left"
                 >
-                  <Avatar name={c.name} url={c.photoUrl} size={48} />
+                  <Avatar name={c.name} url={c.photoUrl} size={48} tint={i} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[17px] font-semibold text-ink-900">{c.name}</span>
                     <span className="block text-sm text-ink-500">

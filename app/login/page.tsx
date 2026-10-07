@@ -14,6 +14,7 @@ interface PublicSchool {
   shortName: string;
   logoUrl: string | null;
   officePhone: string;
+  address?: string;
 }
 
 const RESEND_SECONDS = 30;
@@ -32,6 +33,15 @@ export default function LoginPage() {
   const codeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // First time on this phone: the welcome slides come before sign-in.
+    try {
+      if (!localStorage.getItem("pa:onboarded")) {
+        window.location.replace("/onboarding/");
+        return;
+      }
+    } catch {
+      /* storage blocked: skip the slides */
+    }
     api<PublicSchool>("/school").then(setSchool).catch(() => null);
   }, []);
 
@@ -96,25 +106,28 @@ export default function LoginPage() {
   return (
     <main className="pt-safe mx-auto flex min-h-[100dvh] max-w-[440px] flex-col bg-white px-5 pb-6">
       <div className="flex justify-end pt-3">
-        <button onClick={() => setLang(lang === "hi" ? "en" : "hi")} className="min-h-[44px] rounded-lg px-3 text-sm font-semibold text-brand-700">
+        <button onClick={() => setLang(lang === "hi" ? "en" : "hi")} className="min-h-[44px] rounded-lg px-3 text-[14px] font-semibold text-brand-600">
           {lang === "hi" ? "English" : "हिंदी"}
         </button>
       </div>
 
-      <div className="flex flex-col items-center pb-6 pt-6 text-center">
-        {school ? <SchoolMark name={school.name} url={school.logoUrl} size={72} /> : <div className="h-[72px] w-[72px] rounded-[21px] bg-ink-100" aria-hidden />}
-        <p className="mt-4 text-[20px] font-semibold text-ink-900">{school?.name || " "}</p>
-        <p className="mt-0.5 text-ink-500">{L({ hi: "अभिभावक ऐप", en: "Parent app" })}</p>
+      <div className="flex flex-col items-center pt-4 text-center">
+        {school ? <SchoolMark name={school.name} url={school.logoUrl} size={66} /> : <div className="h-[66px] w-[66px] rounded-[18px] bg-ink-100" aria-hidden />}
+        <p className="mt-3 text-[16px] font-bold">{school?.name || " "}</p>
+        <p className="text-[13px] text-ink-500">{school?.address || L({ hi: "अभिभावक ऐप", en: "Parent app" })}</p>
+      </div>
+
+      <div className="pb-4 pt-8">
+        <h1 className="text-[24px] font-extrabold">{L({ hi: "लॉगिन करें", en: "Sign in" })}</h1>
+        <p className="mt-1 text-[14px] text-ink-500">{L({ hi: "वही मोबाइल नंबर डालें जो एडमिशन के समय स्कूल को दिया था।", en: "Use the mobile number you gave the school at admission." })}</p>
       </div>
 
       <div key={shake} className={clsx("pt-2", shake > 0 && "animate-shake")}>
         {step === "mobile" ? (
           <form onSubmit={sendCode} noValidate>
-            <label htmlFor="mobile" className="mb-2 block font-semibold text-ink-800">
-              {t("login.mobile")}
-            </label>
-            <div className="flex items-stretch overflow-hidden rounded-xl border border-ink-300 bg-white focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
-              <span className="flex items-center pl-4 pr-1 font-medium text-ink-500">+91</span>
+            <label className="field-box">
+              <small>{t("login.mobile")}</small>
+              <span className="pt-4 font-medium text-ink-500">+91</span>
               <input
                 id="mobile"
                 type="tel"
@@ -123,16 +136,17 @@ export default function LoginPage() {
                 maxLength={14}
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value.replace(/[^\d ]/g, ""))}
-                className="tnum min-h-[54px] w-full px-2 text-lg font-semibold tracking-wide text-ink-900 outline-none placeholder:font-normal placeholder:text-ink-400"
+                className="tnum pt-4 text-[17px] font-semibold tracking-wide placeholder:font-normal"
                 placeholder="98765 43210"
                 autoFocus
               />
-            </div>
-            <p className="mt-2 text-sm text-ink-500">{DEMO ? L({ hi: "डेमो: कोई भी 10 अंकों का मोबाइल नंबर डालें।", en: "Demo: enter any 10-digit mobile number." }) : t("login.mobileHelp")}</p>
+            </label>
+            {DEMO && <p className="mt-2 text-[13px] text-ink-500">{L({ hi: "डेमो: कोई भी 10 अंकों का मोबाइल नंबर डालें।", en: "Demo: enter any 10-digit mobile number." })}</p>}
             {error && <p className="mt-3 font-medium text-rose-700" role="alert">{error}</p>}
             <button type="submit" disabled={busy} className="btn-primary mt-5 w-full">
               {busy ? "…" : t("login.send")}
             </button>
+            <p className="mt-3 text-center text-[13px] text-ink-500">{L({ hi: "6 अंकों का कोड कुछ ही सेकंड में आएगा।", en: "The 6-digit code arrives in a few seconds." })}</p>
           </form>
         ) : (
           <form
@@ -142,7 +156,7 @@ export default function LoginPage() {
             }}
             noValidate
           >
-            <button type="button" onClick={() => { setStep("mobile"); setError(""); }} className="-ml-1 mb-2 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-brand-700">
+            <button type="button" onClick={() => { setStep("mobile"); setError(""); }} className="-ml-1 mb-2 flex min-h-[44px] items-center gap-1 text-[14px] font-semibold text-brand-600">
               <ArrowLeft className="h-4 w-4" aria-hidden /> {t("login.change")}
             </button>
             {DEMO ? (

@@ -59,4 +59,5 @@ export const HEAD: Record<string, { hi: string; en: string }> = {
   transport_fee: { hi: "बस शुल्क", en: "Bus" },
   admission_fee: { hi: "प्रवेश शुल्क", en: "Admission" },
   late_fine: { hi: "लेट फ़ाइन", en: "Late fine" },
+  concession: { hi: "छूट", en: "Concession" },
 };
