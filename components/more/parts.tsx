@@ -1,23 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import clsx from "clsx";
-import { ChevronLeft } from "lucide-react";
 import { useL } from "@/lib/i18n";
 import { M } from "@/lib/text/more";
 
-/** Small "‹ और" link back to the More list, then the screen's title. */
-export function SubHeader({ title }: { title: string }) {
-  const L = useL();
-  return (
-    <div className="px-1">
-      <Link href="/more/" className="-ml-2 inline-flex min-h-[44px] items-center gap-0.5 pr-3 text-sm font-semibold text-brand-700">
-        <ChevronLeft className="h-5 w-5" aria-hidden />
-        {L(M.back)}
-      </Link>
-      <h1 className="text-[22px] font-bold leading-tight text-ink-900">{title}</h1>
-    </div>
-  );
+/** The top bar now shows Back and the screen's name, so inner screens draw no heading of their own. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function SubHeader(_props: { title: string }) {
+  return null;
 }
 
 export type LeaveStatus = "pending" | "approved" | "rejected";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParent } from "@/lib/parent";
 import { useL } from "@/lib/i18n";
 import { S } from "@/lib/text/study";
@@ -16,6 +16,10 @@ export default function StudyPage() {
   const { child } = useParent();
   const L = useL();
   const [tab, setTab] = useState<Tab>("homework");
+  // Home's "Timetable" shortcut opens this page on the timetable.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("tab") === "timetable") setTab("timetable");
+  }, []);
 
   return (
     <div className="animate-rise space-y-4">
