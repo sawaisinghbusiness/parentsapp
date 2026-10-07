@@ -87,7 +87,7 @@ export default function FeesPage() {
   }
 
   return (
-    <div className="animate-rise space-y-6 pb-2">
+    <div className="animate-rise space-y-4 pb-2">
       {/* 1. What to pay now, and the one action on this screen */}
       <section className="px-1 pt-1">
         {!data.available ? (
@@ -116,7 +116,7 @@ export default function FeesPage() {
 
             {data.session.balance > 0 &&
               (data.pay.upiId ? (
-                <button onClick={() => setPaying(true)} className="btn-primary mt-5 w-full rounded-full">
+                <button onClick={() => setPaying(true)} className="btn-primary mt-4 w-full">
                   {L(F.payUpi)}
                 </button>
               ) : (
@@ -132,7 +132,7 @@ export default function FeesPage() {
       {/* The year in three plain lines, not three tiles */}
       {data.available && (
         <section>
-          <h2 className="px-1 pb-2 text-[15px] font-medium text-ink-500">{L({ hi: "इस साल का हिसाब", en: "This year" })}</h2>
+          <h2 className="px-1 pb-1.5 text-[15px] font-semibold text-ink-700">{L({ hi: "इस साल का हिसाब", en: "This year" })}</h2>
           <dl className="card tnum divide-y divide-ink-100 px-4">
             {[
               [L(F.yearFee), data.session.total, ""],
@@ -151,7 +151,7 @@ export default function FeesPage() {
       {/* 2. Online payments the school is checking (and recent outcomes) */}
       {claimsOpen.length > 0 && (
         <section>
-          <h2 className="px-1 pb-2 text-[15px] font-medium text-ink-500">{L(F.claims)}</h2>
+          <h2 className="px-1 pb-1.5 text-[15px] font-semibold text-ink-700">{L(F.claims)}</h2>
           <div className="card px-4 py-1">
           <ul className="divide-y divide-ink-100">
             {claimsOpen.map((c) => (
@@ -177,7 +177,7 @@ export default function FeesPage() {
       {/* 3. Instalments */}
       {data.available && data.instalments.length > 0 && (
         <section>
-          <h2 className="px-1 pb-2 text-[15px] font-medium text-ink-500">{L(F.instalments)}</h2>
+          <h2 className="px-1 pb-1.5 text-[15px] font-semibold text-ink-700">{L(F.instalments)}</h2>
           <div className="card px-4 py-1">
           <ul className="divide-y divide-ink-100">
             {data.instalments.map((i) => {
@@ -212,7 +212,7 @@ export default function FeesPage() {
 
       {/* 4. Receipts */}
       <section>
-        <h2 className="px-1 pb-2 text-[15px] font-medium text-ink-500">{L(F.receipts)}</h2>
+        <h2 className="px-1 pb-1.5 text-[15px] font-semibold text-ink-700">{L(F.receipts)}</h2>
         <div className="card px-4 py-1">
         {data.receipts.length === 0 ? (
           <p className="py-3 text-ink-600">{L(F.noReceipts)}</p>

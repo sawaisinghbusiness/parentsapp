@@ -35,7 +35,7 @@ function Row({ href, icon: Icon, text, value, tone }: { href: string; icon: Luci
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="px-4 pb-1.5 text-[15px] font-semibold text-ink-500">{title}</h2>
+      <h2 className="px-1 pb-1.5 text-[15px] font-semibold text-ink-700">{title}</h2>
       <div className="card divide-y divide-ink-100 overflow-hidden">{children}</div>
     </section>
   );
@@ -76,7 +76,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="animate-rise space-y-5 pb-4">
+    <div className="animate-rise space-y-4 pb-4">
       {/* The parent */}
       <section className="flex items-center gap-4 px-1 pt-1">
         <Avatar name={parent} size={56} />

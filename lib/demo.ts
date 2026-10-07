@@ -375,12 +375,16 @@ export async function demoApi(path: string, method: string, body: any): Promise<
 
     switch (p) {
       case "/home": {
-        const att = attendanceMonth(kid, t.slice(0, 7)).days.find((d) => d.date === t);
+        const month = attendanceMonth(kid, t.slice(0, 7));
+        const att = month.days.find((d) => d.date === t);
         const f = feesFor(kid, s);
         const hw = homework(kid).items.filter((h) => h.assignedOn === schoolDay(t) || (h.dueDate && h.dueDate >= t));
+        const rc = reportCard(kid).card;
         return {
           date: t,
           child: childPublic(kid),
+          month: { percent: month.totals.percent, present: month.totals.present, workingDays: month.totals.workingDays },
+          result: rc ? { exam: rc.exam.title, percent: rc.percent, grade: rc.grade } : null,
           attendance: { status: att?.mark ? ({ P: "Present", A: "Absent", L: "Leave", H: "HalfDay" } as const)[att.mark] : null, holiday: att?.holiday || (weekday(t) === 0 ? "Sunday" : null) },
           fees: { dueNow: f.dueNow, fine: f.fine, balance: f.session.balance, next: f.instalments.filter((i) => i.due > t && i.outstanding > 0).map((i) => ({ name: i.name, due: i.due, amount: i.outstanding }))[0] || null },
           homework: hw,
