@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useApi, type ApiError } from "./api";
+import { DEMO, demoSignedIn } from "./demo";
 
 export interface Child {
   id: string;
@@ -56,6 +57,11 @@ export function ParentProvider({ children }: { children: React.ReactNode }) {
   const [picked, setPicked] = useState<string | null>(null);
 
   useEffect(() => {
+    // Not signed in: straight to the sign-in page, without first drawing the home screen.
+    if (DEMO && !demoSignedIn()) {
+      window.location.replace("/login/");
+      return;
+    }
     try {
       setPicked(localStorage.getItem(PICK));
     } catch {

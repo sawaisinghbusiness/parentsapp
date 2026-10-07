@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { ArrowLeft, Phone } from "lucide-react";
 import { api, ApiError, clearCache } from "@/lib/api";
-import { useT } from "@/lib/i18n";
+import { useL, useT } from "@/lib/i18n";
 import { phoneText } from "@/lib/format";
+import { DEMO, DEMO_CODE } from "@/lib/demo";
 
 interface PublicSchool {
   name: string;
@@ -18,6 +19,7 @@ const RESEND_SECONDS = 30;
 
 export default function LoginPage() {
   const { t, lang, setLang } = useT();
+  const L = useL();
   const [school, setSchool] = useState<PublicSchool | null>(null);
   const [step, setStep] = useState<"mobile" | "code">("mobile");
   const [mobile, setMobile] = useState("");
@@ -130,7 +132,7 @@ export default function LoginPage() {
                 autoFocus
               />
             </div>
-            <p className="mt-2 text-sm text-ink-500">{t("login.mobileHelp")}</p>
+            <p className="mt-2 text-sm text-ink-500">{DEMO ? L({ hi: "डेमो: कोई भी 10 अंकों का मोबाइल नंबर डालें।", en: "Demo: enter any 10-digit mobile number." }) : t("login.mobileHelp")}</p>
             {error && <p className="mt-3 font-medium text-rose-700" role="alert">{error}</p>}
             <button type="submit" disabled={busy} className="btn-primary mt-5 w-full">
               {busy ? "…" : t("login.send")}
@@ -147,9 +149,16 @@ export default function LoginPage() {
             <button type="button" onClick={() => { setStep("mobile"); setError(""); }} className="-ml-1 mb-2 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-brand-700">
               <ArrowLeft className="h-4 w-4" aria-hidden /> {t("login.change")}
             </button>
-            <p className="text-ink-600">
-              {t("login.sentTo")} <span className="tnum font-semibold text-ink-900">+91 {phoneText(mobile)}</span>
-            </p>
+            {DEMO ? (
+              <p className="flex items-center gap-2 rounded-xl border border-marigold-300/70 bg-marigold-50 px-3 py-2.5 text-ink-800">
+                <span className="dot bg-marigold-500" aria-hidden />
+                {L({ hi: "डेमो कोड:", en: "Demo code:" })} <span className="tnum text-lg font-bold tracking-widest text-ink-900">{DEMO_CODE}</span>
+              </p>
+            ) : (
+              <p className="text-ink-600">
+                {t("login.sentTo")} <span className="tnum font-semibold text-ink-900">+91 {phoneText(mobile)}</span>
+              </p>
+            )}
             <label htmlFor="code" className="mb-2 mt-4 block font-semibold text-ink-800">
               {t("login.code")}
             </label>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { DEMO, demoApi } from "./demo";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -8,19 +9,36 @@ export class ApiError extends Error {
   }
 }
 
+/** A server that does not answer in this time counts as unreachable, so no screen waits forever. */
+const TIMEOUT_MS = 15_000;
+
 /** Calls the backend through this site's own /api (same domain, so the sign-in cookie just works). */
 export async function api<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
+  const method = init?.method || (init?.body ? "POST" : "GET");
+  if (DEMO) {
+    try {
+      return (await demoApi(path, method, init?.body)) as T;
+    } catch (e: any) {
+      throw new ApiError(e?.status ?? 500, e?.message || "");
+    }
+  }
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   let res: Response;
   try {
     res = await fetch(`/api/parent${path}`, {
-      method: init?.method || (init?.body ? "POST" : "GET"),
+      method,
       credentials: "include",
       headers: init?.body ? { "Content-Type": "application/json" } : undefined,
       body: init?.body ? JSON.stringify(init.body) : undefined,
       cache: "no-store",
+      signal: ctrl.signal,
     });
   } catch {
     throw new ApiError(0, "offline");
+  } finally {
+    clearTimeout(timer);
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new ApiError(res.status, (data as any)?.error || "");
