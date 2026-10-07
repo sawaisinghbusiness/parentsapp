@@ -78,10 +78,10 @@ export default function ProfilePage() {
   return (
     <div className="animate-rise space-y-5 pb-4">
       {/* The parent */}
-      <section className="card flex items-center gap-3.5 p-4">
+      <section className="flex items-center gap-4 px-1 pt-1">
         <Avatar name={parent} size={56} />
         <div className="min-w-0">
-          <p className="truncate text-[19px] font-bold text-ink-900">{parent}</p>
+          <p className="truncate text-[22px] font-semibold text-ink-900">{parent}</p>
           <p className="tnum text-[15px] text-ink-500">+91 {phoneText(me.phone)}</p>
         </div>
       </section>

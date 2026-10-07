@@ -87,9 +87,9 @@ export default function FeesPage() {
   }
 
   return (
-    <div className="animate-rise space-y-3">
-      {/* 1. Where the child stands */}
-      <section className="card p-4">
+    <div className="animate-rise space-y-6 pb-2">
+      {/* 1. What to pay now, and the one action on this screen */}
+      <section className="px-1 pt-1">
         {!data.available ? (
           <>
             <p className="text-ink-700">{L(F.notAvailable)}</p>
@@ -99,40 +99,24 @@ export default function FeesPage() {
           <>
             {data.dueNow > 0 ? (
               <>
-                <p className="flex items-center gap-2 text-sm font-medium text-ink-600">
-                  <span className="dot bg-rose-500" aria-hidden />
-                  {L(F.dueNow)}
-                </p>
-                <p className="tnum mt-0.5 text-[32px] font-extrabold leading-tight tracking-tight text-ink-900">{rupees(data.dueNow + data.fine)}</p>
+                <p className="text-[15px] font-medium text-ink-500">{L(F.dueNow)}</p>
+                <p className="tnum mt-1 text-[34px] font-semibold leading-none text-ink-900">{rupees(data.dueNow + data.fine)}</p>
                 {data.fine > 0 && (
-                  <p className="tnum text-sm text-ink-600">
-                    {rupees(data.dueNow)} + {L(F.fine)} {rupees(data.fine)}
+                  <p className="tnum mt-2 text-[15px] text-ink-600">
+                    {rupees(data.dueNow)} {L({ hi: "फ़ीस", en: "fee" })} + {rupees(data.fine)} {L(F.fine)}
                   </p>
                 )}
               </>
             ) : (
-              <p className="flex items-center gap-2 text-xl font-bold text-ink-900">
-                <span className="dot bg-jade-600" aria-hidden />
+              <p className="flex items-center gap-2.5 text-[22px] font-semibold text-ink-900">
+                <span className="dot h-3 w-3 bg-jade-600" aria-hidden />
                 {L(F.allPaid)}
               </p>
             )}
 
-            <dl className="tnum mt-4 grid grid-cols-3 divide-x divide-ink-100 rounded-xl bg-ink-50 py-2.5 text-center">
-              {[
-                [L(F.yearFee), data.session.total],
-                [L(F.paid), data.session.paid],
-                [L(F.left), data.session.balance],
-              ].map(([k, v]) => (
-                <div key={k as string} className="px-1">
-                  <dt className="text-xs text-ink-500">{k}</dt>
-                  <dd className="font-bold text-ink-900">{rupees(v as number)}</dd>
-                </div>
-              ))}
-            </dl>
-
             {data.session.balance > 0 &&
               (data.pay.upiId ? (
-                <button onClick={() => setPaying(true)} className="btn-primary mt-4 w-full">
+                <button onClick={() => setPaying(true)} className="btn-primary mt-5 w-full rounded-full">
                   {L(F.payUpi)}
                 </button>
               ) : (
@@ -145,11 +129,31 @@ export default function FeesPage() {
         )}
       </section>
 
+      {/* The year in three plain lines, not three tiles */}
+      {data.available && (
+        <section>
+          <h2 className="px-1 pb-2 text-[15px] font-medium text-ink-500">{L({ hi: "इस साल का हिसाब", en: "This year" })}</h2>
+          <dl className="card tnum divide-y divide-ink-100 px-4">
+            {[
+              [L(F.yearFee), data.session.total, ""],
+              [L(F.paid), data.session.paid, ""],
+              [L(F.left), data.session.balance, "font-semibold"],
+            ].map(([k, v, w]) => (
+              <div key={k as string} className="flex min-h-[52px] items-center justify-between">
+                <dt className="text-[16px] text-ink-600">{k as string}</dt>
+                <dd className={clsx("text-[17px] text-ink-900", w as string)}>{rupees(v as number)}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
       {/* 2. Online payments the school is checking (and recent outcomes) */}
       {claimsOpen.length > 0 && (
-        <section className="card p-4">
-          <p className="card-title">{L(F.claims)}</p>
-          <ul className="mt-1 divide-y divide-ink-100">
+        <section>
+          <h2 className="px-1 pb-2 text-[15px] font-medium text-ink-500">{L(F.claims)}</h2>
+          <div className="card px-4 py-1">
+          <ul className="divide-y divide-ink-100">
             {claimsOpen.map((c) => (
               <li key={c.id} className="py-3 first:pt-2 last:pb-0">
                 <div className="flex items-baseline justify-between gap-3">
@@ -166,14 +170,16 @@ export default function FeesPage() {
               </li>
             ))}
           </ul>
+          </div>
         </section>
       )}
 
       {/* 3. Instalments */}
       {data.available && data.instalments.length > 0 && (
-        <section className="card p-4">
-          <p className="card-title">{L(F.instalments)}</p>
-          <ul className="mt-1 divide-y divide-ink-100">
+        <section>
+          <h2 className="px-1 pb-2 text-[15px] font-medium text-ink-500">{L(F.instalments)}</h2>
+          <div className="card px-4 py-1">
+          <ul className="divide-y divide-ink-100">
             {data.instalments.map((i) => {
               const state = i.outstanding <= 0 ? "paid" : i.overdue ? "overdue" : i.paid > 0 ? "part" : "upcoming";
               return (
@@ -200,16 +206,18 @@ export default function FeesPage() {
               );
             })}
           </ul>
+          </div>
         </section>
       )}
 
       {/* 4. Receipts */}
-      <section className="card p-4">
-        <p className="card-title">{L(F.receipts)}</p>
+      <section>
+        <h2 className="px-1 pb-2 text-[15px] font-medium text-ink-500">{L(F.receipts)}</h2>
+        <div className="card px-4 py-1">
         {data.receipts.length === 0 ? (
-          <p className="mt-1 text-ink-600">{L(F.noReceipts)}</p>
+          <p className="py-3 text-ink-600">{L(F.noReceipts)}</p>
         ) : (
-          <ul className="mt-1 divide-y divide-ink-100">
+          <ul className="divide-y divide-ink-100">
             {data.receipts.map((r) => {
               const isOpen = open === r.id;
               return (
@@ -250,6 +258,7 @@ export default function FeesPage() {
             })}
           </ul>
         )}
+        </div>
       </section>
 
       {paying && data.available && data.pay.upiId && child && (

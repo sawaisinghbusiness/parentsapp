@@ -72,9 +72,10 @@ const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
     extend: {
-      colors: { slate: ink, ink, jade, emerald: jade, marigold, brand: indigo, night, rose, red: rose, canvas: "#ECEEF3" },
+      colors: { slate: ink, ink, jade, emerald: jade, marigold, brand: indigo, night, rose, red: rose, canvas: "#EFF0F4" },
       fontFamily: {
-        sans: ["'Plus Jakarta Sans Variable'", "'Noto Sans Devanagari Variable'", "system-ui", "Roboto", "sans-serif"],
+        // Hind: one family drawn for Hindi and English together (Indian Type Foundry, made for UI).
+        sans: ["Hind", "'Noto Sans Devanagari'", "system-ui", "sans-serif"],
       },
       fontSize: {
         // Parents read on small phones, often outdoors: the floor is 14px, body is 17px.

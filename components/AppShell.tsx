@@ -50,21 +50,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto flex min-h-[100dvh] max-w-[560px] flex-col">
       {!isHome && (
-        <header className="pt-safe sticky top-0 z-20 bg-night-900 text-white">
-          <div className="flex h-14 items-center gap-1 px-2">
+        <header className="pt-safe sticky top-0 z-20 bg-canvas text-ink-900">
+          <div className="flex h-16 items-center gap-1 px-2">
             {page?.back ? (
-              <Link href={page.back} className="grid h-11 w-11 place-items-center rounded-xl text-white/85" aria-label={L({ hi: "वापस", en: "Back" })}>
+              <Link href={page.back} className="grid h-11 w-11 place-items-center rounded-full text-ink-800 active:bg-ink-200/60" aria-label={L({ hi: "वापस", en: "Back" })}>
                 <ChevronLeft className="h-6 w-6" aria-hidden />
               </Link>
             ) : (
-              <span className="w-2" />
+              <span className="w-3" />
             )}
-            <h1 className="min-w-0 flex-1 truncate text-[19px] font-bold text-white">{page ? L(page.title) : ""}</h1>
+            <h1 className="min-w-0 flex-1 truncate pt-1 text-[22px] font-semibold text-ink-900">{page ? L(page.title) : ""}</h1>
             {canSwitch && (
-              <button onClick={() => setSwitching(true)} className="flex min-h-[40px] items-center gap-1.5 rounded-full bg-white/10 py-1 pl-1 pr-2.5 text-sm font-semibold text-white" aria-label={L({ hi: "बच्चा बदलें", en: "Switch child" })}>
+              <button onClick={() => setSwitching(true)} className="flex min-h-[44px] items-center gap-1.5 rounded-full bg-white py-1 pl-1 pr-3 text-[15px] font-semibold text-ink-800 ring-1 ring-ink-200" aria-label={L({ hi: "बच्चा बदलें", en: "Switch child" })}>
                 <Avatar name={child!.name} url={child!.photoUrl} size={30} />
                 {child!.name.split(" ")[0]}
-                <ChevronDown className="h-4 w-4 text-white/70" aria-hidden />
+                <ChevronDown className="h-4 w-4 text-ink-500" aria-hidden />
               </button>
             )}
           </div>
@@ -82,14 +82,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </main>
 
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-200 bg-white" aria-label="Main">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-200/70 bg-[#F8F8FB]" aria-label="Main">
         <ul className="grid grid-cols-5">
           {TABS.map(({ href, text, icon: Icon }) => {
             const on = href === "/" ? path === "/" : path.startsWith(href) && !(href === "/more/" && PAGES[path]?.back);
             return (
               <li key={href}>
-                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-16 flex-col items-center justify-center gap-1 text-[12px] font-semibold", on ? "text-brand-700" : "text-ink-500")}>
-                  <span className={clsx("grid h-8 w-14 place-items-center rounded-full transition", on && "bg-brand-50")}>
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[68px] flex-col items-center justify-center gap-1 text-[13px]", on ? "font-semibold text-ink-900" : "font-medium text-ink-600")}>
+                  <span className={clsx("grid h-8 w-16 place-items-center rounded-full transition", on && "bg-brand-100 text-brand-800")}>
                     <Icon className="h-[22px] w-[22px]" strokeWidth={on ? 2.3 : 1.9} aria-hidden />
                   </span>
                   {L(text)}
