@@ -22,7 +22,7 @@ export default function StudyPage() {
   }, []);
 
   return (
-    <div className="animate-rise space-y-4">
+    <div className="animate-rise space-y-3">
       <Segments
         label={L({ hi: "पढ़ाई", en: "Study" })}
         value={tab}

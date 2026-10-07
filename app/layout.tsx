@@ -1,4 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource/figtree/400.css";
+import "@fontsource/figtree/500.css";
+import "@fontsource/figtree/600.css";
+import "@fontsource/figtree/700.css";
 import "@fontsource/hind/400.css";
 import "@fontsource/hind/500.css";
 import "@fontsource/hind/600.css";
@@ -18,7 +22,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#F3F4F6",
+  themeColor: "#F2F6FA",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

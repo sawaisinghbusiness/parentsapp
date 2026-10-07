@@ -5,13 +5,26 @@ import { Phone, RotateCw, WifiOff } from "lucide-react";
 import { initials } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 
-export function Avatar({ name, url, size = 48 }: { name: string; url?: string | null; size?: number }) {
+export function Avatar({ name, url, size = 48, muted }: { name: string; url?: string | null; size?: number; muted?: boolean }) {
   return url ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt="" width={size} height={size} className="shrink-0 rounded-full object-cover ring-2 ring-white/90" style={{ width: size, height: size }} />
+    <img src={url} alt="" width={size} height={size} className="shrink-0 rounded-full object-cover" style={{ width: size, height: size }} />
   ) : (
-    <span className="grid shrink-0 place-items-center rounded-full bg-brand-100 font-bold text-brand-800 ring-2 ring-white/90" style={{ width: size, height: size, fontSize: size * 0.36 }}>
+    <span className={clsx("grid shrink-0 place-items-center rounded-full font-bold", muted ? "bg-ink-200 text-ink-800" : "bg-brand-600 text-white")} style={{ width: size, height: size, fontSize: size * 0.34 }}>
       {initials(name)}
+    </span>
+  );
+}
+
+/** The school's logo, or its initials on a deep sky tile when no logo is set in the ERP. */
+export function SchoolMark({ name, url, size = 34 }: { name: string; url?: string | null; size?: number }) {
+  const r = Math.round(size * 0.29);
+  return url ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={url} alt="" className="shrink-0 bg-white object-contain" style={{ width: size, height: size, borderRadius: r }} />
+  ) : (
+    <span className="grid shrink-0 place-items-center bg-brand-700 font-bold tracking-wide text-white" style={{ width: size, height: size, borderRadius: r, fontSize: size * 0.36, fontFamily: "Georgia, 'Noto Serif', serif" }}>
+      {name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase()}
     </span>
   );
 }
@@ -49,7 +62,7 @@ export function CallOffice({ phone, className }: { phone?: string; className?: s
   if (!phone) return null;
   return (
     <a href={`tel:${phone.replace(/\s/g, "")}`} className={clsx("btn-quiet", className)}>
-      <Phone className="h-4 w-4 text-jade-600" aria-hidden /> {t("common.call")}
+      <Phone className="h-4 w-4" aria-hidden /> {t("common.call")}
     </a>
   );
 }

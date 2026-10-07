@@ -11,17 +11,12 @@ export function SubHeader(_props: { title: string }) {
 }
 
 export type LeaveStatus = "pending" | "approved" | "rejected";
-const DOT: Record<LeaveStatus, string> = { pending: "bg-marigold-500", approved: "bg-jade-600", rejected: "bg-rose-500" };
+const TONE: Record<LeaveStatus, string> = { pending: "text-marigold-500", approved: "text-jade-600", rejected: "text-rose-600" };
 
-/** Neutral chip with a coloured dot: meaning by the dot, never same-hue background and text. */
+/** Status as a coloured word, no pill. */
 export function StatusChip({ status }: { status: LeaveStatus }) {
   const L = useL();
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ink-200 bg-white px-2.5 py-0.5 text-sm font-semibold text-ink-700">
-      <span className={clsx("dot h-2 w-2", DOT[status])} aria-hidden />
-      {L(M[status])}
-    </span>
-  );
+  return <span className={clsx("shrink-0 text-[15px] font-semibold", TONE[status])}>{L(M[status])}</span>;
 }
 
 /** Label on the left, value on the right; one line of a details list. */

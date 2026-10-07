@@ -6,10 +6,11 @@ import { M } from "@/lib/text/more";
 
 /**
  * The child's ID card on the phone. Same look as the printed card in the ERP
- * (components/students/IdCardPrint.tsx): deep jade school band, marigold line, photo over the band.
+ * (components/students/IdCardPrint.tsx) in layout: school band, photo over the band, details below.
+ * The band takes the app's deep sky so the card matches the rest of the app.
  */
 
-const BAND = "#0A5C4C";
+const BAND = "#0369A1";
 
 export interface IdCardData {
   child: {
@@ -49,7 +50,7 @@ export function IdCard({ data }: { data: IdCardData }) {
   ].filter(([, v]) => v) as [string, string][];
 
   return (
-    <article className="mx-auto w-full max-w-[360px] overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card" aria-label={L(M.studentId)}>
+    <article className="mx-auto w-full max-w-[360px] overflow-hidden rounded-3xl bg-white" aria-label={L(M.studentId)}>
       {/* School band */}
       <div className="px-4 pb-12 pt-4 text-white" style={{ background: BAND }}>
         <div className="flex items-center gap-3">
@@ -57,17 +58,16 @@ export function IdCard({ data }: { data: IdCardData }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={s.logoUrl} alt="" className="h-11 w-11 shrink-0 rounded-full bg-white object-contain p-0.5" />
           ) : (
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold" style={{ color: BAND }}>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-sm font-bold" style={{ color: BAND, fontFamily: "Georgia, serif" }}>
               {s.shortName || initials(s.name)}
             </span>
           )}
           <div className="min-w-0 leading-tight">
-            <p className="text-[17px] font-bold">{s.name}</p>
+            <p className="text-[17px] font-semibold">{s.name}</p>
             {s.address && <p className="mt-0.5 truncate text-sm text-white/80">{s.address}</p>}
           </div>
         </div>
       </div>
-      <div className="h-1 bg-marigold-400" aria-hidden />
 
       {/* Photo over the band */}
       <div className="-mt-11 flex justify-center">
@@ -80,7 +80,7 @@ export function IdCard({ data }: { data: IdCardData }) {
       </div>
 
       <div className="px-4 pt-3 text-center">
-        <p className="text-[22px] font-bold leading-tight text-ink-900">{c.name}</p>
+        <p className="text-[22px] font-semibold leading-tight text-ink-900">{c.name}</p>
         <p className="mt-1 font-semibold text-ink-600">
           {L(M.class)} {c.classSec}
         </p>
@@ -90,7 +90,7 @@ export function IdCard({ data }: { data: IdCardData }) {
         {rows.map(([k, v]) => (
           <div key={k} className="flex items-baseline gap-3 py-2">
             <dt className="w-[42%] shrink-0 text-sm text-ink-500">{k}</dt>
-            <dd className="tnum min-w-0 break-words font-semibold text-ink-900">{v}</dd>
+            <dd className="tnum min-w-0 break-words font-medium text-ink-900">{v}</dd>
           </div>
         ))}
       </dl>

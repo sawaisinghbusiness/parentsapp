@@ -59,12 +59,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ) : (
               <span className="w-3" />
             )}
-            <h1 className="min-w-0 flex-1 truncate pt-1 text-[22px] font-semibold text-ink-900">{page ? L(page.title) : ""}</h1>
+            <h1 className="min-w-0 flex-1 truncate pt-0.5 text-[24px] font-semibold tracking-tight text-ink-900">{page ? L(page.title) : ""}</h1>
             {canSwitch && (
-              <button onClick={() => setSwitching(true)} className="flex min-h-[44px] items-center gap-1.5 rounded-full bg-white py-1 pl-1 pr-3 text-[15px] font-semibold text-ink-800 ring-1 ring-ink-200" aria-label={L({ hi: "बच्चा बदलें", en: "Switch child" })}>
-                <Avatar name={child!.name} url={child!.photoUrl} size={30} />
+              <button onClick={() => setSwitching(true)} className="flex min-h-[44px] items-center gap-2 pr-2 text-[15px] font-semibold text-ink-800" aria-label={L({ hi: "बच्चा बदलें", en: "Switch child" })}>
+                <Avatar name={child!.name} url={child!.photoUrl} size={28} />
                 {child!.name.split(" ")[0]}
-                <ChevronDown className="h-4 w-4 text-ink-500" aria-hidden />
+                <ChevronDown className="-ml-1 h-4 w-4 text-ink-500" aria-hidden />
               </button>
             )}
           </div>
@@ -82,16 +82,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </main>
 
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-200/70 bg-[#F8F8FB]" aria-label="Main">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-200 bg-white" aria-label="Main">
         <ul className="grid grid-cols-5">
           {TABS.map(({ href, text, icon: Icon }) => {
             const on = href === "/" ? path === "/" : path.startsWith(href) && !(href === "/more/" && PAGES[path]?.back);
             return (
               <li key={href}>
-                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[68px] flex-col items-center justify-center gap-1 text-[13px]", on ? "font-semibold text-ink-900" : "font-medium text-ink-600")}>
-                  <span className={clsx("grid h-8 w-16 place-items-center rounded-full transition", on && "bg-brand-100 text-brand-800")}>
-                    <Icon className="h-[22px] w-[22px]" strokeWidth={on ? 2.3 : 1.9} aria-hidden />
-                  </span>
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[64px] flex-col items-center justify-center gap-1 text-[13px]", on ? "font-semibold text-brand-700" : "font-medium text-ink-500")}>
+                  <Icon className="h-[23px] w-[23px]" strokeWidth={on ? 2.3 : 1.8} aria-hidden />
                   {L(text)}
                 </Link>
               </li>

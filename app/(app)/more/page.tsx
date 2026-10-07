@@ -15,12 +15,12 @@ function Row({ href, icon: Icon, text, value, tone }: { href: string; icon: Luci
   const inner = (
     <>
       <Icon className={clsx("h-[22px] w-[22px] shrink-0", tone ? "text-rose-600" : "text-ink-500")} strokeWidth={1.9} aria-hidden />
-      <span className={clsx("min-w-0 flex-1 text-[17px] font-medium", tone ? "text-rose-700" : "text-ink-900")}>{text}</span>
+      <span className={clsx("min-w-0 flex-1 text-[16px]", tone ? "text-rose-700" : "text-ink-900")}>{text}</span>
       {value && <span className="tnum shrink-0 text-[15px] text-ink-500">{value}</span>}
       {!tone && <ChevronRight className="h-5 w-5 shrink-0 text-ink-300" aria-hidden />}
     </>
   );
-  const cls = "flex min-h-[56px] items-center gap-3.5 px-4 active:bg-ink-50";
+  const cls = "flex min-h-[52px] items-center gap-3.5 px-4 active:bg-ink-50";
   return href.startsWith("tel:") ? (
     <a href={href} className={cls}>
       {inner}
@@ -35,7 +35,7 @@ function Row({ href, icon: Icon, text, value, tone }: { href: string; icon: Luci
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="px-1 pb-1.5 text-[15px] font-semibold text-ink-700">{title}</h2>
+      <h2 className="sec-title">{title}</h2>
       <div className="card divide-y divide-ink-100 overflow-hidden">{children}</div>
     </section>
   );
@@ -76,12 +76,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="animate-rise space-y-4 pb-4">
+    <div className="animate-rise space-y-3 pb-4">
       {/* The parent */}
-      <section className="flex items-center gap-4 px-1 pt-1">
-        <Avatar name={parent} size={56} />
+      <section className="card flex items-center gap-3.5 p-3.5">
+        <Avatar name={parent} size={50} />
         <div className="min-w-0">
-          <p className="truncate text-[22px] font-semibold text-ink-900">{parent}</p>
+          <p className="truncate text-[18px] font-semibold text-ink-900">{parent}</p>
           <p className="tnum text-[15px] text-ink-500">+91 {phoneText(me.phone)}</p>
         </div>
       </section>
@@ -91,16 +91,24 @@ export default function ProfilePage() {
         {me.children.map((c) => {
           const on = c.id === child?.id;
           return (
-            <button key={c.id} onClick={() => pick(c.id)} className="flex min-h-[72px] w-full items-center gap-3 px-4 py-2 text-left active:bg-ink-50">
-              <Avatar name={c.name} url={c.photoUrl} size={44} />
+            <button key={c.id} onClick={() => pick(c.id)} className="flex min-h-[64px] w-full items-center gap-3 px-4 py-2 text-left active:bg-ink-50">
+              <Avatar name={c.name} url={c.photoUrl} size={38} muted={!on} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[17px] font-semibold text-ink-900">{c.name}</span>
+                <span className="block truncate text-[16px] font-medium text-ink-900">{c.name}</span>
                 <span className="block text-sm text-ink-500">
                   {L({ hi: "कक्षा", en: "Class" })} {c.classSec}
                   {c.rollNo ? ` · ${L({ hi: "रोल", en: "Roll" })} ${c.rollNo}` : ""}
                 </span>
               </span>
-              {me.children.length > 1 && on && <Check className="h-6 w-6 shrink-0 text-brand-600" aria-label={L({ hi: "चुना हुआ", en: "Selected" })} />}
+              {me.children.length > 1 &&
+                (on ? (
+                  <span className="flex shrink-0 items-center gap-1 text-[14px] font-semibold text-brand-700">
+                    <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                    {L({ hi: "दिख रहा है", en: "Showing" })}
+                  </span>
+                ) : (
+                  <ChevronRight className="h-5 w-5 shrink-0 text-ink-300" aria-hidden />
+                ))}
             </button>
           );
         })}
@@ -118,20 +126,20 @@ export default function ProfilePage() {
       </Group>
 
       <Group title={L({ hi: "ऐप", en: "App" })}>
-        <div className="flex min-h-[56px] items-center gap-3.5 px-4">
+        <div className="flex min-h-[56px] items-center gap-3.5 py-1.5 pl-4 pr-2">
           <Languages className="h-[22px] w-[22px] shrink-0 text-ink-500" strokeWidth={1.9} aria-hidden />
-          <span className="min-w-0 flex-1 text-[17px] font-medium text-ink-900">{L({ hi: "भाषा", en: "Language" })}</span>
-          <div className="flex rounded-xl bg-ink-100 p-0.5" role="radiogroup" aria-label={L({ hi: "भाषा", en: "Language" })}>
+          <span className="min-w-0 flex-1 text-[16px] text-ink-900">{L({ hi: "भाषा", en: "Language" })}</span>
+          <div className="seg" role="radiogroup" aria-label={L({ hi: "भाषा", en: "Language" })}>
             {(["hi", "en"] as const).map((l) => (
-              <button key={l} role="radio" aria-checked={lang === l} onClick={() => setLang(l)} className={clsx("min-h-[44px] rounded-[10px] px-3 text-[15px] font-semibold", lang === l ? "bg-white text-ink-900 shadow-sm" : "text-ink-500")}>
+              <button key={l} role="radio" aria-checked={lang === l} aria-selected={lang === l} onClick={() => setLang(l)} className="px-3 text-[14px]">
                 {l === "hi" ? "हिंदी" : "English"}
               </button>
             ))}
           </div>
         </div>
-        <button onClick={logout} disabled={leaving} className="flex min-h-[56px] w-full items-center gap-3.5 px-4 text-left active:bg-ink-50">
+        <button onClick={logout} disabled={leaving} className="flex min-h-[52px] w-full items-center gap-3.5 px-4 text-left active:bg-ink-50">
           <LogOut className="h-[22px] w-[22px] shrink-0 text-rose-600" strokeWidth={1.9} aria-hidden />
-          <span className="text-[17px] font-medium text-rose-700">{L({ hi: "लॉग आउट", en: "Sign out" })}</span>
+          <span className="text-[16px] text-rose-700">{L({ hi: "लॉग आउट", en: "Sign out" })}</span>
         </button>
       </Group>
     </div>

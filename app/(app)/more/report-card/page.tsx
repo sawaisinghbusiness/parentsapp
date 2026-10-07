@@ -65,7 +65,7 @@ export default function ReportCardPage() {
     return (
       <>
         {data.exams.length > 1 && (
-          <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none]" role="tablist" aria-label={L(M.exam)}>
+          <div className={clsx(data.exams.length <= 3 ? "seg" : "-mx-3 flex gap-1.5 overflow-x-auto px-3 [scrollbar-width:none]")} role="tablist" aria-label={L(M.exam)}>
             {data.exams
               .slice()
               .reverse()
@@ -78,8 +78,8 @@ export default function ReportCardPage() {
                     aria-selected={on}
                     onClick={() => setExam(e.id)}
                     className={clsx(
-                      "min-h-[44px] shrink-0 rounded-xl border px-4 text-[15px] font-semibold",
-                      on ? "border-brand-600 bg-white text-brand-800 ring-1 ring-brand-600" : "border-ink-200 bg-white text-ink-700"
+                      data.exams.length > 3 && "min-h-[42px] shrink-0 rounded-xl px-4 text-[15px]",
+                      data.exams.length > 3 && (on ? "bg-brand-600 font-semibold text-white" : "bg-white font-medium text-ink-600")
                     )}
                   >
                     {e.title}
@@ -93,70 +93,66 @@ export default function ReportCardPage() {
           <p className="card p-5 text-ink-700">{L(M.resultError)}</p>
         ) : (
           <>
-            <section className="card p-4">
-              <p className="card-title">{c.exam.title}</p>
-              <div className="mt-1 flex items-end justify-between gap-3">
-                <p className="tnum text-[32px] font-extrabold leading-tight tracking-tight text-ink-900">
-                  {num(c.percent)}%
-                </p>
-                {c.grade && (
-                  <p className="pb-1 text-right text-ink-500">
-                    {L(M.grade)} <span className="tnum text-2xl font-extrabold text-ink-900">{c.grade}</span>
-                  </p>
-                )}
-              </div>
-              <p className="mt-2 flex items-start gap-2 text-ink-800">
-                <span className={clsx("dot mt-2", !c.complete ? "bg-ink-400" : failed.length ? "bg-marigold-500" : "bg-jade-600")} aria-hidden />
-                <span>{!c.complete ? L(M.incomplete) : failed.length ? `${L(M.needsWork)}: ${failed.join(", ")}` : L(M.passed)}</span>
+            {/* The overall result on the sky block */}
+            <section className="hero">
+              <p className="hero-label">{c.exam.title}</p>
+              <p className="hero-big">{num(c.percent)}%</p>
+              <p className="hero-sub tnum">
+                {num(c.grand)} / {c.outOf}
+                {c.grade ? ` · ${L(M.grade)} ${c.grade}` : ""}
+                {c.rank !== null ? ` · ${L(M.rank)} ${c.rank}` : ""}
               </p>
-              <dl className="mt-2 divide-y divide-ink-100 border-t border-ink-100">
-                <InfoRow label={L(M.total)} value={<span className="tnum">{num(c.grand)} / {c.outOf}</span>} />
-                {c.rank !== null && <InfoRow label={L(M.rank)} value={<span className="tnum">{c.rank}</span>} />}
-                {c.attendance && c.attendance.days > 0 && (
-                  <InfoRow label={L(M.attendance)} value={<span className="tnum">{num(c.attendance.present)} / {c.attendance.days}</span>} />
-                )}
-              </dl>
+              <p className="mt-3 border-t border-white/20 pt-2.5 text-[15px] font-medium">{!c.complete ? L(M.incomplete) : failed.length ? `${L(M.needsWork)}: ${failed.join(", ")}` : L(M.passed)}</p>
             </section>
 
-            <section className="card p-4">
-              <div className="flex items-baseline justify-between text-sm font-semibold text-ink-500">
+            {/* Each subject: marks and a thin bar, so the weak one shows at a glance */}
+            <section className="pt-1.5">
+              <h2 className="sec-title">
                 <span>{L(M.subject)}</span>
-                <span>
-                  {L(M.marks)} / {c.exam.max} · {L(M.grade)}
+                <span className="font-medium">
+                  {L({ hi: "अंक", en: "Marks" })} / {c.exam.max}
                 </span>
-              </div>
-              <ul className="mt-1 divide-y divide-ink-100">
-                {c.subjects.map((s) => (
-                  <li key={s.subject} className="flex min-h-[52px] items-center gap-3 py-2">
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-semibold text-ink-900">{s.subject}</span>
-                      {multi && s.entered && !s.absent && (
-                        <span className="tnum block text-sm text-ink-500">{c.exam.parts.map((p) => `${p.name} ${s.marks[p.key] ?? "—"}`).join(" · ")}</span>
+              </h2>
+              <ul className="card divide-y divide-ink-100">
+                {c.subjects.map((s) => {
+                  const pct = s.total !== null && c.exam.max ? Math.min(100, (s.total / c.exam.max) * 100) : 0;
+                  return (
+                    <li key={s.subject} className="px-4 py-3">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="min-w-0 font-medium text-ink-900">{s.subject}</span>
+                        {!s.entered ? (
+                          <span className="text-[15px] text-ink-500">{L(M.notEntered)}</span>
+                        ) : s.absent ? (
+                          <span className="text-[15px] font-medium text-rose-600">{L(M.absent)}</span>
+                        ) : (
+                          <span className="tnum shrink-0">
+                            <span className={clsx("text-[17px] font-semibold", s.passed ? "text-ink-900" : "text-rose-600")}>{s.total === null ? "—" : num(s.total)}</span>
+                            {s.grade && <span className="ml-1.5 text-[14px] text-ink-500">{s.grade}</span>}
+                          </span>
+                        )}
+                      </div>
+                      {s.entered && !s.absent && (
+                        <>
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-100" aria-hidden>
+                            <div className={clsx("h-full rounded-full", s.passed ? "bg-brand-600" : "bg-rose-600")} style={{ width: `${pct}%` }} />
+                          </div>
+                          {multi && <p className="tnum mt-1.5 text-[13px] text-ink-500">{c.exam.parts.map((p) => `${p.name} ${s.marks[p.key] ?? "—"}`).join(" · ")}</p>}
+                        </>
                       )}
-                    </span>
-                    {!s.entered ? (
-                      <span className="text-ink-500">{L(M.notEntered)}</span>
-                    ) : s.absent ? (
-                      <span className="flex items-center gap-1.5 text-ink-700">
-                        <span className="dot bg-rose-500" aria-hidden />
-                        {L(M.absent)}
-                      </span>
-                    ) : (
-                      <>
-                        <span className="tnum w-12 text-right text-lg font-bold text-ink-900">{s.total === null ? "—" : num(s.total)}</span>
-                        <span className="tnum flex w-12 items-center justify-end gap-1.5 font-semibold text-ink-800">
-                          {!s.passed && <span className="dot h-2 w-2 bg-marigold-500" aria-hidden />}
-                          {s.grade}
-                        </span>
-                      </>
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </section>
 
+            {c.attendance && c.attendance.days > 0 && (
+              <dl className="card px-4">
+                <InfoRow label={L(M.attendance)} value={<span className="tnum">{num(c.attendance.present)} / {c.attendance.days}</span>} />
+              </dl>
+            )}
+
             <details className="card p-4">
-              <summary className="flex min-h-[28px] cursor-pointer items-center font-semibold text-ink-700">{L(M.gradeScale)}</summary>
+              <summary className="flex min-h-[28px] cursor-pointer items-center font-medium text-ink-700">{L(M.gradeScale)}</summary>
               <ul className="tnum mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-ink-700">
                 {data.grades.scale.map((g, i) => {
                   const top = i === 0 ? 100 : data.grades.scale[i - 1].min - 1;

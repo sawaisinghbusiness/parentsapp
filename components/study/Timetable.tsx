@@ -92,8 +92,8 @@ export function Timetable({ studentId }: { studentId: string }) {
               aria-label={DAYS_FULL[lang][i]}
               onClick={() => setDay(n)}
               className={clsx(
-                "relative flex h-11 min-w-0 items-center justify-center rounded-xl border text-[15px] font-semibold transition-colors",
-                on ? "border-brand-600 bg-brand-600 text-white" : "border-ink-200 bg-white text-ink-700 active:bg-ink-50"
+                "relative flex h-11 min-w-0 items-center justify-center rounded-xl text-[15px] transition-colors",
+                on ? "bg-brand-600 font-semibold text-white" : "font-medium text-ink-600 active:bg-ink-200/60"
               )}
             >
               {d}
@@ -126,13 +126,13 @@ export function Timetable({ studentId }: { studentId: string }) {
             return (
               <li key={p.id} className={clsx("flex gap-3 py-3", i > 0 && !prevBreak && "border-t border-ink-100")}>
                 <div className="tnum w-14 shrink-0 pt-0.5 leading-tight">
-                  <p className="font-semibold text-ink-900">{p.start || "—"}</p>
+                  <p className="font-medium text-ink-900">{p.start || "—"}</p>
                   {p.end && <p className="text-sm text-ink-500">{p.end}</p>}
                 </div>
                 <div className="min-w-0 flex-1">
                   {c ? (
                     <>
-                      <p className="break-words font-bold leading-snug text-ink-900">{c.subject}</p>
+                      <p className="break-words font-semibold leading-snug text-ink-900">{c.subject}</p>
                       {c.teacher && <p className="truncate text-sm text-ink-500">{c.teacher}</p>}
                     </>
                   ) : (
@@ -140,8 +140,7 @@ export function Timetable({ studentId }: { studentId: string }) {
                   )}
                 </div>
                 {live && (
-                  <span className="flex shrink-0 items-center gap-1.5 self-start pt-0.5 text-sm font-semibold text-ink-800">
-                    <span className="dot bg-jade-600" aria-hidden />
+                  <span className="shrink-0 self-start pt-0.5 text-sm font-semibold text-brand-700">
                     {L(S.now)}
                   </span>
                 )}

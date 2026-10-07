@@ -38,15 +38,51 @@
   .card-title {
     @apply text-sm font-semibold text-ink-500;
   }
+  /* Heading above a group: small grey, like a settings list. */
+  .sec-title {
+    @apply flex items-baseline justify-between px-1.5 pb-1.5 pt-1 text-[14px] font-semibold text-ink-500;
+  }
+
+  /* The one big number of a screen, on solid sky (the CRED-style block). */
+  .hero {
+    @apply rounded-3xl bg-brand-600 p-4 text-white;
+  }
+  .hero-label {
+    @apply text-[14px] text-white/85;
+  }
+  .hero-big {
+    @apply tnum text-[40px] font-semibold leading-[1.08] tracking-tight;
+  }
+  .hero-sub {
+    @apply mt-1 text-[14px] leading-snug text-white/90;
+  }
+  .btn-light {
+    @apply btn bg-white text-brand-700;
+  }
+  .btn-glass {
+    @apply btn bg-white/15 text-white;
+  }
+
+  /* Segmented control: soft grey track, the chosen part white. */
+  .seg {
+    @apply flex rounded-xl bg-ink-200 p-[3px] text-[15px] font-medium text-ink-500;
+  }
+  .seg > * {
+    @apply min-h-[38px] flex-1 rounded-lg px-2 text-center;
+  }
+  .seg > [aria-selected="true"],
+  .seg > [aria-current="true"] {
+    @apply bg-white font-semibold text-ink-900;
+  }
 
   .btn {
     @apply inline-flex min-h-[48px] select-none items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700;
+    @apply btn bg-brand-600 text-white hover:bg-brand-700;
   }
   .btn-quiet {
-    @apply btn border border-ink-200 bg-white text-ink-800 hover:bg-ink-50;
+    @apply btn border border-[#BFD6E8] bg-white text-brand-700 hover:bg-ink-50;
   }
   .link {
     @apply inline-flex min-h-[44px] items-center gap-1 font-semibold text-brand-700;

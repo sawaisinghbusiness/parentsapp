@@ -19,7 +19,8 @@ interface MonthData {
   session: { percent: number | null; workingDays: number };
 }
 
-const DOT: Record<Mark, string> = { P: "bg-jade-600", A: "bg-rose-600", L: "bg-marigold-500", H: "bg-marigold-500" };
+const DOT: Record<Mark, string> = { P: "bg-jade-600", A: "bg-rose-600", L: "bg-marigold-500", H: "bg-marigold-300" };
+const TONE: Record<Mark, string> = { P: "text-jade-600", A: "text-rose-600", L: "text-marigold-500", H: "text-marigold-500" };
 const NAME: Record<Mark, { hi: string; en: string }> = {
   P: { hi: "उपस्थित", en: "Present" },
   A: { hi: "अनुपस्थित", en: "Absent" },
@@ -58,20 +59,19 @@ export default function AttendancePage() {
   const notPresent = shown ? shown.days.filter((d) => (d.mark && d.mark !== "P") || d.holiday) : [];
 
   return (
-    <div className="animate-rise space-y-4 pb-2">
-      {/* Month */}
-      <div className="flex items-center justify-between">
-        <button onClick={() => setMonth(shift(current, -1))} disabled={!canPrev} aria-label={L({ hi: "पिछला महीना", en: "Previous month" })} className="grid h-11 w-11 place-items-center rounded-full text-ink-700 active:bg-ink-200/60 disabled:opacity-25">
+    <div className="animate-rise space-y-2.5 pb-2">
+      {/* Month, and how it went */}
+      <section className="card px-4 pb-4 pt-1.5">
+      <div className="-mx-2 mb-2 flex items-center justify-between">
+        <button onClick={() => setMonth(shift(current, -1))} disabled={!canPrev} aria-label={L({ hi: "पिछला महीना", en: "Previous month" })} className="grid h-11 w-11 place-items-center rounded-full text-ink-500 active:bg-ink-100 disabled:opacity-25">
           <ChevronLeft className="h-6 w-6" aria-hidden />
         </button>
-        <p className="text-[18px] font-semibold text-ink-900">{current ? monthName(current, lang) : " "}</p>
-        <button onClick={() => setMonth(shift(current, 1))} disabled={!canNext} aria-label={L({ hi: "अगला महीना", en: "Next month" })} className="grid h-11 w-11 place-items-center rounded-full text-ink-700 active:bg-ink-200/60 disabled:opacity-25">
+        <p className="text-[17px] font-semibold text-ink-900">{current ? monthName(current, lang) : " "}</p>
+        <button onClick={() => setMonth(shift(current, 1))} disabled={!canNext} aria-label={L({ hi: "अगला महीना", en: "Next month" })} className="grid h-11 w-11 place-items-center rounded-full text-ink-500 active:bg-ink-100 disabled:opacity-25">
           <ChevronRight className="h-6 w-6" aria-hidden />
         </button>
       </div>
 
-      {/* Summary */}
-      <section className="card p-4">
         {!t || !shown ? (
           <div className="space-y-3">
             <Skeleton className="h-8 w-24" />
@@ -84,7 +84,7 @@ export default function AttendancePage() {
           <>
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="tnum text-[30px] font-semibold leading-none text-ink-900">{pct(t.percent)}</p>
+                <p className="tnum text-[36px] font-semibold leading-none tracking-tight text-ink-900">{pct(t.percent)}</p>
                 <p className="mt-1.5 text-[14px] text-ink-500">
                   {L({ hi: "इस महीने", en: "This month" })} · {t.workingDays} {L({ hi: "स्कूल के दिन", en: "school days" })}
                 </p>
@@ -104,7 +104,7 @@ export default function AttendancePage() {
                 return n ? <span key={m} className={DOT[m]} style={{ width: `${(n / t.workingDays) * 100}%` }} /> : null;
               })}
             </div>
-            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[14px] text-ink-600">
+            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[14px] text-ink-500">
               {(["P", "A", "L", "H"] as Mark[]).map((m) => {
                 const n = { P: t.present, A: t.absent, L: t.leave, H: t.half }[m];
                 if (!n && (m === "L" || m === "H")) return null;
@@ -142,7 +142,7 @@ export default function AttendancePage() {
                   const off = d.sunday || !!d.holiday;
                   return (
                     <span key={d.date} className="flex h-12 flex-col items-center justify-center" aria-label={`${dayLine(d.date, lang)}${d.mark ? `: ${L(NAME[d.mark])}` : d.holiday ? `: ${d.holiday}` : ""}`}>
-                      <span className={clsx("tnum grid h-8 w-8 place-items-center rounded-full text-[15px]", isToday ? "bg-brand-600 font-semibold text-white" : future || (off && !d.mark) ? "text-ink-400" : "font-medium text-ink-900")}>{+d.date.slice(8)}</span>
+                      <span className={clsx("tnum grid h-8 w-8 place-items-center rounded-full text-[15px]", isToday ? "bg-brand-600 font-semibold text-white" : future || (off && !d.mark) ? "text-ink-400" : "text-ink-900")}>{+d.date.slice(8)}</span>
                       <span className={clsx("mt-0.5 h-1.5 w-1.5 rounded-full", d.mark ? DOT[d.mark] : "bg-transparent")} />
                     </span>
                   );
@@ -153,8 +153,8 @@ export default function AttendancePage() {
 
       {/* The days that need explaining */}
       {shown && t && t.workingDays > 0 && (
-        <section>
-          <h2 className="px-1 pb-1.5 text-[15px] font-semibold text-ink-700">{L({ hi: "इस महीने की छुट्टियाँ और अनुपस्थिति", en: "Days off and absences" })}</h2>
+        <section className="pt-1.5">
+          <h2 className="sec-title">{L({ hi: "जिन दिन नहीं आया", en: "Days not in school" })}</h2>
           <ul className="card divide-y divide-ink-100">
             {notPresent.length === 0 ? (
               <li className="px-4 py-3 text-ink-600">{L({ hi: "इस महीने हर दिन उपस्थित रहा।", en: "Present every school day this month." })}</li>
@@ -162,10 +162,7 @@ export default function AttendancePage() {
               notPresent.map((d) => (
                 <li key={d.date} className="flex min-h-[52px] items-center justify-between gap-3 px-4 py-2.5">
                   <span className="text-ink-900">{dayLine(d.date, lang)}</span>
-                  <span className="flex shrink-0 items-center gap-1.5 text-[15px] text-ink-600">
-                    <span className={clsx("dot h-2 w-2", d.mark ? DOT[d.mark] : "bg-ink-300")} aria-hidden />
-                    {d.mark ? L(NAME[d.mark]) : d.holiday}
-                  </span>
+                  <span className={clsx("shrink-0 text-[15px] font-medium", d.mark ? TONE[d.mark] : "text-ink-500")}>{d.mark ? L(NAME[d.mark]) : d.holiday}</span>
                 </li>
               ))
             )}

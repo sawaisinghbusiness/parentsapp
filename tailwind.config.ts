@@ -4,52 +4,52 @@ import type { Config } from "tailwindcss";
  * Same colours as the ERP (SMS BARMER/tailwind.config.ts), so the school sees one product.
  * Colour carries meaning only: jade = present / paid, red = absent / due, marigold = needs attention.
  */
-// Neutral grey with no blue/lavender cast: the screen reads clean, not "tech".
+// Grey with a slight sky bias, so it sits with the brand instead of reading as a default.
 const ink = {
-  50: "#F9FAFB",
-  100: "#F3F4F6",
-  200: "#E5E7EB",
-  300: "#D1D5DB",
-  400: "#9CA3AF",
-  500: "#6B7280",
-  600: "#4B5563",
-  700: "#374151",
-  800: "#1F2937",
-  900: "#111827",
-  950: "#0B0F17",
+  50: "#F7FAFC",
+  100: "#EEF3F7",
+  200: "#E3EAF1",
+  300: "#CDD8E2",
+  400: "#94A3B2",
+  500: "#64748B",
+  600: "#4A5868",
+  700: "#334252",
+  800: "#1C2A37",
+  900: "#0F1B26",
+  950: "#0A121A",
 };
 
 // Present / paid.
 const jade = {
-  50: "#F0FDF4",
-  100: "#DCFCE7",
-  200: "#BBF7D0",
-  500: "#22A55A",
-  600: "#16A34A",
-  700: "#15803D",
-  800: "#166534",
+  50: "#EFFAF4",
+  100: "#D9F2E4",
+  200: "#B4E4C9",
+  500: "#1FA866",
+  600: "#15965B",
+  700: "#117A4A",
+  800: "#0E623C",
 };
 
 // Leave / half day / needs attention.
 const marigold = {
-  50: "#FFFBEB",
-  100: "#FEF3C7",
-  300: "#FCD34D",
-  400: "#F5B21A",
-  500: "#F59E0B",
-  600: "#D97706",
-  700: "#B45309",
+  50: "#FFF8EB",
+  100: "#FCEFD2",
+  300: "#E3B65A",
+  400: "#D99E1F",
+  500: "#C98200",
+  600: "#A86C00",
+  700: "#875700",
 };
 
-// School blue: actions and links only. Deep and plain, like a bank's, not a startup violet.
-const indigo = {
-  50: "#EEF3FC",
-  100: "#DCE6F8",
-  200: "#B9CDF1",
-  500: "#3A66CF",
-  600: "#1E4BB8",
-  700: "#183D96",
-  800: "#13317A",
+// School sky blue: the app's identity (hero block, buttons, active tab), solid not pastel.
+const sky = {
+  50: "#F0F9FF",
+  100: "#E0F2FE",
+  200: "#BAE6FD",
+  500: "#0EA5E9",
+  600: "#0284C7",
+  700: "#0369A1",
+  800: "#075985",
 };
 
 const night = {
@@ -66,21 +66,21 @@ const night = {
 
 // Absent / due.
 const rose = {
-  50: "#FEF2F2",
-  100: "#FEE2E2",
-  500: "#EF4444",
-  600: "#DC2626",
-  700: "#B91C1C",
+  50: "#FDF1F0",
+  100: "#FADFDC",
+  500: "#E04B40",
+  600: "#D33A2F",
+  700: "#B02E25",
 };
 
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
     extend: {
-      colors: { slate: ink, ink, jade, emerald: jade, marigold, brand: indigo, night, rose, red: rose, canvas: "#F3F4F6" },
+      colors: { slate: ink, ink, jade, emerald: jade, marigold, brand: sky, night, rose, red: rose, canvas: "#F2F6FA" },
       fontFamily: {
-        // Hind: one family drawn for Hindi and English together (Indian Type Foundry, made for UI).
-        sans: ["Hind", "'Noto Sans Devanagari'", "system-ui", "sans-serif"],
+        // Figtree for Latin and numbers (geometric, like Groww); Hind fills in Devanagari.
+        sans: ["Figtree", "Hind", "'Noto Sans Devanagari'", "system-ui", "sans-serif"],
       },
       fontSize: {
         // Parents read on small phones, often outdoors: the floor is 14px, body is 17px.
@@ -88,8 +88,8 @@ const config: Config = {
         sm: ["0.9375rem", { lineHeight: "1.375rem" }],
         base: ["1.0625rem", { lineHeight: "1.625rem" }],
       },
-      // Phone-app shapes: cards 12px, buttons and fields 10px (rounder reads bubbly).
-      borderRadius: { xl: "0.625rem", "2xl": "0.75rem" },
+      // Soft but not bubbly: buttons and fields 10px, white groups 14px, the hero block 18px.
+      borderRadius: { xl: "0.625rem", "2xl": "0.875rem", "3xl": "1.125rem" },
       boxShadow: {
         card: "0 1px 2px rgb(21 24 58 / 0.05), 0 10px 26px -16px rgb(21 24 58 / 0.18)",
         bar: "0 -1px 0 rgb(21 24 58 / 0.06), 0 -8px 24px -12px rgb(21 24 58 / 0.12)",

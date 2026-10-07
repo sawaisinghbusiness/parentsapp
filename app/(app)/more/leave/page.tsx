@@ -161,8 +161,7 @@ export default function LeavePage() {
             </p>
           )}
           {done && (
-            <p role="status" className="flex items-center gap-2 text-ink-800">
-              <span className="dot bg-jade-600" aria-hidden />
+            <p role="status" className="font-medium text-jade-600">
               {L(M.sent)}
             </p>
           )}
@@ -174,21 +173,22 @@ export default function LeavePage() {
       )}
 
       {!data?.setupNeeded && (
-        <section className="card p-4">
-          <p className="card-title">{L(M.past)}</p>
+        <section className="pt-1.5">
+          <h2 className="sec-title">{L(M.past)}</h2>
+          <div className="card px-4">
           {!data ? (
-            <div className="mt-3 space-y-3">
+            <div className="space-y-3 py-4">
               <Skeleton className="h-5 w-48" />
               <Skeleton className="h-4 w-full" />
             </div>
           ) : data.requests.length === 0 ? (
-            <p className="mt-1 text-ink-600">{L(M.noPast)}</p>
+            <p className="py-3 text-ink-600">{L(M.noPast)}</p>
           ) : (
-            <ul className="mt-1 divide-y divide-ink-100">
+            <ul className="divide-y divide-ink-100">
               {data.requests.map((q) => (
                 <li key={q.id} className="py-3">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="tnum font-semibold text-ink-900">
+                    <p className="tnum font-medium text-ink-900">
                       {range(q.from, q.to, lang)}
                       <span className="font-normal text-ink-500">
                         {" "}
@@ -197,7 +197,7 @@ export default function LeavePage() {
                     </p>
                     <StatusChip status={q.status} />
                   </div>
-                  <p className="mt-1 whitespace-pre-line break-words text-ink-700">{q.reason}</p>
+                  <p className="mt-0.5 whitespace-pre-line break-words text-[15px] text-ink-500">{q.reason}</p>
                   {q.status !== "pending" && q.decidedBy && (
                     <p className="mt-1 text-sm text-ink-500">
                       {lang === "hi" ? `${q.decidedBy} ${L(M.by)}` : `${L(M.by)} ${q.decidedBy}`}
@@ -224,6 +224,7 @@ export default function LeavePage() {
               ))}
             </ul>
           )}
+          </div>
         </section>
       )}
     </div>

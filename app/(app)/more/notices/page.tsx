@@ -92,12 +92,12 @@ export default function NoticesPage() {
         <>
           {groups.map(([date, list]) => (
             <section key={date} aria-label={heading(date)}>
-              <h2 className="px-2 pb-1.5 pt-1 text-sm font-semibold text-ink-500">{heading(date)}</h2>
+              <h2 className="sec-title">{heading(date)}</h2>
               <ul className="card divide-y divide-ink-100 overflow-hidden">
                 {list.map((n) => (
                   <li key={n.id} className="p-4">
                     <p className="font-semibold leading-snug text-ink-900">{n.title}</p>
-                    <p className="mt-1 whitespace-pre-line break-words text-ink-700">{n.body}</p>
+                    <p className="mt-1 whitespace-pre-line break-words text-[15px] leading-relaxed text-ink-600">{n.body}</p>
                   </li>
                 ))}
               </ul>

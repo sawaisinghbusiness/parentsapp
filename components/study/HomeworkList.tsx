@@ -99,10 +99,10 @@ export function HomeworkList({ studentId }: { studentId: string }) {
   const heading = (d: string) => (d === today ? `${L(S.today)} · ${weekdayDate(d, lang)}` : d === addDays(today, -1) ? `${L(S.yesterday)} · ${weekdayDate(d, lang)}` : weekdayDate(d, lang));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {groups.map((g) => (
         <section key={g.date}>
-          <h2 className="mb-1.5 px-1 text-sm font-semibold text-ink-600">{heading(g.date)}</h2>
+          <h2 className="sec-title">{heading(g.date)}</h2>
           <ul className="card divide-y divide-ink-100 px-4">
             {g.items.map((h) => (
               <Item key={h.id} h={h} today={today} />
@@ -142,9 +142,9 @@ function Item({ h, today }: { h: Homework; today: string }) {
   }
 
   return (
-    <li className="py-3.5">
-      <p className="text-sm font-semibold text-brand-700">{h.subject}</p>
-      <p className="font-semibold leading-snug text-ink-900">{h.title}</p>
+    <li className="py-3">
+      <p className="text-[13px] font-medium text-ink-500">{h.subject}</p>
+      <p className="font-medium leading-snug text-ink-900">{h.title}</p>
       {h.details && (
         <>
           <p className={clsx("mt-1 whitespace-pre-line break-words text-ink-700", long && !open && "line-clamp-4")}>{h.details}</p>
@@ -156,8 +156,7 @@ function Item({ h, today }: { h: Homework; today: string }) {
         </>
       )}
       {due && (
-        <p className={clsx("tnum mt-1.5 flex items-center gap-2 text-sm", due.soon ? "font-medium text-ink-800" : "text-ink-500")}>
-          {due.soon && <span className="dot bg-marigold-500" aria-hidden />}
+        <p className={clsx("tnum mt-1 text-sm", due.soon ? "font-medium text-marigold-600" : "text-ink-500")}>
           {due.text}
         </p>
       )}

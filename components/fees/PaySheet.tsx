@@ -103,7 +103,7 @@ export function PaySheet({ info, onClose, onSent }: { info: PayInfo; onClose: ()
         {sent ? (
           <div className="space-y-4 px-5 py-6">
             <p className="flex items-center gap-2 text-xl font-bold text-ink-900">
-              <span className="dot bg-jade-600" aria-hidden /> {sent}
+              <Check className="h-6 w-6 text-jade-600" strokeWidth={2.5} aria-hidden /> {sent}
             </p>
             <p className="text-ink-700">{L(F.thanks)}</p>
             <button onClick={onClose} className="btn-primary w-full">
@@ -117,7 +117,7 @@ export function PaySheet({ info, onClose, onSent }: { info: PayInfo; onClose: ()
               <legend className="mb-2 font-semibold text-ink-800">{L(F.howMuch)}</legend>
               <div className="space-y-2">
                 {opts.map((o) => (
-                  <label key={o.key} className={clsx("flex min-h-[56px] cursor-pointer items-center gap-3 rounded-xl border px-4 py-2", choice === o.key ? "border-brand-600 bg-brand-50" : "border-ink-200")}>
+                  <label key={o.key} className={clsx("flex min-h-[56px] cursor-pointer items-center gap-3 rounded-xl border px-4 py-2", choice === o.key ? "border-brand-600 ring-1 ring-brand-600" : "border-ink-200")}>
                     <input type="radio" name="amt" checked={choice === o.key} onChange={() => setChoice(o.key)} className="h-5 w-5 accent-brand-600" />
                     <span className="flex-1">
                       <span className="block font-medium text-ink-900">{o.label}</span>

@@ -7,6 +7,7 @@ import { api, ApiError, clearCache } from "@/lib/api";
 import { useL, useT } from "@/lib/i18n";
 import { phoneText } from "@/lib/format";
 import { DEMO, DEMO_CODE } from "@/lib/demo";
+import { SchoolMark } from "@/components/ui";
 
 interface PublicSchool {
   name: string;
@@ -93,7 +94,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="pt-safe mx-auto flex min-h-[100dvh] max-w-[440px] flex-col px-4 pb-6">
+    <main className="pt-safe mx-auto flex min-h-[100dvh] max-w-[440px] flex-col bg-white px-5 pb-6">
       <div className="flex justify-end pt-3">
         <button onClick={() => setLang(lang === "hi" ? "en" : "hi")} className="min-h-[44px] rounded-lg px-3 text-sm font-semibold text-brand-700">
           {lang === "hi" ? "English" : "हिंदी"}
@@ -101,24 +102,19 @@ export default function LoginPage() {
       </div>
 
       <div className="flex flex-col items-center pb-6 pt-6 text-center">
-        {school?.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={school.logoUrl} alt="" className="h-20 w-20 rounded-2xl border border-ink-200 bg-white object-contain p-1.5 shadow-card" />
-        ) : (
-          <div className="h-20 w-20 rounded-2xl bg-night-900" aria-hidden />
-        )}
-        <p className="mt-4 text-xl font-bold text-ink-900">{school?.name || " "}</p>
-        <p className="mt-0.5 text-ink-500">{t("login.title")}</p>
+        {school ? <SchoolMark name={school.name} url={school.logoUrl} size={72} /> : <div className="h-[72px] w-[72px] rounded-[21px] bg-ink-100" aria-hidden />}
+        <p className="mt-4 text-[20px] font-semibold text-ink-900">{school?.name || " "}</p>
+        <p className="mt-0.5 text-ink-500">{L({ hi: "अभिभावक ऐप", en: "Parent app" })}</p>
       </div>
 
-      <div key={shake} className={clsx("card p-5", shake > 0 && "animate-shake")}>
+      <div key={shake} className={clsx("pt-2", shake > 0 && "animate-shake")}>
         {step === "mobile" ? (
           <form onSubmit={sendCode} noValidate>
             <label htmlFor="mobile" className="mb-2 block font-semibold text-ink-800">
               {t("login.mobile")}
             </label>
             <div className="flex items-stretch overflow-hidden rounded-xl border border-ink-300 bg-white focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
-              <span className="flex items-center border-r border-ink-200 bg-ink-50 px-3 font-semibold text-ink-600">+91</span>
+              <span className="flex items-center pl-4 pr-1 font-medium text-ink-500">+91</span>
               <input
                 id="mobile"
                 type="tel"
@@ -127,7 +123,7 @@ export default function LoginPage() {
                 maxLength={14}
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value.replace(/[^\d ]/g, ""))}
-                className="tnum min-h-[54px] w-full px-3 text-lg font-semibold tracking-wide text-ink-900 outline-none placeholder:font-normal placeholder:text-ink-400"
+                className="tnum min-h-[54px] w-full px-2 text-lg font-semibold tracking-wide text-ink-900 outline-none placeholder:font-normal placeholder:text-ink-400"
                 placeholder="98765 43210"
                 autoFocus
               />
@@ -150,8 +146,7 @@ export default function LoginPage() {
               <ArrowLeft className="h-4 w-4" aria-hidden /> {t("login.change")}
             </button>
             {DEMO ? (
-              <p className="flex items-center gap-2 rounded-xl border border-marigold-300/70 bg-marigold-50 px-3 py-2.5 text-ink-800">
-                <span className="dot bg-marigold-500" aria-hidden />
+              <p className="text-ink-600">
                 {L({ hi: "डेमो कोड:", en: "Demo code:" })} <span className="tnum text-lg font-bold tracking-widest text-ink-900">{DEMO_CODE}</span>
               </p>
             ) : (
