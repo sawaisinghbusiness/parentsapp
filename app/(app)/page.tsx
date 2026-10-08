@@ -31,6 +31,8 @@ import { dayMonth, rupees } from "@/lib/format";
 import { EventPicture } from "@/components/art";
 import { Avatar, ErrorCard, OfflineNote, SchoolMark, Skeleton } from "@/components/ui";
 import { ChildSheet } from "@/components/ChildSheet";
+import { ProfilePeek } from "@/components/ProfilePeek";
+import { ripple, tilt } from "@/lib/motion";
 
 interface EventRow {
   id: string;
@@ -87,6 +89,7 @@ export default function HomePage() {
   const { lang, setLang } = useT();
   const [switching, setSwitching] = useState(false);
   const [more, setMore] = useState(false);
+  const [peek, setPeek] = useState(false);
   const many = (me?.children.length || 0) > 1;
   const tint = Math.max(0, me?.children.findIndex((c) => c.id === child?.id) ?? 0);
   const first = child?.name.split(" ")[0] || "";
@@ -140,9 +143,14 @@ export default function HomePage() {
             )}
           </Link>
           {child ? (
-            <Link href="/profile/" className="shrink-0 rounded-full ring-2 ring-white" aria-label={L({ hi: "प्रोफ़ाइल", en: "Profile" })}>
+            <button
+              onClick={() => setPeek(true)}
+              aria-haspopup="dialog"
+              className="shrink-0 rounded-full ring-2 ring-white transition-transform duration-300 active:scale-90"
+              aria-label={`${child.name}: ${L({ hi: "विवरण", en: "details" })}`}
+            >
               <Avatar name={child.name} url={child.photoUrl} size={38} tint={tint} />
-            </Link>
+            </button>
           ) : (
             <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-full" />
           )}
@@ -193,7 +201,7 @@ export default function HomePage() {
             {QUICK.map((a, k) => (
               <QuickTile key={a.href} {...a} i={k} />
             ))}
-            <button onClick={() => setMore((m) => !m)} aria-expanded={more} className="quick-tile pop-in" style={v(QUICK.length)}>
+            <button onClick={() => setMore((m) => !m)} onPointerDown={ripple} aria-expanded={more} className="quick-tile pop-in" style={v(QUICK.length)}>
               <span>
                 <MoreHorizontal className={clsx("h-6 w-6 transition-transform duration-500", more && "rotate-90")} strokeWidth={2.2} aria-hidden />
               </span>
@@ -218,8 +226,9 @@ export default function HomePage() {
                 const n = daysUntil(data.date, e.date);
                 return (
                   <li key={e.id} className="enter" style={v(6 + k * 1.5)}>
-                    <Link href={`/events/album/?id=${encodeURIComponent(e.id)}`} className="event-card">
+                    <Link href={`/events/album/?id=${encodeURIComponent(e.id)}`} className="event-card tilt" {...tilt}>
                       <EventPicture url={e.coverUrl} scene={e.scene} alt="" className={events.length > 1 ? "!aspect-[4/5]" : "!aspect-[16/8]"} />
+                      <i className="glare" aria-hidden />
                       <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2.5 py-1 text-[12.5px] font-semibold text-ink-900">{dayMonth(e.date, lang)}</span>
                       <span className="absolute inset-x-3 bottom-3 text-white">
                         <span className="line-clamp-2 block text-[16px] font-semibold leading-snug">{e.title}</span>
@@ -238,6 +247,7 @@ export default function HomePage() {
       </div>
 
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
+      {peek && <ProfilePeek onClose={() => setPeek(false)} />}
     </div>
   );
 }
@@ -260,7 +270,7 @@ function Greeting({ name }: { name: string }) {
 function QuickTile({ href, text, icon: Icon, i }: Action & { i: number }) {
   const L = useL();
   return (
-    <Link href={href} className="quick-tile pop-in" style={v(i)}>
+    <Link href={href} onPointerDown={ripple} className="quick-tile pop-in" style={v(i)}>
       <span>
         <Icon className="h-6 w-6" strokeWidth={1.8} aria-hidden />
       </span>
@@ -381,7 +391,7 @@ function useCountUp(target: number) {
 function TodayRow({ i, href, tile, icon, title, note, end }: { i: number; href: string; tile: string; icon: React.ReactNode; title: string; note: string; end?: React.ReactNode }) {
   return (
     <li className="enter border-b border-ink-100 last:border-0" style={v(i)}>
-      <Link href={href} className="flex min-h-[72px] items-center gap-3.5 py-3 active:opacity-70">
+      <Link href={href} onPointerDown={ripple} className="relative -mx-4 flex min-h-[72px] items-center gap-3.5 overflow-hidden px-4 py-3">
         <span className={clsx("grid h-12 w-12 shrink-0 place-items-center rounded-xl", tile)}>{icon}</span>
         <span className="min-w-0 flex-1">
           <span className="block text-[16px] font-semibold text-ink-900">{title}</span>
