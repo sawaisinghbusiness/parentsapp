@@ -64,6 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isHome = path === "/";
   const canSwitch = !!page?.perChild && (me?.children.length || 0) > 1 && !!child;
   const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
+  const litIndex = TABS.findIndex((t) => t.href === lit);
 
   return (
     <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-ink-50" : "bg-white")}>
@@ -99,20 +100,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className={clsx(isHome && "px-4 pt-6")}>
             <ErrorCard offline={error.status === 0} onRetry={reload} />
           </div>
-        ) : (
+        ) : isHome ? (
           children
+        ) : (
+          <div key={path} className="page-in space-y-3.5">
+            {children}
+          </div>
         )}
       </main>
 
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-100 bg-white" aria-label="Main">
-        <ul className="grid grid-cols-4">
+        <ul className="relative grid grid-cols-4">
+          {/* One blue pill that slides to the lit tab. */}
+          <span
+            aria-hidden
+            className="slide-pill pointer-events-none absolute left-0 top-[9px] flex w-1/4 justify-center"
+            style={{ transform: `translateX(${Math.max(0, litIndex) * 100}%)`, opacity: litIndex < 0 ? 0 : 1 }}
+          >
+            <span className="h-8 w-[52px] rounded-[10px] bg-brand-600" />
+          </span>
           {TABS.map(({ href, text, icon: Icon }) => {
             const on = lit === href;
             return (
-              <li key={href}>
-                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[66px] flex-col items-center justify-center gap-0.5 text-[12px]", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
-                  <span className={clsx("grid h-8 w-[52px] place-items-center rounded-[10px]", on && "bg-brand-600 text-white")}>
-                    <Icon className="h-[22px] w-[22px]" strokeWidth={on ? 2.1 : 1.7} aria-hidden />
+              <li key={href} className="relative">
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[66px] flex-col items-center justify-center gap-0.5 text-[12px] transition-colors duration-300", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
+                  <span className={clsx("grid h-8 w-[52px] place-items-center rounded-[10px] transition-colors duration-300", on && "text-white")}>
+                    <Icon key={on ? "on" : "off"} className={clsx("h-[22px] w-[22px]", on && "tab-icon-on")} strokeWidth={on ? 2.1 : 1.7} aria-hidden />
                   </span>
                   {L(text)}
                 </Link>

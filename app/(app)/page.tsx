@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import {
@@ -64,6 +64,11 @@ const MORE: Action[] = [
   { href: "/id-card/", text: { hi: "आईडी कार्ड", en: "ID Card" }, icon: IdCard },
 ];
 
+let arrived = false;
+
+/** Place in the arrival order (see .enter / .pop-in in globals.css). */
+const v = (i: number) => ({ "--i": i }) as React.CSSProperties;
+
 const daysUntil = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / 864e5);
 
 /** "Thu, 09 Oct 2026" / "गुरुवार, 9 अक्टूबर" */
@@ -88,12 +93,17 @@ export default function HomePage() {
   const school = me?.school;
   const unread = data?.noticeCount || 0;
   const events = (data?.events || []).slice(0, 2);
+  // The arrival plays once per visit to the app; coming back to Home later, it is simply there.
+  const [calm] = useState(arrived);
+  useEffect(() => {
+    arrived = true;
+  }, []);
 
   return (
-    <div className="animate-fadeIn">
+    <div className={clsx("animate-fadeIn", calm && "calm")}>
       <header className="pt-safe px-4">
         {/* One row like the reference: school, then language, search, notices and the child, all at the top. */}
-        <div className="flex items-center gap-1.5 pt-4">
+        <div className="enter flex items-center gap-1.5 pt-4" style={v(0)}>
           {school ? <SchoolMark name={school.name} url={school.logoUrl} size={44} /> : <Skeleton className="h-11 w-11 rounded-xl" />}
           <div className="ml-0.5 min-w-0 flex-1">
             {school ? (
@@ -105,13 +115,14 @@ export default function HomePage() {
               <Skeleton className="h-4 w-24" />
             )}
           </div>
-          <div className="flex shrink-0 rounded-full border border-ink-200 bg-white p-0.5" role="group" aria-label={L({ hi: "भाषा", en: "Language" })}>
+          <div className="relative flex shrink-0 rounded-full border border-ink-200 bg-white p-0.5" role="group" aria-label={L({ hi: "भाषा", en: "Language" })}>
+            <span aria-hidden className="slide-pill absolute left-0.5 top-0.5 h-7 w-[30px] rounded-full bg-brand-600" style={{ transform: lang === "hi" ? "translateX(30px)" : "none" }} />
             {(["en", "hi"] as const).map((k) => (
               <button
                 key={k}
                 onClick={() => setLang(k)}
                 aria-pressed={lang === k}
-                className={clsx("h-7 min-w-[30px] rounded-full px-1.5 text-[12px] font-semibold", lang === k ? "bg-brand-600 text-white" : "text-ink-500")}
+                className={clsx("relative h-7 w-[30px] rounded-full text-[12px] font-semibold transition-colors duration-300", lang === k ? "text-white" : "text-ink-500")}
               >
                 {k === "en" ? "EN" : "हि"}
               </button>
@@ -121,9 +132,9 @@ export default function HomePage() {
             <Search className="h-[21px] w-[21px]" strokeWidth={2} aria-hidden />
           </Link>
           <Link href="/notice/" className="relative grid h-10 w-9 shrink-0 place-items-center rounded-full text-brand-800 active:bg-ink-100" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
-            <Bell className="h-[21px] w-[21px]" strokeWidth={2} aria-hidden />
+            <Bell className={clsx("h-[21px] w-[21px]", unread > 0 && "bell-ring")} strokeWidth={2} aria-hidden />
             {unread > 0 && (
-              <span className="absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-ink-50 bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
+              <span className="badge-pop absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-ink-50 bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
@@ -143,17 +154,13 @@ export default function HomePage() {
               <>
                 {many ? (
                   <button onClick={() => setSwitching(true)} className="flex max-w-full items-center gap-1.5 text-left" aria-label={`${L({ hi: "बच्चा बदलें", en: "Switch child" })}: ${child.name}`}>
-                    <h1 className="truncate text-[clamp(21px,6.4vw,26px)] font-bold leading-tight text-brand-800">
-                      {L({ hi: "नमस्ते,", en: "Hello," })} {first}
-                    </h1>
-                    <ChevronDown className="h-5 w-5 shrink-0 text-brand-800" strokeWidth={2.4} aria-hidden />
+                    <Greeting name={first} />
+                    <ChevronDown className="enter h-5 w-5 shrink-0 text-brand-800" style={v(3)} strokeWidth={2.4} aria-hidden />
                   </button>
                 ) : (
-                  <h1 className="truncate text-[clamp(21px,6.4vw,26px)] font-bold leading-tight text-brand-800">
-                    {L({ hi: "नमस्ते,", en: "Hello," })} {first}
-                  </h1>
+                  <Greeting name={first} />
                 )}
-                <p className="mt-0.5 text-[15px] text-ink-500">
+                <p className="enter mt-0.5 text-[15px] text-ink-500" style={v(2)}>
                   {L({ hi: "कक्षा", en: "Class" })} {child.classSec.replace(/\s*-\s*/, "-")}
                   {child.rollNo && ` · ${L({ hi: "रोल", en: "Roll" })} ${child.rollNo}`}
                 </p>
@@ -174,7 +181,7 @@ export default function HomePage() {
 
         <Today data={data} />
 
-        <section>
+        <section className="enter" style={v(4)}>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[19px] font-bold text-brand-800">{L({ hi: "जल्दी पहुँचें", en: "Quick Actions" })}</h2>
             <button onClick={() => setMore((m) => !m)} className="flex min-h-[44px] items-center gap-0.5 text-[14px] font-medium text-brand-600" aria-expanded={more}>
@@ -183,21 +190,22 @@ export default function HomePage() {
             </button>
           </div>
           <div className="grid grid-cols-5 gap-1.5">
-            {QUICK.map((a) => (
-              <QuickTile key={a.href} {...a} />
+            {QUICK.map((a, k) => (
+              <QuickTile key={a.href} {...a} i={k} />
             ))}
-            <button onClick={() => setMore((m) => !m)} aria-expanded={more} className="quick-tile">
+            <button onClick={() => setMore((m) => !m)} aria-expanded={more} className="quick-tile pop-in" style={v(QUICK.length)}>
               <span>
-                <MoreHorizontal className="h-6 w-6" strokeWidth={2.2} aria-hidden />
+                <MoreHorizontal className={clsx("h-6 w-6 transition-transform duration-500", more && "rotate-90")} strokeWidth={2.2} aria-hidden />
               </span>
               {L({ hi: "और", en: "More" })}
             </button>
-            {more && MORE.map((a) => <QuickTile key={a.href} {...a} />)}
+            {/* Opened later, so these pop in on their own, without the page's starting delay. */}
+            {more && MORE.map((a, k) => <QuickTile key={a.href} {...a} i={k - 5} />)}
           </div>
         </section>
 
         {events.length > 0 && data && (
-          <section>
+          <section className="enter" style={v(5)}>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-[19px] font-bold text-brand-800">{L({ hi: "आने वाले कार्यक्रम", en: "Upcoming Events" })}</h2>
               <Link href="/events/" className="flex min-h-[44px] items-center gap-0.5 text-[14px] font-medium text-brand-600">
@@ -206,10 +214,10 @@ export default function HomePage() {
               </Link>
             </div>
             <ul className={clsx("grid gap-3", events.length > 1 && "grid-cols-2")}>
-              {events.map((e) => {
+              {events.map((e, k) => {
                 const n = daysUntil(data.date, e.date);
                 return (
-                  <li key={e.id}>
+                  <li key={e.id} className="enter" style={v(6 + k * 1.5)}>
                     <Link href={`/events/album/?id=${encodeURIComponent(e.id)}`} className="event-card">
                       <EventPicture url={e.coverUrl} scene={e.scene} alt="" className={events.length > 1 ? "!aspect-[4/5]" : "!aspect-[16/8]"} />
                       <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2.5 py-1 text-[12.5px] font-semibold text-ink-900">{dayMonth(e.date, lang)}</span>
@@ -234,10 +242,25 @@ export default function HomePage() {
   );
 }
 
-function QuickTile({ href, text, icon: Icon }: Action) {
+/** "Hello," then the name, each sliding up out of its line. */
+function Greeting({ name }: { name: string }) {
   const L = useL();
   return (
-    <Link href={href} className="quick-tile">
+    <h1 className="truncate text-[clamp(21px,6.4vw,26px)] font-bold leading-tight text-brand-800">
+      <span className="reveal">
+        <span style={v(0)}>{L({ hi: "नमस्ते,", en: "Hello," })}</span>
+      </span>{" "}
+      <span className="reveal">
+        <span style={v(1)}>{name}</span>
+      </span>
+    </h1>
+  );
+}
+
+function QuickTile({ href, text, icon: Icon, i }: Action & { i: number }) {
+  const L = useL();
+  return (
+    <Link href={href} className="quick-tile pop-in" style={v(i)}>
       <span>
         <Icon className="h-6 w-6" strokeWidth={1.8} aria-hidden />
       </span>
@@ -250,6 +273,7 @@ function QuickTile({ href, text, icon: Icon }: Action) {
 function Today({ data }: { data: Home | undefined }) {
   const L = useL();
   const { lang } = useT();
+  const shownDue = useCountUp(data?.fees ? data.fees.dueNow + data.fees.fine : 0);
 
   if (!data)
     return (
@@ -267,7 +291,7 @@ function Today({ data }: { data: Home | undefined }) {
   const a = data.attendance;
   const att: { icon: React.ReactNode; tile: string; note: string } =
     a.status === "Present"
-      ? { icon: <Mark className="bg-jade-600" icon={Check} />, tile: "bg-jade-50", note: L({ hi: "आज उपस्थित", en: "Present today" }) }
+      ? { icon: <Mark className="bg-jade-600" icon={Check} draw />, tile: "bg-jade-50", note: L({ hi: "आज उपस्थित", en: "Present today" }) }
       : a.status === "Absent"
         ? { icon: <Mark className="bg-rose-600" icon={X} />, tile: "bg-rose-50", note: L({ hi: "आज अनुपस्थित", en: "Absent today" }) }
         : a.status === "Leave" || a.status === "HalfDay"
@@ -281,7 +305,7 @@ function Today({ data }: { data: Home | undefined }) {
   const feeNote = !f
     ? L({ hi: "विवरण देखें", en: "See details" })
     : due > 0
-      ? `${rupees(due)} ${L({ hi: "बाकी", en: "due" })}`
+      ? `${rupees(shownDue)} ${L({ hi: "बाकी", en: "due" })}`
       : f.next
         ? `${L({ hi: "अगली", en: "Next" })} ${rupees(f.next.amount)} · ${dayMonth(f.next.due, lang)}`
         : L({ hi: "कोई फ़ीस बाकी नहीं", en: "No fees due" });
@@ -290,14 +314,15 @@ function Today({ data }: { data: Home | undefined }) {
   const hwNote = newHw ? L({ hi: `आज ${newHw} होमवर्क मिला`, en: `${newHw} new today` }) : data.homework.length ? L({ hi: `${data.homework.length} बाकी`, en: `${data.homework.length} to do` }) : L({ hi: "आज कोई होमवर्क नहीं", en: "None today" });
 
   return (
-    <section className="today-card">
+    <section className="today-card enter" style={v(3)}>
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-[20px] font-bold text-brand-800">{L({ hi: "आज", en: "Today" })}</h2>
         <span className="truncate text-[13.5px] text-ink-500">{todayText(data.date, lang)}</span>
       </div>
       <ul>
-        <TodayRow href="/calendar/" tile={att.tile} icon={att.icon} title={L({ hi: "हाज़िरी", en: "Attendance" })} note={att.note} />
+        <TodayRow i={4} href="/calendar/" tile={att.tile} icon={att.icon} title={L({ hi: "हाज़िरी", en: "Attendance" })} note={att.note} />
         <TodayRow
+          i={5}
           href={due > 0 ? "/fees/pay/" : "/fees/"}
           tile="bg-brand-50"
           icon={<IndianRupee className="h-6 w-6 text-brand-600" strokeWidth={1.8} aria-hidden />}
@@ -305,11 +330,12 @@ function Today({ data }: { data: Home | undefined }) {
           note={feeNote}
           end={
             due > 0 ? (
-              <span className="rounded-full bg-brand-600 px-3.5 py-2 text-[13.5px] font-semibold text-white">{L({ hi: "अभी भरें", en: "Pay now" })}</span>
+              <span className="pay-pulse rounded-full bg-brand-600 px-3.5 py-2 text-[13.5px] font-semibold text-white">{L({ hi: "अभी भरें", en: "Pay now" })}</span>
             ) : null
           }
         />
         <TodayRow
+          i={6}
           href="/homework/"
           tile="bg-brand-50"
           icon={<BookOpen className="h-6 w-6 text-brand-600" strokeWidth={1.8} aria-hidden />}
@@ -322,17 +348,39 @@ function Today({ data }: { data: Home | undefined }) {
   );
 }
 
-function Mark({ className, icon: Icon }: { className: string; icon: LucideIcon }) {
+/** A round status mark that pops in; with `draw` its tick draws itself. */
+function Mark({ className, icon: Icon, draw }: { className: string; icon: LucideIcon; draw?: boolean }) {
   return (
-    <span className={clsx("grid h-7 w-7 place-items-center rounded-full text-white", className)}>
-      <Icon className="h-4 w-4" strokeWidth={3} aria-hidden />
+    <span className={clsx("tick-pop grid h-7 w-7 place-items-center rounded-full text-white", className)}>
+      <Icon className={clsx("h-4 w-4", draw && "tick-draw")} strokeWidth={3} aria-hidden />
     </span>
   );
 }
 
-function TodayRow({ href, tile, icon, title, note, end }: { href: string; tile: string; icon: React.ReactNode; title: string; note: string; end?: React.ReactNode }) {
+/** Counts up to `target` once (about 0.9 s, easing out); jumps straight there for "Reduce motion". */
+function useCountUp(target: number) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!target || arrived || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setN(target);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now() + 450;
+    const step = (now: number) => {
+      const t = Math.min(1, Math.max(0, (now - start) / 900));
+      setN(Math.round(target * (1 - Math.pow(1 - t, 3))));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return n;
+}
+
+function TodayRow({ i, href, tile, icon, title, note, end }: { i: number; href: string; tile: string; icon: React.ReactNode; title: string; note: string; end?: React.ReactNode }) {
   return (
-    <li className="border-b border-ink-100 last:border-0">
+    <li className="enter border-b border-ink-100 last:border-0" style={v(i)}>
       <Link href={href} className="flex min-h-[72px] items-center gap-3.5 py-3 active:opacity-70">
         <span className={clsx("grid h-12 w-12 shrink-0 place-items-center rounded-xl", tile)}>{icon}</span>
         <span className="min-w-0 flex-1">
