@@ -92,16 +92,17 @@ export default function HomePage() {
   return (
     <div className="animate-fadeIn">
       <header className="pt-safe px-4">
-        <div className="flex items-center gap-2.5 pt-4">
-          {school ? <SchoolMark name={school.name} url={school.logoUrl} size={50} /> : <Skeleton className="h-[50px] w-[50px] rounded-[14px]" />}
-          <div className="min-w-0 flex-1">
+        {/* One row like the reference: school, then language, search, notices and the child, all at the top. */}
+        <div className="flex items-center gap-1.5 pt-4">
+          {school ? <SchoolMark name={school.name} url={school.logoUrl} size={44} /> : <Skeleton className="h-11 w-11 rounded-xl" />}
+          <div className="ml-0.5 min-w-0 flex-1">
             {school ? (
               <>
-                <p className="line-clamp-2 text-[14.5px] font-semibold leading-tight text-brand-800">{school.name}</p>
-                {school.address && <p className="mt-0.5 truncate text-[12.5px] text-ink-500">{school.address}</p>}
+                <p className="line-clamp-2 text-[13.5px] font-semibold leading-tight text-brand-800">{school.name}</p>
+                {school.address && <p className="mt-0.5 truncate text-[11.5px] text-ink-500">{school.address}</p>}
               </>
             ) : (
-              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-24" />
             )}
           </div>
           <div className="flex shrink-0 rounded-full border border-ink-200 bg-white p-0.5" role="group" aria-label={L({ hi: "भाषा", en: "Language" })}>
@@ -110,16 +111,34 @@ export default function HomePage() {
                 key={k}
                 onClick={() => setLang(k)}
                 aria-pressed={lang === k}
-                className={clsx("h-8 min-w-[34px] rounded-full px-2 text-[12.5px] font-semibold", lang === k ? "bg-brand-600 text-white" : "text-ink-500")}
+                className={clsx("h-7 min-w-[30px] rounded-full px-1.5 text-[12px] font-semibold", lang === k ? "bg-brand-600 text-white" : "text-ink-500")}
               >
                 {k === "en" ? "EN" : "हि"}
               </button>
             ))}
           </div>
+          <Link href="/search/" className="grid h-10 w-9 shrink-0 place-items-center rounded-full text-brand-800 active:bg-ink-100" aria-label={L({ hi: "खोजें", en: "Search" })}>
+            <Search className="h-[21px] w-[21px]" strokeWidth={2} aria-hidden />
+          </Link>
+          <Link href="/notice/" className="relative grid h-10 w-9 shrink-0 place-items-center rounded-full text-brand-800 active:bg-ink-100" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
+            <Bell className="h-[21px] w-[21px]" strokeWidth={2} aria-hidden />
+            {unread > 0 && (
+              <span className="absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-ink-50 bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
+          </Link>
+          {child ? (
+            <Link href="/profile/" className="shrink-0 rounded-full ring-2 ring-white" aria-label={L({ hi: "प्रोफ़ाइल", en: "Profile" })}>
+              <Avatar name={child.name} url={child.photoUrl} size={38} tint={tint} />
+            </Link>
+          ) : (
+            <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-full" />
+          )}
         </div>
 
-        <div className="mt-4 flex items-center gap-1">
-          <div className="min-w-0 flex-1">
+        <div className="mt-5">
+          <div className="min-w-0">
             {child ? (
               <>
                 {many ? (
@@ -146,22 +165,6 @@ export default function HomePage() {
               </div>
             )}
           </div>
-          <Link href="/search/" className="grid h-11 w-11 place-items-center rounded-full text-brand-800 active:bg-ink-100" aria-label={L({ hi: "खोजें", en: "Search" })}>
-            <Search className="h-[22px] w-[22px]" strokeWidth={2} aria-hidden />
-          </Link>
-          <Link href="/notice/" className="relative grid h-11 w-11 place-items-center rounded-full text-brand-800 active:bg-ink-100" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
-            <Bell className="h-[22px] w-[22px]" strokeWidth={2} aria-hidden />
-            {unread > 0 && (
-              <span className="absolute right-1.5 top-1.5 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-ink-50 bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
-                {unread > 9 ? "9+" : unread}
-              </span>
-            )}
-          </Link>
-          {child && (
-            <Link href="/profile/" className="ml-1 rounded-full ring-2 ring-white" aria-label={L({ hi: "प्रोफ़ाइल", en: "Profile" })}>
-              <Avatar name={child.name} url={child.photoUrl} size={44} tint={tint} />
-            </Link>
-          )}
         </div>
       </header>
 
