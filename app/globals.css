@@ -140,6 +140,20 @@
   .banner > .art {
     @apply absolute bottom-0 right-[-6px] h-[116px] w-[136px];
   }
+  /* Photo banner: the photo fills the card, its plain left side (plus a lavender fade) carries the dark text. */
+  .banner-photo {
+    @apply pr-0;
+  }
+  .banner-photo > img {
+    @apply absolute inset-0 z-0 h-full w-full object-cover object-right;
+  }
+  .banner-photo::before {
+    content: "";
+    @apply absolute inset-0 z-[1] bg-[linear-gradient(90deg,#F3F0FE_0%,#F3F0FE_42%,rgba(243,240,254,0)_64%)];
+  }
+  .banner-photo > :not(img) {
+    @apply relative z-[2] w-[62%];
+  }
 
   /* Label left, value right, hairline between rows. */
   /* :where keeps these weak, so a colour or size utility on one row still wins. */

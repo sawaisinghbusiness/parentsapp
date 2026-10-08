@@ -24,13 +24,21 @@ export interface Card {
   attendance: { present: number; days: number } | null;
 }
 export interface Report {
-  exams: { id: string; title: string; startDate: string | null; endDate: string | null }[];
+  /** grand/outOf/percent are per exam for the % ring; older servers send none and the row shows no ring. */
+  exams: { id: string; title: string; startDate: string | null; endDate: string | null; grand?: number; outOf?: number; percent?: number }[];
   card: Card | null;
   grades: { scale: { grade: string; min: number }[]; passPercent: number };
 }
 export interface Schedule {
   exam: { title: string; startDate: string; endDate: string } | null;
   papers: { subject: string; syllabus: string; max: number; pass: number; date: string; start: string; end: string }[];
+}
+
+/** One colour per subject that stays with the subject (not its rank), so a child learns "Maths is green". */
+const PALETTE = ["#6C4FE0", "#EB6834", "#1BAF7A", "#EDA100", "#E87BA4", "#2A78D6"];
+const SUBJECT_COLOR: Record<string, number> = { english: 0, hindi: 1, maths: 2, mathematics: 2, science: 3, "social studies": 4, "social science": 4, sanskrit: 5, evs: 3 };
+export function subjectColor(subject: string, index: number) {
+  return PALETTE[SUBJECT_COLOR[subject.trim().toLowerCase()] ?? index % PALETTE.length];
 }
 
 /** "Social Studies" -> "SSt", "Maths" -> "Mat": short enough for a chart label or a tile. */

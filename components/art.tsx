@@ -72,8 +72,37 @@ export type ArtName = keyof typeof ART;
 
 const range = (n: number) => Array.from({ length: n }, (_, k) => k);
 
-/** Event pictures for the demo; a real school's events carry their own photos instead. */
-export const SCENES: Record<string, string> = {
+/** Demo event photos, by scene name; a real school's events carry their own photos instead. */
+export const SCENE_PHOTOS: Record<string, string> = {
+  sports: "/img/events/sports.webp",
+  mela: "/img/events/mela.webp",
+  flag: "/img/events/independence.webp",
+  teach: "/img/events/teachers.webp",
+  stage: "/img/events/annual.webp",
+  diya: "/img/events/diwali.webp",
+  march: "/img/events/march.webp",
+};
+
+/** Subject photos for result tiles; a subject without one gets its short name on grey. */
+const SUBJECT_PHOTOS: Record<string, string> = {
+  english: "english",
+  hindi: "hindi",
+  maths: "maths",
+  mathematics: "maths",
+  science: "science",
+  "social studies": "social-studies",
+  "social science": "social-studies",
+  sst: "social-studies",
+  sanskrit: "sanskrit",
+  evs: "evs",
+};
+export const subjectPhoto = (subject: string) => {
+  const f = SUBJECT_PHOTOS[subject.trim().toLowerCase()];
+  return f ? `/img/subjects/${f}.webp` : null;
+};
+
+/** Drawn fallbacks, used only when a scene has no photo. */
+const SCENES: Record<string, string> = {
   sports: `<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="110" fill="#CFE8C6"/><ellipse cx="80" cy="96" rx="96" ry="40" fill="none" stroke="#fff" stroke-width="3"/><ellipse cx="80" cy="96" rx="78" ry="28" fill="none" stroke="#fff" stroke-width="3"/>
 <path d="M0 14q40 10 80 0t80 0" stroke="#5B5670" stroke-width="1" fill="none"/><path d="m10 16 5 9 5-8z" fill="${V600}"/><path d="m30 19 5 9 5-9z" fill="${MARI}"/><path d="m50 18 5 9 5-9z" fill="#DC2626"/><path d="m70 15 5 9 5-9z" fill="#16A34A"/><path d="m90 14 5 9 5-8z" fill="${V600}"/><path d="m110 17 5 9 5-9z" fill="${MARI}"/><path d="m130 18 5 9 5-9z" fill="#DC2626"/>
 <circle cx="62" cy="58" r="6" fill="${SKIN}"/><rect x="56" y="64" width="12" height="16" rx="5" fill="#fff"/><path d="M58 80l-4 12M66 80l5 11" stroke="${SKIN}" stroke-width="4" stroke-linecap="round"/>
@@ -117,8 +146,9 @@ export function Art({ name, className }: { name: ArtName; className?: string }) 
   return <span aria-hidden className={`art block [&>svg]:h-full [&>svg]:w-full ${className || ""}`} dangerouslySetInnerHTML={{ __html: ART[name] }} />;
 }
 
-/** An event picture: the school's photo when there is one, else one of our scenes. */
+/** An event picture: the school's photo when there is one, else the demo photo or drawing for its scene. */
 export function EventPicture({ url, scene, alt, className }: { url?: string | null; scene?: string | null; alt: string; className?: string }) {
+  url = url || (scene && SCENE_PHOTOS[scene]) || null;
   if (url)
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={url} alt={alt} className={`block aspect-[16/11] w-full object-cover ${className || ""}`} loading="lazy" />;

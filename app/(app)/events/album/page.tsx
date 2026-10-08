@@ -46,7 +46,7 @@ export default function AlbumPage() {
             <span>
               <ImageIcon aria-hidden />
               {data.photoCount} {L({ hi: "फ़ोटो", en: "photos" })}
-              {data.videoCount > 0 && ` · ${data.videoCount} ${L({ hi: "वीडियो", en: "videos" })}`}
+              {data.videoCount > 0 && ` · ${data.videoCount} ${L({ hi: "वीडियो", en: data.videoCount === 1 ? "video" : "videos" })}`}
             </span>
           )}
         </p>

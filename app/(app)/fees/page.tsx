@@ -1,37 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { CalendarDays, ChevronDown, Share2 } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { dayMonth, fullDate, rupees } from "@/lib/format";
-import { INS_TEXT, INS_TONE, insState, type Fees, type Receipt } from "@/lib/fees";
-import { F, HEAD } from "@/lib/text/fees";
+import { INS_TEXT, INS_TONE, insState, type Fees } from "@/lib/fees";
+import { F } from "@/lib/text/fees";
 import { CallOffice, ErrorCard, ListSkeleton, Skeleton, Status } from "@/components/ui";
-import { PaySheet } from "@/components/fees/PaySheet";
 
 const CLAIM_TONE = { pending: "wait", verified: "ok", rejected: "bad" } as const;
 
-/** Fees tab: the session in three numbers, one Pay button, each instalment (tap for its breakdown), then receipts. */
+/**
+ * Fees tab, as the kit has it: the session in three numbers, then the instalments (unpaid first).
+ * Each opens Fee Detail, which has Pay Now or, once paid, the receipt.
+ */
 export default function FeesPage() {
   const { child } = useParent();
   const L = useL();
   const { lang } = useT();
   const { data, error, reload } = useApi<Fees>(child ? `/fees?student=${child.id}` : null);
-  const [paying, setPaying] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
-
-  // Home's "Pay now" lands here with ?pay=1: open the sheet straight away.
-  const canPay = !!data && data.available && data.session.balance > 0 && !!data.pay.upiId;
-  useEffect(() => {
-    if (canPay && new URLSearchParams(window.location.search).get("pay") === "1") {
-      setPaying(true);
-      window.history.replaceState(null, "", window.location.pathname);
-    }
-  }, [canPay]);
 
   if (!data) {
     if (error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
@@ -43,22 +33,33 @@ export default function FeesPage() {
     );
   }
 
-  const label = (key: string) => (HEAD[key] ? L(HEAD[key]) : key.replace(/_fee$/, "").replace(/_/g, " "));
-
-  async function share(r: Receipt) {
-    const text = `${child?.name} · ${L(F.receiptNo)} ${r.receiptNo}\n${dayMonth(r.date, lang)} · ${rupees(r.amount)} (${r.mode})`;
-    try {
-      if (navigator.share) await navigator.share({ text });
-      else await navigator.clipboard.writeText(text);
-    } catch {
-      /* user closed the share sheet */
-    }
-  }
-
-  const payNow = data.available ? (data.dueNow > 0 ? data.options.dueNow : data.options.full) : 0;
+  // Pending UPI payments stay on top until the school checks them; checked ones show for a while below.
+  const claims = data.claims.slice(0, 10);
+  const order = data.available ? data.instalments.map((i, k) => ({ i, k })).sort((a, b) => Number(insState(a.i) === "paid") - Number(insState(b.i) === "paid")) : [];
+  const named = new Set(data.available ? data.instalments.map((i) => i.name) : []);
+  // Receipts that name no instalment (e.g. a lump sum) have no Fee Detail to live on, so they stay here.
+  const loose = data.receipts.filter((r) => !r.instalments.split(/\s*,\s*/).some((n) => named.has(n)));
 
   return (
     <div className="animate-rise space-y-3.5">
+      {claims.length > 0 && (
+        <ul className="space-y-2">
+          {claims.map((c) => (
+            <li key={c.id} className="row-card">
+              <div className="flex items-center justify-between gap-2">
+                <span className="tnum text-[15.5px] font-bold">{rupees(c.amount)}</span>
+                <Status tone={CLAIM_TONE[c.status]}>{L(c.status === "pending" ? F.claimPending : c.status === "verified" ? F.claimVerified : F.claimRejected)}</Status>
+              </div>
+              <p className="meta tnum mt-1">
+                <span>UTR {c.utr}</span>
+                <span>{dayMonth(c.paidOn, lang)}</span>
+              </p>
+              {c.status === "rejected" && c.rejectReason && <p className="mt-1 text-[14px] text-ink-700">{c.rejectReason}</p>}
+            </li>
+          ))}
+        </ul>
+      )}
+
       {!data.available ? (
         <section className="row-card space-y-3 p-4">
           <p className="text-ink-700">{L(F.notAvailable)}</p>
@@ -79,24 +80,8 @@ export default function FeesPage() {
             ))}
           </dl>
 
-          {data.session.balance > 0 &&
-            (data.pay.upiId ? (
-              <button onClick={() => setPaying(true)} className="btn-primary w-full">
-                {data.dueNow > 0 ? `${L({ hi: "बकाया भरें", en: "Pay due" })} ${rupees(payNow)}` : L(F.payUpi)}
-              </button>
-            ) : (
-              <p className="text-[14px] text-ink-500">
-                {L(F.noOnline)}{" "}
-                {data.pay.officePhone && (
-                  <a href={`tel:${data.pay.officePhone.replace(/\s/g, "")}`} className="tnum font-semibold text-brand-600">
-                    {data.pay.officePhone}
-                  </a>
-                )}
-              </p>
-            ))}
-
           <ul className="space-y-2">
-            {data.instalments.map((i, k) => {
+            {order.map(({ i, k }) => {
               const st = insState(i);
               return (
                 <li key={i.name}>
@@ -120,94 +105,37 @@ export default function FeesPage() {
               );
             })}
           </ul>
+
+          {data.session.balance > 0 && !data.pay.upiId && (
+            <p className="text-[14px] text-ink-500">
+              {L(F.noOnline)}{" "}
+              {data.pay.officePhone && (
+                <a href={`tel:${data.pay.officePhone.replace(/\s/g, "")}`} className="tnum font-semibold text-brand-600">
+                  {data.pay.officePhone}
+                </a>
+              )}
+            </p>
+          )}
         </>
       )}
 
-      {data.claims.length > 0 && (
+      {loose.length > 0 && (
         <section className="space-y-2 pt-1">
-          <h2 className="mlabel">{L(F.claims)}</h2>
+          <h2 className="mlabel">{L(F.receipts)}</h2>
           <ul className="space-y-2">
-            {data.claims.slice(0, 10).map((c) => (
-              <li key={c.id} className="row-card">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="tnum text-[15.5px] font-bold">{rupees(c.amount)}</span>
-                  <Status tone={CLAIM_TONE[c.status]}>{L(c.status === "pending" ? F.claimPending : c.status === "verified" ? F.claimVerified : F.claimRejected)}</Status>
-                </div>
-                <p className="meta tnum mt-1">
-                  <span>UTR {c.utr}</span>
-                  <span>{dayMonth(c.paidOn, lang)}</span>
-                </p>
-                {c.status === "rejected" && c.rejectReason && <p className="mt-1 text-[14px] text-ink-700">{c.rejectReason}</p>}
+            {loose.map((r) => (
+              <li key={r.id} className="row-card flex items-center gap-3">
+                <span className="min-w-0 flex-1">
+                  <span className="tnum block truncate text-[15px] font-semibold">{r.receiptNo}</span>
+                  <span className="block text-[13px] text-ink-500">
+                    {dayMonth(r.date, lang)} · {r.mode}
+                  </span>
+                </span>
+                <span className="tnum font-bold">{rupees(r.amount)}</span>
               </li>
             ))}
           </ul>
         </section>
-      )}
-
-      <section className="space-y-2 pt-1">
-        <h2 className="mlabel">{L(F.receipts)}</h2>
-        {data.receipts.length === 0 ? (
-          <p className="row-card text-[15px] text-ink-500">{L(F.noReceipts)}</p>
-        ) : (
-          <ul className="space-y-2">
-            {data.receipts.map((r) => {
-              const isOpen = open === r.id;
-              return (
-                <li key={r.id} className="rounded-2xl bg-ink-50">
-                  <button onClick={() => setOpen(isOpen ? null : r.id)} aria-expanded={isOpen} className="flex min-h-[60px] w-full items-center gap-3 px-3.5 py-2.5 text-left">
-                    <span className="min-w-0 flex-1">
-                      <span className="tnum block truncate text-[15px] font-semibold">{r.receiptNo}</span>
-                      <span className="block text-[13px] text-ink-500">
-                        {dayMonth(r.date, lang)} · {r.mode}
-                      </span>
-                    </span>
-                    <span className="tnum font-bold">{rupees(r.amount)}</span>
-                    <ChevronDown className={clsx("h-5 w-5 shrink-0 text-ink-400 transition", isOpen && "rotate-180")} aria-hidden />
-                  </button>
-                  {isOpen && (
-                    <div className="animate-fadeIn px-3.5 pb-2">
-                      <dl className="kv tnum border-t border-ink-100 pt-1">
-                        {r.heads.map((h) => (
-                          <div key={h.key}>
-                            <dt>{label(h.key)}</dt>
-                            <dd>{rupees(h.amount)}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                      {(r.instalments || r.ref) && (
-                        <p className="text-[12px] text-ink-500">
-                          {r.instalments}
-                          {r.ref ? ` · Ref ${r.ref}` : ""}
-                        </p>
-                      )}
-                      <button onClick={() => share(r)} className="link text-[14px]">
-                        <Share2 className="h-4 w-4" aria-hidden /> {L(F.share)}
-                      </button>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      {paying && data.available && data.pay.upiId && child && (
-        <PaySheet
-          info={{
-            studentId: child.id,
-            srNo: child.srNo,
-            childName: child.name,
-            asOf: data.asOf,
-            upiId: data.pay.upiId,
-            upiName: data.pay.upiName,
-            dueNow: data.options.dueNow,
-            full: data.options.full,
-            fineIncluded: data.fine > 0,
-          }}
-          onClose={() => setPaying(false)}
-          onSent={reload}
-        />
       )}
     </div>
   );

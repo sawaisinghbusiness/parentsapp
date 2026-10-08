@@ -6,9 +6,10 @@ import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { num, ordinal } from "@/lib/format";
-import { abbr, type Report } from "@/lib/exam";
+import { abbr, subjectColor, type Report } from "@/lib/exam";
 import { M } from "@/lib/text/more";
-import { Empty, ErrorCard, ListSkeleton, TINTS } from "@/components/ui";
+import { subjectPhoto } from "@/components/art";
+import { Empty, ErrorCard, ListSkeleton } from "@/components/ui";
 
 /** One exam: total, percent, grade and rank on top, then every subject with its bar. */
 export default function ResultDetailPage() {
@@ -49,15 +50,21 @@ export default function ResultDetailPage() {
         {!c.complete ? L(M.incomplete) : failed.length ? `${L(M.needsWork)}: ${failed.join(", ")}` : `${L(M.result)}: ${L(M.passed)}`}
       </p>
 
-      <ul className="space-y-4">
+      <ul className="space-y-2">
         {c.subjects.map((s, k) => {
           const pct = s.total !== null && c.exam.max ? Math.min(100, (s.total / c.exam.max) * 100) : 0;
           const multi = c.exam.parts.length > 1;
+          const photo = subjectPhoto(s.subject);
           return (
-            <li key={s.subject} className="grid grid-cols-[40px_1fr] items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl text-[13px] font-bold" style={{ background: TINTS[k % TINTS.length][0], color: TINTS[k % TINTS.length][1] }} aria-hidden>
-                {abbr(s.subject)}
-              </span>
+            <li key={s.subject} className="grid grid-cols-[52px_1fr] items-center gap-3 rounded-2xl bg-ink-50 p-2.5">
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photo} alt="" className="h-[52px] w-[52px] rounded-xl object-cover" loading="lazy" />
+              ) : (
+                <span className="grid h-[52px] w-[52px] place-items-center rounded-xl bg-ink-100 text-[14px] font-bold text-ink-900" aria-hidden>
+                  {abbr(s.subject)}
+                </span>
+              )}
               <div className="min-w-0">
                 <div className="mb-1.5 flex items-baseline justify-between gap-2">
                   <span className="truncate text-[15px] font-semibold">{s.subject}</span>
@@ -72,8 +79,8 @@ export default function ResultDetailPage() {
                     </span>
                   )}
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-ink-100" aria-hidden>
-                  <div className={clsx("h-full rounded-full", s.passed ? "bg-brand-600" : "bg-rose-600")} style={{ width: `${s.entered && !s.absent ? pct : 0}%` }} />
+                <div className="h-1.5 overflow-hidden rounded-full bg-ink-200/70" aria-hidden>
+                  <div className="h-full rounded-full" style={{ width: `${s.entered && !s.absent ? pct : 0}%`, background: s.passed ? subjectColor(s.subject, k) : "#DC2626" }} />
                 </div>
                 {multi && s.entered && !s.absent && <p className="tnum mt-1 text-[12px] text-ink-400">{c.exam.parts.map((p) => `${p.name} ${s.marks[p.key] ?? "—"}/${p.max}`).join(" · ")}</p>}
               </div>

@@ -55,7 +55,7 @@ export default function HomePage() {
   const first = child?.name.split(" ")[0] || "";
 
   // The banner: the one thing that matters most today.
-  let banner: { title: string; text: string; href: string; button: string; art: ArtName } | null = null;
+  let banner: { title: string; text: string; href: string; button: string; art: ArtName; photo?: string } | null = null;
   if (data && child) {
     const f = data.fees;
     const due = f ? f.dueNow + f.fine : 0;
@@ -65,7 +65,7 @@ export default function HomePage() {
       banner = {
         title: `${L({ hi: "फ़ीस बाकी", en: "Fees due" })} ${rupees(due)}`,
         text: f.fine > 0 ? `${L({ hi: "लेट फ़ाइन सहित", en: "Includes late fine" })} ${rupees(f.fine)}` : L({ hi: "आख़िरी तारीख निकल गई है", en: "The last date has passed" }),
-        href: "/fees/?pay=1",
+        href: "/fees/pay/",
         button: L({ hi: "अभी भरें", en: "Pay now" }),
         art: "child",
       };
@@ -84,6 +84,7 @@ export default function HomePage() {
         href: "/homework/",
         button: L({ hi: "देखें", en: "View" }),
         art: "notebook",
+        photo: "/img/homework.webp",
       };
     else if (f?.next && daysUntil(data.date, f.next.due) <= 10)
       banner = {
@@ -158,6 +159,18 @@ export default function HomePage() {
             <Skeleton className="h-3.5 w-32 bg-brand-100" />
             <Skeleton className="h-10 w-24 bg-brand-100" />
           </div>
+        ) : banner.photo ? (
+          <section className="banner banner-photo">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={banner.photo} alt="" />
+            <div>
+              <p className="text-[17px] font-bold leading-snug">{banner.title}</p>
+              <p className="mb-3 mt-1 text-[13px] leading-snug text-ink-500">{banner.text}</p>
+              <Link href={banner.href} className="btn-dark">
+                {banner.button}
+              </Link>
+            </div>
+          </section>
         ) : (
           <section className="banner">
             <p className="text-[17px] font-bold leading-snug">{banner.title}</p>
@@ -172,7 +185,8 @@ export default function HomePage() {
         <nav className="grid grid-cols-4 gap-x-1.5 gap-y-3 pt-1" aria-label={L({ hi: "सब कुछ", en: "Everything" })}>
           {GRID.map(({ href, text, icon: Icon }, k) => (
             <Link key={href} href={href} className="icon-tile">
-              <span style={{ background: TINTS[k][0], color: TINTS[k][1] }}>
+              {/* Black icon on a soft tint: a same-hue icon and background looked machine-made. */}
+              <span className="text-ink-900" style={{ background: TINTS[k][0] }}>
                 <Icon className="h-6 w-6" strokeWidth={1.6} aria-hidden />
               </span>
               {L(text)}

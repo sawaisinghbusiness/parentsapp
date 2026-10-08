@@ -7,7 +7,6 @@ import { useParent } from "@/lib/parent";
 import { useL } from "@/lib/i18n";
 import { phoneText } from "@/lib/format";
 import { M } from "@/lib/text/more";
-import { Art } from "@/components/art";
 import { CallOffice, ErrorCard, ListSkeleton } from "@/components/ui";
 
 interface Bus {
@@ -53,11 +52,14 @@ export default function BusPage() {
   const r = data.route;
   return (
     <div className="animate-rise space-y-4">
-      <section className="banner">
-        <p className="text-[13px] text-ink-500">{data.pickup ? L(M.pickup) : L(M.stop)}</p>
-        <p className="tnum text-[28px] font-extrabold leading-tight">{data.pickup ? clock(data.pickup) : data.stop || L(M.notSet)}</p>
-        <p className="mt-1 text-[13px] leading-snug text-ink-500">{[data.pickup ? data.stop : null, data.routeName].filter(Boolean).join(" · ")}</p>
-        <Art name="bus" />
+      <section className="banner banner-photo min-h-[128px]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/img/bus.webp" alt="" />
+        <div>
+          <p className="text-[13px] text-ink-500">{data.pickup ? L(M.pickup) : L(M.stop)}</p>
+          <p className="tnum text-[28px] font-extrabold leading-tight">{data.pickup ? clock(data.pickup) : data.stop || L(M.notSet)}</p>
+          <p className="mt-1 text-[13px] leading-snug text-ink-500">{[data.pickup ? data.stop : null, data.routeName].filter(Boolean).join(" · ")}</p>
+        </div>
       </section>
 
       {(r?.vehicleNo || r?.driverName || r?.conductorName) && (

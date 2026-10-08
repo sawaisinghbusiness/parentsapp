@@ -1,4 +1,4 @@
-import { SCENES } from "@/components/art";
+import { SCENE_PHOTOS } from "@/components/art";
 
 export interface EventRow {
   id: string;
@@ -6,7 +6,7 @@ export interface EventRow {
   date: string;
   upcoming: boolean;
   coverUrl?: string | null;
-  /** Demo only: one of our drawn scenes instead of a photo. */
+  /** Demo only: one of our stock photos instead of the school's own. */
   scene?: string | null;
   photoCount: number;
   videoCount: number;
@@ -21,21 +21,15 @@ export interface Album extends EventRow {
   photos: Photo[];
 }
 
-/** Saves one picture to the phone: the school's file, or the drawn scene as an SVG. */
+/** Saves one picture to the phone: the school's file, or the demo photo for its scene. */
 export async function savePhoto(p: Photo, name: string) {
-  let href = p.url || "";
-  let made = false;
-  if (!href && p.scene && SCENES[p.scene]) {
-    href = URL.createObjectURL(new Blob([SCENES[p.scene]], { type: "image/svg+xml" }));
-    made = true;
-  }
+  const href = p.url || (p.scene && SCENE_PHOTOS[p.scene]) || "";
   if (!href) return;
   const a = document.createElement("a");
   a.href = href;
-  a.download = p.url ? name : `${name}.svg`;
+  a.download = p.url ? name : `${name}.webp`;
   a.rel = "noopener";
   document.body.appendChild(a);
   a.click();
   a.remove();
-  if (made) setTimeout(() => URL.revokeObjectURL(href), 2000);
 }

@@ -316,7 +316,11 @@ function reportCard(kid: Kid, examId: string | null) {
   const outOf = subjects.length * exam.max;
   const percent = Math.round((grand / outOf) * 1000) / 10;
   return {
-    exams: EXAMS.map(({ id, title, startDate, endDate }) => ({ id, title, startDate, endDate })),
+    exams: EXAMS.map(({ id, title, startDate, endDate, max }) => {
+      const g = MARKS[kid.id][id].reduce((a, [, ...m]) => a + m.reduce((x, y) => x + y, 0), 0);
+      const o = MARKS[kid.id][id].length * max;
+      return { id, title, startDate, endDate, grand: g, outOf: o, percent: Math.round((g / o) * 1000) / 10 };
+    }),
     card: {
       exam: { id: exam.id, title: exam.title, max: exam.max, parts: exam.parts, startDate: exam.startDate, endDate: exam.endDate },
       subjects,
@@ -366,10 +370,11 @@ function events() {
   return [
     { id: "sports", title: "Sports Day", date: addDays(t, 7), scene: "sports", photos: [] as ReturnType<typeof pics> },
     { id: "mela", title: "Dussehra Mela", date: addDays(t, 12), scene: "mela", photos: [] as ReturnType<typeof pics> },
-    { id: "teachers", title: "Teachers' Day", date: "2026-09-05", scene: "teach", photos: pics(["teach", "stage", "teach"], 9, [4]) },
-    { id: "independence", title: "Independence Day", date: "2026-08-15", scene: "flag", photos: pics(["flag", "march"], 18, [1, 7]) },
-    { id: "annual", title: "Annual Function", date: "2025-12-12", scene: "stage", photos: pics(["stage", "march", "stage"], 12, [2]) },
-    { id: "diwali", title: "Diwali Celebration", date: "2025-10-30", scene: "diya", photos: pics(["diya", "mela"], 8) },
+    // We only have one stock photo per scene, so each album shows each photo once.
+    { id: "teachers", title: "Teachers' Day", date: "2026-09-05", scene: "teach", photos: pics(["teach", "stage"], 2) },
+    { id: "independence", title: "Independence Day", date: "2026-08-15", scene: "flag", photos: pics(["flag", "march", "flag"], 3, [2]) },
+    { id: "annual", title: "Annual Function", date: "2025-12-12", scene: "stage", photos: pics(["stage", "march"], 2) },
+    { id: "diwali", title: "Diwali Celebration", date: "2025-10-30", scene: "diya", photos: pics(["diya", "mela"], 2) },
   ].map((e) => ({ ...e, coverUrl: null, upcoming: e.date >= t, photoCount: e.photos.filter((p) => !p.video).length, videoCount: e.photos.filter((p) => p.video).length }));
 }
 

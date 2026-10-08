@@ -33,6 +33,7 @@ const PAGES: Record<string, PageInfo> = {
   "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true },
   "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true },
   "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true },
+  "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/profile/": { title: { hi: "प्रोफ़ाइल", en: "Profile" } },
   "/id-card/": { title: { hi: "आईडी कार्ड", en: "ID Card" }, back: "/profile/", tab: "/profile/", perChild: true },
   "/exam/": { title: { hi: "परीक्षा", en: "Exam" }, back: "/", perChild: true },
