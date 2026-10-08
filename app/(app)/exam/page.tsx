@@ -165,8 +165,8 @@ function Ring({ percent }: { percent: number }) {
   const p = Math.max(0, Math.min(100, percent));
   return (
     <svg width="48" height="48" viewBox="0 0 46 46" className="shrink-0" role="img" aria-label={`${num(percent)}%`}>
-      <circle cx="23" cy="23" r={r} fill="none" stroke="#E7E1FD" strokeWidth="4" />
-      <circle cx="23" cy="23" r={r} fill="none" stroke="#6C4FE0" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${(C * p) / 100} ${C}`} transform="rotate(-90 23 23)" />
+      <circle cx="23" cy="23" r={r} fill="none" stroke="#E1EAFB" strokeWidth="4" />
+      <circle cx="23" cy="23" r={r} fill="none" stroke="#1446A0" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${(C * p) / 100} ${C}`} transform="rotate(-90 23 23)" />
       <text x="23" y="27" textAnchor="middle" fontSize="11" fontWeight="700" fill="#1F1B2E">
         {Math.round(percent)}%
       </text>

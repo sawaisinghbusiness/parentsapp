@@ -16,7 +16,7 @@ type Choice = "this" | "due" | "full" | "other";
 
 /** Each app opens straight to the payment; "any app" lets the phone ask which one. */
 const APPS = [
-  { key: "any", name: { hi: "कोई भी UPI ऐप", en: "Any UPI app" }, mark: "₹", bg: "#6C4FE0", scheme: "upi://pay" },
+  { key: "any", name: { hi: "कोई भी UPI ऐप", en: "Any UPI app" }, mark: "₹", bg: "#1446A0", scheme: "upi://pay" },
   { key: "phonepe", name: { hi: "PhonePe", en: "PhonePe" }, mark: "Pe", bg: "#5F259F", scheme: "phonepe://pay" },
   { key: "gpay", name: { hi: "Google Pay", en: "Google Pay" }, mark: "G", bg: "#1A73E8", scheme: "tez://upi/pay" },
   { key: "paytm", name: { hi: "Paytm", en: "Paytm" }, mark: "Pt", bg: "#00B9F1", scheme: "paytmmp://pay" },

@@ -469,6 +469,7 @@ export async function demoApi(path: string, method: string, body: any): Promise<
           fees: { dueNow: f.dueNow, fine: f.fine, balance: f.session.balance, next: f.instalments.filter((i) => i.due > t && i.outstanding > 0).map((i) => ({ name: i.name, due: i.due, amount: i.outstanding }))[0] || null },
           homework: hw,
           notice: notices(kid)[0],
+          noticeCount: notices(kid).filter((n) => n.date >= addDays(t, -6)).length,
           events: events()
             .filter((e) => e.upcoming)
             .map(({ photos, ...e }) => e),

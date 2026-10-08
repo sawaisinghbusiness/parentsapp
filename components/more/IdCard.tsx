@@ -10,7 +10,7 @@ import { M } from "@/lib/text/more";
  * The band takes the app's deep violet so the card matches the rest of the app.
  */
 
-const BAND = "#5A3CC9";
+const BAND = "#103A86";
 
 export interface IdCardData {
   child: {

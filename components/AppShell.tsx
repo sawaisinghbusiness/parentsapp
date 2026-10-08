@@ -66,7 +66,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] max-w-[560px] flex-col bg-white">
+    <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-ink-50" : "bg-white")}>
       {!isHome && (
         <header className="pt-safe sticky top-0 z-20 bg-white/95 backdrop-blur-sm">
           <div className="grid h-14 grid-cols-[48px_1fr_48px] items-center px-1.5">
@@ -110,8 +110,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             const on = lit === href;
             return (
               <li key={href}>
-                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[62px] flex-col items-center justify-center gap-1 text-[12px]", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
-                  <Icon className="h-[23px] w-[23px]" strokeWidth={on ? 2 : 1.7} fill={on && Icon !== IndianRupee ? "#E7E1FD" : "none"} aria-hidden />
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[66px] flex-col items-center justify-center gap-0.5 text-[12px]", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
+                  <span className={clsx("grid h-8 w-[52px] place-items-center rounded-[10px]", on && "bg-brand-600 text-white")}>
+                    <Icon className="h-[22px] w-[22px]" strokeWidth={on ? 2.1 : 1.7} aria-hidden />
+                  </span>
                   {L(text)}
                 </Link>
               </li>

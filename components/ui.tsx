@@ -9,7 +9,7 @@ import { useL, useT } from "@/lib/i18n";
 
 /** Soft pastel pairs (background, text) for avatars, subject marks and the home grid. Never the same hue as a status. */
 export const TINTS: [string, string][] = [
-  ["#EDE8FE", "#5A3CC9"],
+  ["#E8EFFC", "#103A86"],
   ["#E0F2FE", "#0369A1"],
   ["#DCFCE7", "#15803D"],
   ["#FEF3C7", "#B45309"],

@@ -7,9 +7,9 @@ const SKIN = "#D9966B";
 const SKIN2 = "#C98258";
 const HAIR = "#2A2033";
 const MARI = "#F5A524";
-const V600 = "#6C4FE0";
-const V700 = "#5A3CC9";
-const V100 = "#E7E1FD";
+const V600 = "#1446A0";
+const V700 = "#103A86";
+const V100 = "#E1EAFB";
 
 export const ART = {
   child: `<svg viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg"><circle cx="82" cy="66" r="48" fill="${V100}"/>
@@ -119,7 +119,7 @@ ${range(8).map((k) => `<circle cx="${10 + k * 20}" cy="${36 + (k % 2) * 4}" r="5
 <circle cx="84" cy="36" r="4.5" fill="none" stroke="#1E3A8A" stroke-width="1.4"/><circle cx="84" cy="36" r="1" fill="#1E3A8A"/>
 ${range(6).map((k) => `<circle cx="${20 + k * 24}" cy="84" r="5" fill="${k % 2 ? SKIN2 : SKIN}"/><rect x="${15 + k * 24}" y="89" width="10" height="12" rx="4" fill="#fff"/>`).join("")}</svg>`,
 
-  teach: `<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="110" fill="#EDE8FE"/><rect x="30" y="18" width="100" height="60" rx="4" fill="#2F4A3A"/><rect x="26" y="78" width="108" height="5" rx="2" fill="#B98A5B"/>
+  teach: `<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="110" fill="#E8EFFC"/><rect x="30" y="18" width="100" height="60" rx="4" fill="#2F4A3A"/><rect x="26" y="78" width="108" height="5" rx="2" fill="#B98A5B"/>
 <text x="80" y="47" text-anchor="middle" font-family="Figtree,sans-serif" font-size="13" font-weight="700" fill="#F1F5EE">Thank you</text><text x="80" y="64" text-anchor="middle" font-family="Figtree,sans-serif" font-size="9" fill="#C9D9CC">5 September</text>
 <circle cx="40" cy="96" r="7" fill="${MARI}"/><circle cx="52" cy="98" r="6" fill="#E97A8A"/><circle cx="118" cy="97" r="7" fill="#DC2626"/><path d="M118 90q2-5 6-6" stroke="#2F8F46" stroke-width="2" fill="none"/></svg>`,
 
