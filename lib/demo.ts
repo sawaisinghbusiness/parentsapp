@@ -2,10 +2,11 @@
  * Demo mode: the whole app runs on the phone with sample data, no backend and no real OTP.
  * Sign in with any 10-digit mobile and the code 123456.
  *
- * On by default while the app is being shown to schools. Set NEXT_PUBLIC_DEMO=0 (Vercel →
- * Environment Variables) to use the real backend and WhatsApp codes.
+ * Off by default: the app uses the real backend. Set NEXT_PUBLIC_DEMO=1 (Vercel → Environment
+ * Variables) to show the app with this sample family and no backend at all. To show schools the
+ * app on real data with the code 123456, use the backend's PARENT_DEMO_LOGIN=1 instead.
  */
-export const DEMO = process.env.NEXT_PUBLIC_DEMO !== "0";
+export const DEMO = process.env.NEXT_PUBLIC_DEMO === "1";
 export const DEMO_CODE = "123456";
 
 const SESSION = "pa:demo-session";

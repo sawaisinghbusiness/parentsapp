@@ -15,6 +15,8 @@ interface PublicSchool {
   logoUrl: string | null;
   officePhone: string;
   address?: string;
+  /** The backend signs everyone in with 123456 (shown to schools on real data). */
+  demoLogin?: boolean;
 }
 
 const RESEND_SECONDS = 30;
@@ -31,6 +33,7 @@ export default function LoginPage() {
   const [shake, setShake] = useState(0);
   const [wait, setWait] = useState(0);
   const codeRef = useRef<HTMLInputElement>(null);
+  const demoCode = DEMO || !!school?.demoLogin;
 
   useEffect(() => {
     // First time on this phone: the welcome slides come before sign-in.
@@ -141,7 +144,11 @@ export default function LoginPage() {
                 autoFocus
               />
             </label>
-            {DEMO && <p className="mt-2 text-[13px] text-ink-500">{L({ hi: "डेमो: कोई भी 10 अंकों का मोबाइल नंबर डालें।", en: "Demo: enter any 10-digit mobile number." })}</p>}
+            {DEMO ? (
+              <p className="mt-2 text-[13px] text-ink-500">{L({ hi: "डेमो: कोई भी 10 अंकों का मोबाइल नंबर डालें।", en: "Demo: enter any 10-digit mobile number." })}</p>
+            ) : (
+              school?.demoLogin && <p className="mt-2 text-[13px] text-ink-500">{L({ hi: "डेमो: ERP में बच्चे का जो नंबर है वही डालें। कोड 123456 है।", en: "Demo: enter the child's number from the ERP. The code is 123456." })}</p>
+            )}
             {error && <p className="mt-3 font-medium text-rose-700" role="alert">{error}</p>}
             <button type="submit" disabled={busy} className="btn-primary mt-5 w-full">
               {busy ? "…" : t("login.send")}
@@ -159,7 +166,7 @@ export default function LoginPage() {
             <button type="button" onClick={() => { setStep("mobile"); setError(""); }} className="-ml-1 mb-2 flex min-h-[44px] items-center gap-1 text-[14px] font-semibold text-brand-600">
               <ArrowLeft className="h-4 w-4" aria-hidden /> {t("login.change")}
             </button>
-            {DEMO ? (
+            {demoCode ? (
               <p className="text-ink-600">
                 {L({ hi: "डेमो कोड:", en: "Demo code:" })} <span className="tnum text-lg font-bold tracking-widest text-ink-900">{DEMO_CODE}</span>
               </p>

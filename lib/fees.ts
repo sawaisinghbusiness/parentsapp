@@ -29,7 +29,7 @@ export interface Instalment {
   overdue: boolean;
   fine: number;
   /** Fee heads that make up the amount; a concession is a negative head. Older servers send none. */
-  heads?: { key: string; amount: number }[];
+  heads?: { key: string; name?: string; amount: number }[];
   paidOn?: string | null;
 }
 export interface Pay {

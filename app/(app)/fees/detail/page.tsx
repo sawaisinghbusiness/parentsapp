@@ -29,7 +29,7 @@ export default function FeeDetailPage() {
   if (!data.available || !ins) return <Empty>{L(F.notAvailable)}</Empty>;
 
   const st = insState(ins);
-  const label = (key: string) => (HEAD[key] ? L(HEAD[key]) : key.replace(/_fee$/, "").replace(/_/g, " "));
+  const label = (h: { key: string; name?: string }) => (HEAD[h.key] ? L(HEAD[h.key]) : h.name || h.key.replace(/_fee$/, "").replace(/_/g, " "));
   const heads = ins.heads || [];
   const fine = ins.overdue ? ins.fine : 0;
   const toPay = ins.outstanding + fine;
@@ -65,7 +65,7 @@ export default function FeeDetailPage() {
         {heads.length > 0 ? (
           heads.map((h) => (
             <div key={h.key}>
-              <dt>{label(h.key)}</dt>
+              <dt>{label(h)}</dt>
               <dd className={clsx(h.amount < 0 && "text-jade-600")}>{h.amount < 0 ? `− ${rupees(-h.amount)}` : rupees(h.amount)}</dd>
             </div>
           ))
