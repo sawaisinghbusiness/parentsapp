@@ -37,6 +37,7 @@ const PAGES: Record<string, PageInfo> = {
   "/profile/": { title: { hi: "प्रोफ़ाइल", en: "Profile" } },
   "/id-card/": { title: { hi: "आईडी कार्ड", en: "ID Card" }, back: "/profile/", tab: "/profile/", perChild: true },
   "/exam/": { title: { hi: "परीक्षा", en: "Exam" }, back: "/", perChild: true },
+  "/report-card/": { title: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, back: "/", perChild: true },
   "/exam/detail/": { title: { hi: "रिज़ल्ट", en: "Result" }, back: "/exam/?tab=result", perChild: true },
   "/leave/": { title: { hi: "छुट्टी", en: "Leave" }, back: "/", perChild: true, action: { href: "/leave/apply/", text: { hi: "छुट्टी की अर्ज़ी", en: "Apply leave" } } },
   "/leave/apply/": { title: { hi: "छुट्टी की अर्ज़ी", en: "Apply Leave" }, back: "/leave/", perChild: true },

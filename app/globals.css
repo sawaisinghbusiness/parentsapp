@@ -560,3 +560,40 @@
     stroke-dashoffset: 0;
   }
 }
+
+/* Report card download: on screen the full-size sheets stay hidden; printing shows only them, one A4 page each. */
+#rc-print {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body > *:not(#rc-print) {
+    display: none !important;
+  }
+  #rc-print {
+    display: block !important;
+  }
+  #rc-print * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  #rc-print .report-sheet {
+    width: 210mm !important;
+    height: 297mm !important;
+    break-after: page;
+    page-break-after: always;
+  }
+  #rc-print .report-sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}

@@ -22,12 +22,31 @@ export interface Card {
   classSize?: number | null;
   remark?: string | null;
   attendance: { present: number; days: number } | null;
+  /** The child's particulars for the printed card; older servers send none (the app falls back to /me). */
+  student?: { name: string; rollNo: string; srNo: string; fatherName: string; motherName: string; dob: string | null; classSec: string };
+}
+/** The printed card's letterhead (same fields as the ERP's report card page). */
+export interface SheetSchool {
+  name: string;
+  short: string;
+  affiliationNo: string;
+  schoolCode: string;
+  place: string;
+  /** Town for "Place:" under the signatures; older servers send none (first part of `place` then). */
+  city?: string;
+  pincode: string;
+  phone: string;
+  email: string;
+  logoUrl: string | null;
+  principal: string;
 }
 export interface Report {
   /** grand/outOf/percent are per exam for the % ring; older servers send none and the row shows no ring. */
   exams: { id: string; title: string; startDate: string | null; endDate: string | null; grand?: number; outOf?: number; percent?: number }[];
   card: Card | null;
   grades: { scale: { grade: string; min: number }[]; passPercent: number };
+  school?: SheetSchool;
+  session?: string;
 }
 export interface Schedule {
   exam: { title: string; startDate: string; endDate: string } | null;

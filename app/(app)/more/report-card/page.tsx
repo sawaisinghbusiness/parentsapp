@@ -3,5 +3,5 @@
 import { Redirect } from "@/components/Redirect";
 
 export default function Moved() {
-  return <Redirect to="/exam/?tab=result" />;
+  return <Redirect to="/report-card/" />;
 }

@@ -50,58 +50,58 @@ export function IdCard({ data }: { data: IdCardData }) {
   ].filter(([, v]) => v) as [string, string][];
 
   return (
-    <article className="mx-auto w-full max-w-[360px] overflow-hidden rounded-3xl bg-white" aria-label={L(M.studentId)}>
+    <article className="mx-auto w-full max-w-[300px] overflow-hidden rounded-2xl bg-white shadow-[0_6px_24px_rgba(11,34,82,0.12)]" aria-label={L(M.studentId)}>
       {/* School band */}
-      <div className="px-4 pb-12 pt-4 text-white" style={{ background: BAND }}>
+      <div className="px-3.5 pb-9 pt-3 text-white" style={{ background: BAND }}>
         <div className="flex items-center gap-3">
           {s.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={s.logoUrl} alt="" className="h-11 w-11 shrink-0 rounded-full bg-white object-contain p-0.5" />
+            <img src={s.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full bg-white object-contain p-0.5" />
           ) : (
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-sm font-bold" style={{ color: BAND, fontFamily: "Georgia, serif" }}>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white text-xs font-bold" style={{ color: BAND, fontFamily: "Georgia, serif" }}>
               {s.shortName || initials(s.name)}
             </span>
           )}
           <div className="min-w-0 leading-tight">
-            <p className="text-[17px] font-semibold">{s.name}</p>
-            {s.address && <p className="mt-0.5 truncate text-sm text-white/80">{s.address}</p>}
+            <p className="text-[15px] font-semibold">{s.name}</p>
+            {s.address && <p className="mt-0.5 truncate text-xs text-white/80">{s.address}</p>}
           </div>
         </div>
       </div>
 
       {/* Photo over the band */}
-      <div className="-mt-11 flex justify-center">
+      <div className="-mt-8 flex justify-center">
         {c.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={c.photoUrl} alt="" className="h-[124px] w-[100px] rounded-lg border-4 border-white bg-ink-100 object-cover shadow-md" />
+          <img src={c.photoUrl} alt="" className="h-[96px] w-[78px] rounded-md border-[3px] border-white bg-ink-100 object-cover shadow-md" />
         ) : (
-          <span className="grid h-[124px] w-[100px] place-items-center rounded-lg border-4 border-white bg-ink-100 text-3xl font-bold text-ink-600 shadow-md">{initials(c.name)}</span>
+          <span className="grid h-[124px] w-[100px] place-items-center rounded-lg border-4 border-white bg-ink-100 text-2xl font-bold text-ink-600 shadow-md">{initials(c.name)}</span>
         )}
       </div>
 
-      <div className="px-4 pt-3 text-center">
-        <p className="text-[22px] font-semibold leading-tight text-ink-900">{c.name}</p>
-        <p className="mt-1 font-semibold text-ink-600">
+      <div className="px-3.5 pt-2 text-center">
+        <p className="text-[18px] font-semibold leading-tight text-ink-900">{c.name}</p>
+        <p className="mt-0.5 text-[14px] font-semibold text-ink-600">
           {L(M.class)} {c.classSec}
         </p>
       </div>
 
-      <dl className="mx-4 mt-3 divide-y divide-ink-100 border-t border-ink-100">
+      <dl className="mx-3.5 mt-2 divide-y divide-ink-100 border-t border-ink-100">
         {rows.map(([k, v]) => (
-          <div key={k} className="flex items-baseline gap-3 py-2">
-            <dt className="w-[42%] shrink-0 text-sm text-ink-500">{k}</dt>
+          <div key={k} className="flex items-baseline gap-3 py-1.5 text-[13.5px]">
+            <dt className="w-[40%] shrink-0 text-ink-500">{k}</dt>
             <dd className="tnum min-w-0 break-words font-medium text-ink-900">{v}</dd>
           </div>
         ))}
       </dl>
 
-      <div className="mt-2 flex items-center justify-between px-4 pb-3 text-sm text-ink-500">
+      <div className="mt-1 flex items-center justify-between px-3.5 pb-2.5 text-[12.5px] text-ink-500">
         <span>
           {L(M.session)} {data.session}
         </span>
         <span className="tnum">{s.shortName}</span>
       </div>
-      <div className="flex min-h-[36px] items-center justify-center px-4 text-sm font-semibold text-white" style={{ background: BAND }}>
+      <div className="flex min-h-[30px] items-center justify-center px-3.5 text-[13px] font-semibold text-white" style={{ background: BAND }}>
         {s.officePhone ? `Ph. ${phoneText(s.officePhone)}` : s.name}
       </div>
     </article>

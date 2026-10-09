@@ -22,7 +22,7 @@ export default function IdCardPage() {
       ) : error && error.status !== 401 ? (
         <ErrorCard offline={error.status === 0} onRetry={reload} />
       ) : (
-        <Skeleton className="mx-auto h-[560px] w-full max-w-[360px] rounded-3xl" />
+        <Skeleton className="mx-auto h-[440px] w-full max-w-[300px] rounded-2xl" />
       )}
     </div>
   );

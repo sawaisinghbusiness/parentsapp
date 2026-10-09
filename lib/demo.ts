@@ -324,6 +324,7 @@ function reportCard(kid: Kid, examId: string | null) {
     }),
     card: {
       exam: { id: exam.id, title: exam.title, max: exam.max, parts: exam.parts, startDate: exam.startDate, endDate: exam.endDate },
+      student: { name: kid.name, rollNo: kid.rollNo, srNo: kid.srNo, fatherName: kid.fatherName, motherName: kid.motherName, dob: kid.dob, classSec: kid.classSec },
       subjects,
       grand,
       outOf,
@@ -337,6 +338,20 @@ function reportCard(kid: Kid, examId: string | null) {
       attendance: exam.id === "half-yearly" ? { present: 118, days: 128 } : null,
     },
     grades: { scale: GRADES, passPercent: 33 },
+    school: {
+      name: SCHOOL.name,
+      short: SCHOOL.shortName,
+      affiliationNo: "1730512",
+      schoolCode: "10458",
+      place: "Nehru Nagar, Barmer, Rajasthan",
+      city: "Barmer",
+      pincode: "344001",
+      phone: SCHOOL.officePhone,
+      email: "office@mtnabarmer.in",
+      logoUrl: SCHOOL.logoUrl,
+      principal: "",
+    },
+    session: "2026-27",
   };
 }
 
