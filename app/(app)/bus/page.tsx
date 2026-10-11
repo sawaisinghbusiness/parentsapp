@@ -8,6 +8,7 @@ import { useL } from "@/lib/i18n";
 import { phoneText } from "@/lib/format";
 import { M } from "@/lib/text/more";
 import { CallOffice, ErrorCard, ListSkeleton } from "@/components/ui";
+import { LiveBusCard, useLiveBus } from "@/components/LiveBus";
 
 interface Bus {
   opted: boolean;
@@ -36,6 +37,7 @@ export default function BusPage() {
   const { child, me } = useParent();
   const L = useL();
   const { data, error, reload } = useApi<Bus>(child ? `/bus?student=${child.id}` : null);
+  const live = useLiveBus(child && data?.opted ? child.id : null);
 
   if (!data) {
     if (error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
@@ -52,15 +54,19 @@ export default function BusPage() {
   const r = data.route;
   return (
     <div className="animate-rise space-y-4">
-      <section className="banner banner-photo min-h-[128px]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/img/bus.webp" alt="" />
-        <div>
-          <p className="text-[13px] text-ink-500">{data.pickup ? L(M.pickup) : L(M.stop)}</p>
-          <p className="tnum text-[28px] font-extrabold leading-tight">{data.pickup ? clock(data.pickup) : data.stop || L(M.notSet)}</p>
-          <p className="mt-1 text-[13px] leading-snug text-ink-500">{[data.pickup ? data.stop : null, data.routeName].filter(Boolean).join(" · ")}</p>
-        </div>
-      </section>
+{live?.running && child ? (
+        <LiveBusCard live={live} childName={child.name} />
+      ) : (
+              <section className="banner banner-photo min-h-[128px]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/bus.webp" alt="" />
+          <div>
+            <p className="text-[13px] text-ink-500">{data.pickup ? L(M.pickup) : L(M.stop)}</p>
+            <p className="tnum text-[28px] font-extrabold leading-tight">{data.pickup ? clock(data.pickup) : data.stop || L(M.notSet)}</p>
+            <p className="mt-1 text-[13px] leading-snug text-ink-500">{[data.pickup ? data.stop : null, data.routeName].filter(Boolean).join(" · ")}</p>
+          </div>
+        </section>
+      )}
 
       {(r?.vehicleNo || r?.driverName || r?.conductorName) && (
         <dl className="kv">
@@ -111,10 +117,11 @@ export default function BusPage() {
             <span className="absolute bottom-5 left-[6px] top-5 w-0.5 bg-brand-100" aria-hidden />
             {r.stops.map((s, i) => {
               const mine = s.name === data.stop;
+              const passed = !!live?.running && !!live.stops.find((x) => x.name === s.name)?.done;
               return (
                 <li key={`${s.name}-${i}`} className="relative flex min-h-[48px] items-center gap-3">
-                  <span className={clsx("h-3.5 w-3.5 shrink-0 rounded-full border-2 ring-2 ring-white", mine ? "border-brand-600 bg-brand-600" : "border-brand-200 bg-white")} aria-hidden />
-                  <span className={clsx("min-w-0 flex-1 text-[15px]", mine ? "font-bold" : "text-ink-700")}>
+                  <span className={clsx("h-3.5 w-3.5 shrink-0 rounded-full border-2 ring-2 ring-white", passed ? "border-jade-600 bg-jade-600" : mine ? "border-brand-600 bg-brand-600" : "border-brand-200 bg-white")} aria-hidden />
+                  <span className={clsx("min-w-0 flex-1 text-[15px]", mine ? "font-bold" : passed ? "text-ink-400" : "text-ink-700")}>
                     {s.name}
                     {mine && <span className="font-medium text-brand-600"> · {L({ hi: "आपका स्टॉप", en: "your stop" })}</span>}
                   </span>

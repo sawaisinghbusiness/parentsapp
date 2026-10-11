@@ -6,6 +6,8 @@
  * Variables) to show the app with this sample family and no backend at all. To show schools the
  * app on real data with the code 123456, use the backend's PARENT_DEMO_LOGIN=1 instead.
  */
+import { metres } from "./bus";
+
 export const DEMO = process.env.NEXT_PUBLIC_DEMO === "1";
 export const DEMO_CODE = "123456";
 
@@ -245,19 +247,44 @@ function notices(kid: Kid) {
   ];
 }
 
+// The same Route 3 the demo driver runs in the staff app (real Barmer places, morning order).
+const LIVE_STOPS = [
+  { name: "Gandhi Chowk", time: "06:55", lat: 25.7466, lng: 71.3912 },
+  { name: "Station Road", time: "07:00", lat: 25.7432, lng: 71.3965 },
+  { name: "Sindhari Chauraha", time: "07:06", lat: 25.7381, lng: 71.4019 },
+  { name: "Mahabar Road", time: "07:12", lat: 25.7446, lng: 71.4079 },
+  { name: "Ambedkar Circle", time: "07:18", lat: 25.7512, lng: 71.4061 },
+];
+const LIVE_SCHOOL = { name: "Mother Teresa Nobles Academy", lat: 25.7563, lng: 71.4002 };
+const LIVE_LOOP_MS = 8 * 60_000;
+
+/** A pretend morning run that loops every 8 minutes, so the live map always has a moving bus. */
+function busLive(kid: Kid) {
+  const idle = { running: false, kind: "morning", at: null, bus: null, stops: [], school: LIVE_SCHOOL, myStop: kid.busStop, child: { done: false, at: null } };
+  if (!kid.bus) return idle;
+  const pts = [{ lat: 25.7489, lng: 71.3858 }, ...LIVE_STOPS, LIVE_SCHOOL];
+  const legs = pts.slice(1).map((p, i) => metres(pts[i], p));
+  const total = legs.reduce((a, b) => a + b, 0);
+  const now = Date.now();
+  let left = ((now % LIVE_LOOP_MS) / LIVE_LOOP_MS) * total;
+  let i = 0;
+  while (i < legs.length - 1 && left > legs[i]) left -= legs[i++];
+  const f = Math.min(1, left / legs[i]);
+  const bus = { lat: pts[i].lat + (pts[i + 1].lat - pts[i].lat) * f, lng: pts[i].lng + (pts[i + 1].lng - pts[i].lng) * f };
+  // Leg i runs from pts[i] to pts[i+1]; stops 0..i-1 (pts 1..i) are behind the bus.
+  const stops = LIVE_STOPS.map((st, k) => ({ ...st, done: k < i }));
+  const mine = stops.find((x) => x.name === kid.busStop);
+  return { running: true, kind: "morning", at: new Date(now - 4000).toISOString(), bus, stops, school: LIVE_SCHOOL, myStop: kid.busStop, child: { done: !!mine?.done, at: mine?.done ? new Date(now - 60_000).toISOString() : null } };
+}
+
 function busFor(kid: Kid) {
   if (!kid.bus) return { opted: false };
-  const stops = [
-    { name: "Station Road", time: "07:05" },
-    { name: "Sindhari Chauraha", time: "07:15" },
-    { name: "Ambedkar Circle", time: "07:25" },
-    { name: "Nehru Nagar (School)", time: "07:40" },
-  ];
+  const stops = LIVE_STOPS.map(({ name, time }) => ({ name, time }));
   return {
     opted: true,
     routeName: kid.busRoute,
     stop: kid.busStop,
-    pickup: "07:15",
+    pickup: "07:06",
     route: { vehicleNo: "RJ 04 PA 2231", driverName: "Bhanwar Lal", driverPhone: "9414000000", conductorName: "Mangi Lal", conductorPhone: null, stops },
   };
 }
@@ -542,6 +569,8 @@ export async function demoApi(path: string, method: string, body: any): Promise<
       }
       case "/bus":
         return busFor(kid);
+      case "/bus/live":
+        return busLive(kid);
       case "/id-card":
         return {
           child: { name: kid.name, classSec: kid.classSec, rollNo: kid.rollNo, srNo: kid.srNo, admissionNo: kid.admissionNo, fatherName: kid.fatherName, motherName: kid.motherName, photoUrl: null, dob: kid.dob, address: "Sindhari Road, Near Bus Stand, Barmer", bus: kid.bus ? kid.busRoute : null, mobile: s.phone },

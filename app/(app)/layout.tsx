@@ -2,11 +2,14 @@
 
 import { ParentProvider } from "@/lib/parent";
 import { AppShell } from "@/components/AppShell";
+import { SignInGate } from "@/components/SignInGate";
 
 export default function SignedInLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ParentProvider>
-      <AppShell>{children}</AppShell>
-    </ParentProvider>
+    <SignInGate>
+      <ParentProvider>
+        <AppShell>{children}</AppShell>
+      </ParentProvider>
+    </SignInGate>
   );
 }
