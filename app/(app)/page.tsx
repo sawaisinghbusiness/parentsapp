@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import {
+  Handshake,
   FileText,
   Bell,
   BookOpen,
@@ -60,6 +61,7 @@ const QUICK: Action[] = [
 ];
 // Behind "More" (and "View all"): the rest, opened in place.
 const MORE: Action[] = [
+  { href: "/meetings/", text: { hi: "मीटिंग", en: "Meetings" }, icon: Handshake },
   { href: "/exam/", text: { hi: "परीक्षा", en: "Exam" }, icon: ClipboardList },
   { href: "/report-card/", text: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, icon: FileText },
   { href: "/leave/", text: { hi: "छुट्टी", en: "Leave" }, icon: CalendarX2 },

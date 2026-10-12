@@ -49,6 +49,8 @@ const PAGES: Record<string, PageInfo> = {
   "/events/album/": { title: { hi: "फ़ोटो", en: "Photos" }, back: "/events/" },
   "/notice/": { title: { hi: "सूचनाएँ", en: "Notice" }, back: "/" },
   "/bus/": { title: { hi: "स्कूल बस", en: "School Bus" }, back: "/", perChild: true },
+  "/meetings/": { title: { hi: "मीटिंग", en: "Meetings" }, back: "/", perChild: true },
+  "/meetings/detail/": { title: { hi: "मीटिंग", en: "Meeting" }, back: "/meetings/", perChild: true },
   "/search/": { title: { hi: "खोजें", en: "Search" }, back: "/" },
 };
 
