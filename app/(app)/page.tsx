@@ -189,6 +189,10 @@ export default function HomePage() {
         <OfflineNote show={stale && !!me} />
         {error && error.status !== 401 && !data && <ErrorCard offline={error.status === 0} onRetry={reload} />}
 
+        {/* The school's banner, right under the greeting. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/img/home-banner.webp" alt={school?.name || ""} width={1400} height={781} className="enter block aspect-[1400/781] w-full rounded-2xl object-cover shadow-card" style={v(3)} />
+
         <Today data={data} />
 
         <section className="enter" style={v(4)}>
@@ -223,20 +227,20 @@ export default function HomePage() {
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>
-            <ul className={clsx("grid gap-3", events.length > 1 && "grid-cols-2")}>
+            {/* 16:9 cards; with more than one, they sit in a row that swipes sideways. */}
+            <ul className={clsx(events.length > 1 ? "no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1" : "grid")}>
               {events.map((e, k) => {
                 const n = daysUntil(data.date, e.date);
                 return (
-                  <li key={e.id} className="enter" style={v(6 + k * 1.5)}>
+                  <li key={e.id} className={clsx("enter", events.length > 1 && "w-[84%] shrink-0 snap-start")} style={v(6 + k * 1.5)}>
                     <Link href={`/events/album/?id=${encodeURIComponent(e.id)}`} className="event-card tilt" {...tilt}>
-                      <EventPicture url={e.coverUrl} scene={e.scene} alt="" className={events.length > 1 ? "!aspect-[4/5]" : "!aspect-[16/8]"} />
+                      <EventPicture url={e.coverUrl} scene={e.scene} alt="" className="!aspect-[16/9]" />
                       <i className="glare" aria-hidden />
-                      <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2.5 py-1 text-[12.5px] font-semibold text-ink-900">{dayMonth(e.date, lang)}</span>
                       <span className="absolute inset-x-3 bottom-3 text-white">
                         <span className="line-clamp-2 block text-[16px] font-semibold leading-snug">{e.title}</span>
                         <span className="mt-1 flex items-center gap-1 text-[12.5px] text-white/90">
                           <Clock3 className="h-3.5 w-3.5" aria-hidden />
-                          {n <= 0 ? L({ hi: "आज", en: "Today" }) : n === 1 ? L({ hi: "कल", en: "Tomorrow" }) : L({ hi: `${n} दिन में`, en: `In ${n} days` })}
+                          {dayMonth(e.date, lang)} · {n <= 0 ? L({ hi: "आज", en: "Today" }) : n === 1 ? L({ hi: "कल", en: "Tomorrow" }) : L({ hi: `${n} दिन में`, en: `In ${n} days` })}
                         </span>
                       </span>
                     </Link>

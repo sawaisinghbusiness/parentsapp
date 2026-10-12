@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Lang } from "@/lib/i18n";
 import { clock, monthYear, num } from "@/lib/format";
+import type { EventRow } from "@/lib/events";
+import { EventPicture } from "@/components/art";
 import { DAYS, DAYS_FULL, S } from "@/lib/text/study";
-import { Empty, ErrorCard, LineTabs, Skeleton } from "@/components/ui";
+import { Empty, ErrorCard, Skeleton } from "@/components/ui";
 
 type Tab = "attendance" | "timetable";
 
@@ -23,15 +26,15 @@ export default function CalendarPage() {
 
   return (
     <div className="animate-rise space-y-4">
-      <LineTabs
-        label={L({ hi: "कैलेंडर", en: "Calendar" })}
-        value={tab}
-        onChange={setTab}
-        options={[
-          { key: "attendance", text: L({ hi: "हाज़िरी", en: "Attendance" }) },
-          { key: "timetable", text: L({ hi: "टाइम टेबल", en: "Time Table" }) },
-        ]}
-      />
+      {/* Two tabs as one pill, the blue part sliding to the chosen one. */}
+      <div className="relative grid grid-cols-2 rounded-full bg-brand-50 p-1 ring-1 ring-brand-100" role="tablist" aria-label={L({ hi: "कैलेंडर", en: "Calendar" })}>
+        <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-brand-700 shadow-[0_2px_8px_rgba(20,70,160,.25)]" style={{ transform: tab === "timetable" ? "translateX(100%)" : "none" }} />
+        {(["attendance", "timetable"] as const).map((k) => (
+          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={clsx("relative h-11 rounded-full text-[15px] transition-colors duration-300", tab === k ? "font-semibold text-white" : "font-medium text-ink-600")}>
+            {k === "attendance" ? L({ hi: "हाज़िरी", en: "Attendance" }) : L({ hi: "टाइम टेबल", en: "Time Table" })}
+          </button>
+        ))}
+      </div>
       {!child ? <Skeleton className="h-72 w-full rounded-3xl" /> : tab === "attendance" ? <Attendance key={child.id} studentId={child.id} /> : <Timetable key={child.id} studentId={child.id} />}
     </div>
   );
@@ -49,7 +52,6 @@ interface MonthData {
   session: { percent: number | null; workingDays: number };
 }
 
-const DOT: Record<Mark | "hol", string> = { P: "bg-jade-600", A: "bg-rose-600", L: "bg-marigold-500", H: "bg-marigold-500", hol: "bg-brand-600" };
 const NAME: Record<Mark, { hi: string; en: string }> = {
   P: { hi: "उपस्थित", en: "Present" },
   A: { hi: "अनुपस्थित", en: "Absent" },
@@ -77,42 +79,54 @@ function Attendance({ studentId }: { studentId: string }) {
   // Monday-first grid: Sunday (0) goes to the end.
   const lead = shown ? (new Date(shown.days[0].date + "T00:00:00").getDay() + 6) % 7 : 0;
   const holidays = shown ? shown.days.filter((d) => d.holiday && !d.sunday) : [];
-  const notes = shown ? shown.days.filter((d) => (d.mark && d.mark !== "P") || (d.holiday && !d.sunday)) : [];
 
   return (
     <div className="space-y-3.5">
-      <section className="cal">
+      <section className="rounded-[20px] border border-ink-100 bg-white px-3 pb-3 pt-2.5 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
         <div className="flex items-center justify-between">
-          <button onClick={() => setMonth(shift(current, -1))} disabled={!canPrev} aria-label={L({ hi: "पिछला महीना", en: "Previous month" })} className="grid h-11 w-11 place-items-center rounded-full text-ink-700 active:bg-ink-100 disabled:opacity-25">
-            <ChevronLeft className="h-5 w-5" aria-hidden />
+          <button onClick={() => setMonth(shift(current, -1))} disabled={!canPrev} aria-label={L({ hi: "पिछला महीना", en: "Previous month" })} className="grid h-11 w-11 place-items-center rounded-full text-ink-900 active:bg-ink-100 disabled:opacity-25">
+            <ChevronLeft className="h-6 w-6" aria-hidden />
           </button>
-          <p className="text-[16px] font-bold">{current ? monthYear(current, lang) : " "}</p>
-          <button onClick={() => setMonth(shift(current, 1))} disabled={!canNext} aria-label={L({ hi: "अगला महीना", en: "Next month" })} className="grid h-11 w-11 place-items-center rounded-full text-ink-700 active:bg-ink-100 disabled:opacity-25">
-            <ChevronRight className="h-5 w-5" aria-hidden />
+          <p className="text-[21px] font-extrabold tracking-[-0.01em] text-ink-950">{current ? monthYear(current, lang) : " "}</p>
+          <button onClick={() => setMonth(shift(current, 1))} disabled={!canNext} aria-label={L({ hi: "अगला महीना", en: "Next month" })} className="grid h-11 w-11 place-items-center rounded-full text-ink-900 active:bg-ink-100 disabled:opacity-25">
+            <ChevronRight className="h-6 w-6" aria-hidden />
           </button>
         </div>
-        <div className="grid grid-cols-7 text-center">
+        <div className="mt-1 grid grid-cols-7 text-center">
           {WEEK[lang].map((w) => (
-            <span key={w} className="pb-1.5 text-[12px] text-ink-400">
+            <span key={w} className="pb-2 pt-1 text-[13px] text-ink-400">
               {w}
             </span>
           ))}
           {!shown
             ? Array.from({ length: 35 }, (_, i) => (
-                <span key={i} className="grid h-11 place-items-center">
-                  <Skeleton className="h-6 w-6 rounded-lg bg-ink-200/60" />
+                <span key={i} className="grid h-12 place-items-center">
+                  <Skeleton className="h-9 w-9 rounded-full bg-ink-200/60" />
                 </span>
               ))
             : [
                 ...Array.from({ length: lead }, (_, i) => <span key={`b${i}`} />),
                 ...shown.days.map((d) => {
                   const isToday = d.date === shown.today;
-                  const dot = d.mark ? DOT[d.mark] : d.holiday && !d.sunday ? DOT.hol : null;
+                  const hol = !!d.holiday && !d.sunday;
                   const dim = d.date > shown.today || d.sunday;
+                  // Each day says what it was by its circle: blue present, red absent, amber leave / half day, grey holiday.
+                  const look = isToday
+                    ? "bg-brand-700 font-bold text-white shadow-[0_4px_12px_rgba(20,70,160,.3)]"
+                    : d.mark === "P"
+                      ? "bg-brand-50 font-semibold text-brand-800"
+                      : d.mark === "A"
+                        ? "bg-rose-50 font-semibold text-rose-600"
+                        : d.mark === "L" || d.mark === "H"
+                          ? "bg-marigold-50 font-semibold text-marigold-700"
+                          : hol
+                            ? "bg-ink-100 font-medium text-ink-600"
+                            : dim
+                              ? "text-ink-300"
+                              : "text-ink-900";
                   return (
-                    <span key={d.date} className="relative grid h-11 place-items-center" aria-label={`${dayLine(d.date, lang)}${d.mark ? `: ${L(NAME[d.mark])}` : d.holiday ? `: ${d.holiday}` : ""}`}>
-                      <span className={clsx("tnum grid h-8 w-8 place-items-center rounded-[10px] text-[14px]", isToday ? "bg-brand-600 font-bold text-white" : dim ? "text-ink-300" : "text-ink-900")}>{+d.date.slice(8)}</span>
-                      {dot && !isToday && <span className={clsx("absolute bottom-0.5 h-[5px] w-[5px] rounded-full", dot)} />}
+                    <span key={d.date} className="grid h-12 place-items-center" aria-label={`${dayLine(d.date, lang)}${d.mark ? `: ${L(NAME[d.mark])}` : d.holiday ? `: ${d.holiday}` : ""}`}>
+                      <span className={clsx("tnum grid h-10 w-10 place-items-center rounded-full text-[16px] transition-colors", look)}>{+d.date.slice(8)}</span>
                     </span>
                   );
                 }),
@@ -122,15 +136,15 @@ function Attendance({ studentId }: { studentId: string }) {
 
       {t && shown && (
         <>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2.5">
             {[
-              [L({ hi: "उपस्थित", en: "Present" }), t.present + t.half / 2, "bg-jade-50"],
-              [L({ hi: "अनुपस्थित", en: "Absent" }), t.absent, "bg-rose-50"],
-              [L({ hi: "छुट्टियाँ", en: "Holidays" }), holidays.length, "bg-brand-50"],
-            ].map(([k, v, bg]) => (
-              <div key={k as string} className={clsx("rounded-2xl px-3 py-2.5", bg as string)}>
-                <p className="text-[12px] text-ink-500">{k as string}</p>
-                <p className="tnum text-[22px] font-extrabold leading-tight">{num(v as number)}</p>
+              [L({ hi: "उपस्थित", en: "Present" }), t.present + t.half / 2, "text-jade-600"],
+              [L({ hi: "अनुपस्थित", en: "Absent" }), t.absent, "text-rose-600"],
+              [L({ hi: "छुट्टियाँ", en: "Holidays" }), holidays.length, "text-brand-700"],
+            ].map(([k, v, color]) => (
+              <div key={k as string} className="rounded-2xl border border-ink-100 bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
+                <p className="text-[14px] text-ink-500">{k as string}</p>
+                <p className={clsx("tnum mt-0.5 text-[32px] font-extrabold leading-none", color as string)}>{num(v as number)}</p>
               </div>
             ))}
           </div>
@@ -146,23 +160,35 @@ function Attendance({ studentId }: { studentId: string }) {
               )}
             </p>
           )}
-
-          {notes.length > 0 && (
-            <ul className="space-y-2">
-              {notes.map((d) => (
-                <li key={d.date} className="flex min-h-[46px] items-center gap-2.5 rounded-xl bg-ink-50 px-3 text-[14px]">
-                  <span className={clsx("h-2 w-2 shrink-0 rounded-full", d.mark ? DOT[d.mark] : DOT.hol)} aria-hidden />
-                  <span className="min-w-0 flex-1">
-                    {d.mark ? L(NAME[d.mark]) : `${L({ hi: "छुट्टी", en: "Holiday" })} · ${d.holiday}`}
-                    <span className="text-ink-500"> · {dayLine(d.date, lang)}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
         </>
       )}
+
+      <NextEvent today={shown?.today} />
     </div>
+  );
+}
+
+/** The next school event as a photo banner: date, how many days to go, and the name. */
+function NextEvent({ today }: { today?: string }) {
+  const L = useL();
+  const { lang } = useT();
+  const { data } = useApi<{ events: EventRow[] }>("/events");
+  const day = today || new Date().toISOString().slice(0, 10);
+  const next = (data?.events || []).filter((e) => e.date >= day).sort((a, b) => a.date.localeCompare(b.date))[0];
+  if (!next) return null;
+  const n = Math.round((Date.parse(next.date + "T00:00:00Z") - Date.parse(day + "T00:00:00Z")) / 864e5);
+  return (
+    <Link href={`/events/album/?id=${encodeURIComponent(next.id)}`} className="relative block overflow-hidden rounded-[20px] active:opacity-90">
+      <EventPicture url={next.coverUrl} scene={next.scene} alt="" className="!aspect-[16/7]" />
+      <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      <span className="absolute inset-x-4 bottom-3 text-white">
+        <span className="line-clamp-1 block text-[19px] font-bold">{next.title}</span>
+        <span className="mt-0.5 flex items-center gap-1.5 text-[13px] text-white/90">
+          <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+          {dayLine(next.date, lang)} · {n <= 0 ? L({ hi: "आज", en: "Today" }) : n === 1 ? L({ hi: "कल", en: "Tomorrow" }) : L({ hi: `${n} दिन में`, en: `In ${n} days` })}
+        </span>
+      </span>
+    </Link>
   );
 }
 

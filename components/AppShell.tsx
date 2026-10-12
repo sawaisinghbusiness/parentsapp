@@ -9,6 +9,7 @@ import { useParent } from "@/lib/parent";
 import { useL, type Bi } from "@/lib/i18n";
 import { Avatar, ErrorCard, OfflineNote } from "./ui";
 import { ChildSheet } from "./ChildSheet";
+import { TopActions } from "./TopActions";
 
 const TABS: { href: string; text: Bi; icon: LucideIcon }[] = [
   { href: "/", text: { hi: "होम", en: "Home" }, icon: Home },
@@ -27,10 +28,12 @@ interface PageInfo {
   perChild?: boolean;
   /** A + on the right, e.g. Leave → Apply. */
   action?: { href: string; text: Bi };
+  /** A tab screen drawn like Home: big title on the left, the same buttons on the right, grey page. */
+  big?: boolean;
 }
 
 const PAGES: Record<string, PageInfo> = {
-  "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true },
+  "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true, big: true },
   "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true },
   "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true },
@@ -63,13 +66,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [switching, setSwitching] = useState(false);
   const page = PAGES[path];
   const isHome = path === "/";
+  const big = !!page?.big;
   const canSwitch = !!page?.perChild && (me?.children.length || 0) > 1 && !!child;
   const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
   const litIndex = TABS.findIndex((t) => t.href === lit);
 
   return (
-    <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-ink-50" : "bg-white")}>
-      {!isHome && (
+    <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome || big ? "bg-ink-50" : "bg-white")}>
+      {big && page && (
+        <header className="pt-safe px-4">
+          <div className="flex items-center gap-2 pb-1 pt-4">
+            <h1 className="min-w-0 flex-1 truncate text-[28px] font-extrabold tracking-[-0.01em] text-ink-950">{L(page.title)}</h1>
+            <TopActions />
+          </div>
+        </header>
+      )}
+      {!isHome && !big && (
         <header className="pt-safe sticky top-0 z-20 bg-white/95 backdrop-blur-sm">
           <div className="grid h-14 grid-cols-[48px_1fr_48px] items-center px-1.5">
             {page?.back ? (
@@ -95,7 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
       )}
 
-      <main className={clsx("flex-1 pb-28", !isHome && "space-y-3.5 px-4 pt-1")}>
+      <main className={clsx("flex-1 pb-28", !isHome && "space-y-3.5 px-4", !isHome && (big ? "pt-3" : "pt-1"))}>
         {!isHome && <OfflineNote show={stale && !!me} />}
         {error && error.status !== 401 ? (
           <div className={clsx(isHome && "px-4 pt-6")}>
