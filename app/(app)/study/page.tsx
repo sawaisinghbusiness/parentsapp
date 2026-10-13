@@ -106,6 +106,7 @@ export default function StudyPage() {
 
   const [mode, setMode] = useState<Mode>("timer");
   const [subject, setSubject] = useState("");
+  // Steps of 5 minutes; one more "−" below 5 gives 1 minute (handy for a quick try or a demo).
   const [minutes, setMinutes] = useState(25);
   const [run, setRun] = useState<Running | null>(null);
   const [log, setLog] = useState<Session[]>([]);
@@ -343,13 +344,13 @@ export default function StudyPage() {
                   ))}
                 </div>
                 <div className="flex items-center justify-center gap-4">
-                  <button type="button" onClick={() => setMinutes((m) => Math.max(5, m - 5))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="glass-chip grid h-10 w-10 place-items-center rounded-full border border-white/70 text-ink-800">
+                  <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="glass-chip grid h-10 w-10 place-items-center rounded-full border border-white/70 text-ink-800">
                     <Minus className="h-4 w-4" aria-hidden />
                   </button>
                   <span className="tnum w-24 text-center text-[15px] font-semibold text-ink-800">
-                    {minutes} {L({ hi: "मिनट", en: "minutes" })}
+                    {minutes} {L({ hi: "मिनट", en: minutes === 1 ? "minute" : "minutes" })}
                   </span>
-                  <button type="button" onClick={() => setMinutes((m) => Math.min(180, m + 5))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="glass-chip grid h-10 w-10 place-items-center rounded-full border border-white/70 text-ink-800">
+                  <button type="button" onClick={() => setMinutes((m) => (m < 5 ? 5 : Math.min(180, m + 5)))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="glass-chip grid h-10 w-10 place-items-center rounded-full border border-white/70 text-ink-800">
                     <Plus className="h-4 w-4" aria-hidden />
                   </button>
                 </div>
