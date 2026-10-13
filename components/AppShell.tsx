@@ -30,6 +30,10 @@ interface PageInfo {
   action?: { href: string; text: Bi };
   /** A tab screen drawn like Home: big title on the left, the same buttons on the right, grey page. */
   big?: boolean;
+  /** The screen draws its own header and background (Ask Teacher's Ajrakh look). */
+  own?: boolean;
+  /** No tab bar (a chat, whose message box sits at the bottom). */
+  bare?: boolean;
 }
 
 const PAGES: Record<string, PageInfo> = {
@@ -52,6 +56,8 @@ const PAGES: Record<string, PageInfo> = {
   "/meetings/": { title: { hi: "मीटिंग", en: "Meetings" }, back: "/", perChild: true },
   "/meetings/detail/": { title: { hi: "मीटिंग", en: "Meeting" }, back: "/meetings/", perChild: true },
   "/search/": { title: { hi: "खोजें", en: "Search" }, back: "/" },
+  "/teachers/": { title: { hi: "टीचर से पूछें", en: "Ask Teacher" }, back: "/", perChild: true, own: true },
+  "/teachers/chat/": { title: { hi: "टीचर से बात", en: "Chat" }, back: "/teachers/", perChild: true, own: true, bare: true },
 };
 
 const norm = (p: string) => (p.endsWith("/") ? p : p + "/");
@@ -69,12 +75,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const page = PAGES[path];
   const isHome = path === "/";
   const big = !!page?.big;
+  const own = !!page?.own;
   const canSwitch = !!page?.perChild && (me?.children.length || 0) > 1 && !!child;
   const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
   const litIndex = TABS.findIndex((t) => t.href === lit);
 
   return (
-    <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome || big ? "bg-ink-50" : "bg-white")}>
+    <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", own ? "bg-ajk-sand" : isHome || big ? "bg-ink-50" : "bg-white")}>
       {big && page && (
         <header className="pt-safe px-4">
           <div className="flex items-center gap-2 pb-1 pt-4">
@@ -83,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
       )}
-      {!isHome && !big && (
+      {!isHome && !big && !own && (
         <header className="pt-safe sticky top-0 z-20 bg-white/95 backdrop-blur-sm">
           <div className="grid h-14 grid-cols-[48px_1fr_48px] items-center px-1.5">
             {page?.back ? (
@@ -109,8 +116,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
       )}
 
-      <main className={clsx("flex-1 pb-28", !isHome && "space-y-3.5 px-4", !isHome && (big ? "pt-3" : "pt-1"))}>
-        {!isHome && <OfflineNote show={stale && !!me} />}
+      <main className={clsx("flex-1", !page?.bare && "pb-28", !isHome && !own && "space-y-3.5 px-4", !isHome && !own && (big ? "pt-3" : "pt-1"))}>
+        {!isHome && !own && <OfflineNote show={stale && !!me} />}
         {error && error.status !== 401 ? (
           <div className={clsx(isHome && "px-4 pt-6")}>
             <ErrorCard offline={error.status === 0} onRetry={reload} />
@@ -118,12 +125,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ) : isHome ? (
           children
         ) : (
-          <div key={path} className="page-in space-y-3.5">
+          <div key={path} className={clsx("page-in", !own && "space-y-3.5")}>
             {children}
           </div>
         )}
       </main>
 
+      {!page?.bare && (
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-100 bg-white" aria-label="Main">
         <ul className="relative grid grid-cols-4">
           {/* One blue pill that slides to the lit tab. */}
@@ -149,6 +157,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </ul>
       </nav>
+      )}
 
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
     </div>

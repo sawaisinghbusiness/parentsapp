@@ -5,6 +5,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import {
   Handshake,
+  MessageCircle,
   FileText,
   Bell,
   BookOpen,
@@ -61,6 +62,7 @@ const QUICK: Action[] = [
 ];
 // Behind "More" (and "View all"): the rest, opened in place.
 const MORE: Action[] = [
+  { href: "/teachers/", text: { hi: "टीचर से पूछें", en: "Ask Teacher" }, icon: MessageCircle },
   { href: "/meetings/", text: { hi: "मीटिंग", en: "Meetings" }, icon: Handshake },
   { href: "/exam/", text: { hi: "परीक्षा", en: "Exam" }, icon: ClipboardList },
   { href: "/report-card/", text: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, icon: FileText },
