@@ -41,6 +41,8 @@ interface PageInfo {
   own?: boolean;
   /** No tab bar (a chat, whose message box sits at the bottom). */
   bare?: boolean;
+  /** No top bar at all (no menu button, no title). */
+  noHeader?: boolean;
 }
 
 const PAGES: Record<string, PageInfo> = {
@@ -49,7 +51,7 @@ const PAGES: Record<string, PageInfo> = {
   "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/profile/": { title: { hi: "प्रोफ़ाइल", en: "Profile" } },
-  "/study/": { title: { hi: "पढ़ाई", en: "Study" }, perChild: true },
+  "/study/": { title: { hi: "पढ़ाई", en: "Study" }, perChild: true, noHeader: true },
   "/id-card/": { title: { hi: "आईडी कार्ड", en: "ID Card" }, back: "/profile/", tab: "/profile/", perChild: true },
   "/exam/": { title: { hi: "परीक्षा", en: "Exam" }, back: "/", perChild: true },
   "/report-card/": { title: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, back: "/", perChild: true },
@@ -140,7 +142,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
       )}
-      {!isHome && !big && !own && (
+      {page?.noHeader && <div className="pt-safe" aria-hidden />}
+      {!isHome && !big && !own && !page?.noHeader && (
         <header className="pt-safe sticky top-0 z-20 bg-white/95 backdrop-blur-sm">
           <div className="grid h-14 grid-cols-[48px_1fr_48px] items-center px-1.5">
             {page?.back ? (

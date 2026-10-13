@@ -261,7 +261,7 @@ export default function StudyPage() {
 
       <div className="relative space-y-4">
         {/* Timer or Pomodoro: stays under the top bar while the page scrolls. */}
-        <div className="glass sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-10 grid grid-cols-2 rounded-2xl p-1" style={{ background: "rgb(255 255 255 / 0.9)" }} role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
+        <div className="glass sticky top-[env(safe-area-inset-top)] z-10 grid grid-cols-2 rounded-2xl p-1" style={{ background: "rgb(255 255 255 / 0.9)" }} role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
           {(["timer", "pomodoro"] as const).map((m) => (
             <button
               key={m}
