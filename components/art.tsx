@@ -41,7 +41,7 @@ export const ART = {
 <rect x="24" y="33" width="22" height="20" rx="3" fill="#CFE3F7"/><rect x="52" y="33" width="22" height="20" rx="3" fill="#CFE3F7"/><rect x="80" y="33" width="22" height="20" rx="3" fill="#CFE3F7"/>
 <rect x="110" y="33" width="18" height="40" rx="3" fill="#E08E12"/><rect x="113" y="36" width="12" height="16" rx="2" fill="#CFE3F7"/>
 <rect x="134" y="33" width="14" height="20" rx="3" fill="#CFE3F7"/><rect x="148" y="70" width="8" height="6" rx="2" fill="#fff"/>
-<text x="30" y="78" font-family="Figtree,sans-serif" font-size="8" font-weight="800" fill="${HAIR}" letter-spacing="1">SCHOOL BUS</text>
+<text x="30" y="78" font-family="Inter Variable,Inter,sans-serif" font-size="8" font-weight="800" fill="${HAIR}" letter-spacing="1">SCHOOL BUS</text>
 <circle cx="44" cy="84" r="11" fill="${HAIR}"/><circle cx="44" cy="84" r="4.5" fill="#8E8AA3"/><circle cx="126" cy="84" r="11" fill="${HAIR}"/><circle cx="126" cy="84" r="4.5" fill="#8E8AA3"/>
 <circle cx="35" cy="45" r="5" fill="${SKIN}"/><path d="M30 44a5 5 0 0 1 10 0z" fill="${HAIR}"/><circle cx="63" cy="45" r="5" fill="${SKIN}"/><path d="M58 44a5 5 0 0 1 10 0z" fill="${HAIR}"/></svg>`,
 
@@ -56,7 +56,7 @@ export const ART = {
 <rect x="38" y="20" width="62" height="84" rx="5" fill="#fff"/><rect x="38" y="20" width="62" height="14" rx="5" fill="${V600}"/><rect x="38" y="29" width="62" height="5" fill="${V600}"/>
 <path d="M47 46h34M47 58h40M47 70h30M47 82h36" stroke="#E3DEF2" stroke-width="3" stroke-linecap="round"/>
 <path d="m86 43 3 3 5-6M90 55l3 3 5-6M80 67l3 3 5-6" stroke="#16A34A" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="92" cy="92" r="12" fill="none" stroke="#DC2626" stroke-width="2.4"/><text x="92" y="97" text-anchor="middle" font-family="Figtree,sans-serif" font-weight="800" font-size="13" fill="#DC2626">A</text>
+<circle cx="92" cy="92" r="12" fill="none" stroke="#DC2626" stroke-width="2.4"/><text x="92" y="97" text-anchor="middle" font-family="Inter Variable,Inter,sans-serif" font-weight="800" font-size="13" fill="#DC2626">A</text>
 <g transform="rotate(-30 112 60)"><rect x="107" y="30" width="9" height="46" rx="2" fill="${MARI}"/><path d="m107 76 4.5 9 4.5-9z" fill="#F2D3B5"/></g></svg>`,
 
   calflag: `<svg viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg"><circle cx="72" cy="64" r="48" fill="${V100}"/>
@@ -120,7 +120,7 @@ ${range(8).map((k) => `<circle cx="${10 + k * 20}" cy="${36 + (k % 2) * 4}" r="5
 ${range(6).map((k) => `<circle cx="${20 + k * 24}" cy="84" r="5" fill="${k % 2 ? SKIN2 : SKIN}"/><rect x="${15 + k * 24}" y="89" width="10" height="12" rx="4" fill="#fff"/>`).join("")}</svg>`,
 
   teach: `<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="110" fill="#E8EFFC"/><rect x="30" y="18" width="100" height="60" rx="4" fill="#2F4A3A"/><rect x="26" y="78" width="108" height="5" rx="2" fill="#B98A5B"/>
-<text x="80" y="47" text-anchor="middle" font-family="Figtree,sans-serif" font-size="13" font-weight="700" fill="#F1F5EE">Thank you</text><text x="80" y="64" text-anchor="middle" font-family="Figtree,sans-serif" font-size="9" fill="#C9D9CC">5 September</text>
+<text x="80" y="47" text-anchor="middle" font-family="Inter Variable,Inter,sans-serif" font-size="13" font-weight="700" fill="#F1F5EE">Thank you</text><text x="80" y="64" text-anchor="middle" font-family="Inter Variable,Inter,sans-serif" font-size="9" fill="#C9D9CC">5 September</text>
 <circle cx="40" cy="96" r="7" fill="${MARI}"/><circle cx="52" cy="98" r="6" fill="#E97A8A"/><circle cx="118" cy="97" r="7" fill="#DC2626"/><path d="M118 90q2-5 6-6" stroke="#2F8F46" stroke-width="2" fill="none"/></svg>`,
 
   stage: `<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg"><rect width="160" height="110" fill="${HAIR}"/><path d="M48 0h64l20 110H28z" fill="#3A2F4F"/><path d="M0 0h52q-6 40 4 110H0z" fill="#B23A48"/><path d="M160 0h-52q6 40-4 110h56z" fill="#B23A48"/>

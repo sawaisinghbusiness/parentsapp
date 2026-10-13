@@ -30,6 +30,8 @@ interface PageInfo {
   action?: { href: string; text: Bi };
   /** A tab screen drawn like Home: big title on the left, the same buttons on the right, grey page. */
   big?: boolean;
+  /** Big screen without the big title text (the buttons stay on the right). */
+  noTitle?: boolean;
   /** The screen draws its own header and background (Ask Teacher's Ajrakh look). */
   own?: boolean;
   /** No tab bar (a chat, whose message box sits at the bottom). */
@@ -37,7 +39,7 @@ interface PageInfo {
 }
 
 const PAGES: Record<string, PageInfo> = {
-  "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true, big: true },
+  "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true, big: true, noTitle: true },
   "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true },
   "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true },
@@ -85,7 +87,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {big && page && (
         <header className="pt-safe px-4">
           <div className="flex items-center gap-2 pb-1 pt-4">
-            <h1 className="min-w-0 flex-1 truncate text-[28px] font-extrabold tracking-[-0.01em] text-ink-950">{L(page.title)}</h1>
+            <h1 className={clsx("min-w-0 flex-1 truncate text-[28px] font-extrabold tracking-[-0.01em] text-ink-950", page.noTitle && "invisible")}>{L(page.title)}</h1>
             <TopActions />
           </div>
         </header>

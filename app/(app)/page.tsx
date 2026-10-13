@@ -21,7 +21,6 @@ import {
   Images,
   IndianRupee,
   Megaphone,
-  MoreHorizontal,
   PartyPopper,
   Search,
   X,
@@ -94,7 +93,8 @@ export default function HomePage() {
   const L = useL();
   const { lang, setLang } = useT();
   const [switching, setSwitching] = useState(false);
-  const [more, setMore] = useState(false);
+  // Every action shows from the start; "Show less" folds it to the first row.
+  const [more, setMore] = useState(true);
   const [peek, setPeek] = useState(false);
   const many = (me?.children.length || 0) > 1;
   const tint = Math.max(0, me?.children.findIndex((c) => c.id === child?.id) ?? 0);
@@ -174,10 +174,6 @@ export default function HomePage() {
                 ) : (
                   <Greeting name={first} />
                 )}
-                <p className="enter mt-0.5 text-[15px] text-ink-500" style={v(2)}>
-                  {L({ hi: "कक्षा", en: "Class" })} {child.classSec.replace(/\s*-\s*/, "-")}
-                  {child.rollNo && ` · ${L({ hi: "रोल", en: "Roll" })} ${child.rollNo}`}
-                </p>
               </>
             ) : (
               <div className="space-y-2 py-1">
@@ -195,7 +191,7 @@ export default function HomePage() {
 
         {/* The school's banner, right under the greeting. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/img/home-banner.webp" alt={school?.name || ""} width={1400} height={781} className="enter block aspect-[1400/781] w-full rounded-2xl object-cover shadow-card" style={v(3)} />
+        <img src="/img/home-banner-2.webp" alt={school?.name || ""} width={1280} height={720} className="enter block aspect-[1280/720] w-full rounded-2xl object-cover shadow-card" style={v(3)} />
 
         <Today data={data} />
 
@@ -207,18 +203,12 @@ export default function HomePage() {
               <ChevronRight className={clsx("h-4 w-4 transition-transform", more && "rotate-90")} aria-hidden />
             </button>
           </div>
-          <div className="grid grid-cols-5 gap-1.5">
+          {/* Twelve actions, four to a row; folded, only the first row shows. */}
+          <div className="grid grid-cols-4 gap-2">
             {QUICK.map((a, k) => (
               <QuickTile key={a.href} {...a} i={k} />
             ))}
-            <button onClick={() => setMore((m) => !m)} onPointerDown={ripple} aria-expanded={more} className="quick-tile pop-in" style={v(QUICK.length)}>
-              <span>
-                <MoreHorizontal className={clsx("h-6 w-6 transition-transform duration-500", more && "rotate-90")} strokeWidth={2.2} aria-hidden />
-              </span>
-              {L({ hi: "और", en: "More" })}
-            </button>
-            {/* Opened later, so these pop in on their own, without the page's starting delay. */}
-            {more && MORE.map((a, k) => <QuickTile key={a.href} {...a} i={k - 5} />)}
+            {more && MORE.map((a, k) => <QuickTile key={a.href} {...a} i={k + QUICK.length} />)}
           </div>
         </section>
 
@@ -311,14 +301,14 @@ function Today({ data }: { data: Home | undefined }) {
   const a = data.attendance;
   const att: { icon: React.ReactNode; tile: string; note: string } =
     a.status === "Present"
-      ? { icon: <Mark className="bg-jade-600" icon={Check} draw />, tile: "bg-jade-50", note: L({ hi: "आज उपस्थित", en: "Present today" }) }
+      ? { icon: <Mark className="bg-jade-600" icon={Check} draw />, tile: "", note: L({ hi: "आज उपस्थित", en: "Present today" }) }
       : a.status === "Absent"
-        ? { icon: <Mark className="bg-rose-600" icon={X} />, tile: "bg-rose-50", note: L({ hi: "आज अनुपस्थित", en: "Absent today" }) }
+        ? { icon: <Mark className="bg-rose-600" icon={X} />, tile: "", note: L({ hi: "आज अनुपस्थित", en: "Absent today" }) }
         : a.status === "Leave" || a.status === "HalfDay"
-          ? { icon: <Mark className="bg-marigold-500" icon={Check} />, tile: "bg-marigold-50", note: a.status === "Leave" ? L({ hi: "आज छुट्टी पर", en: "On leave today" }) : L({ hi: "आज आधा दिन", en: "Half day today" }) }
+          ? { icon: <Mark className="bg-marigold-500" icon={Check} />, tile: "", note: a.status === "Leave" ? L({ hi: "आज छुट्टी पर", en: "On leave today" }) : L({ hi: "आज आधा दिन", en: "Half day today" }) }
           : a.holiday
-            ? { icon: <PartyPopper className="h-6 w-6 text-brand-600" strokeWidth={1.8} aria-hidden />, tile: "bg-brand-50", note: a.holiday === "Sunday" ? L({ hi: "आज रविवार है", en: "Sunday" }) : a.holiday }
-            : { icon: <Clock3 className="h-6 w-6 text-ink-500" strokeWidth={1.8} aria-hidden />, tile: "bg-ink-100", note: L({ hi: "अभी हाज़िरी नहीं लगी", en: "Not marked yet" }) };
+            ? { icon: <PartyPopper className="h-6 w-6 text-ink-900" strokeWidth={1.8} aria-hidden />, tile: "", note: a.holiday === "Sunday" ? L({ hi: "आज रविवार है", en: "Sunday" }) : a.holiday }
+            : { icon: <Clock3 className="h-6 w-6 text-ink-900" strokeWidth={1.8} aria-hidden />, tile: "", note: L({ hi: "अभी हाज़िरी नहीं लगी", en: "Not marked yet" }) };
 
   const f = data.fees;
   const due = f ? f.dueNow + f.fine : 0;
@@ -344,8 +334,8 @@ function Today({ data }: { data: Home | undefined }) {
         <TodayRow
           i={5}
           href={due > 0 ? "/fees/pay/" : "/fees/"}
-          tile="bg-brand-50"
-          icon={<IndianRupee className="h-6 w-6 text-brand-600" strokeWidth={1.8} aria-hidden />}
+          tile=""
+          icon={<IndianRupee className="h-6 w-6 text-ink-900" strokeWidth={1.8} aria-hidden />}
           title={L({ hi: "फ़ीस", en: "Fees" })}
           note={feeNote}
           end={
@@ -357,8 +347,8 @@ function Today({ data }: { data: Home | undefined }) {
         <TodayRow
           i={6}
           href="/homework/"
-          tile="bg-brand-50"
-          icon={<BookOpen className="h-6 w-6 text-brand-600" strokeWidth={1.8} aria-hidden />}
+          tile=""
+          icon={<BookOpen className="h-6 w-6 text-ink-900" strokeWidth={1.8} aria-hidden />}
           title={L({ hi: "होमवर्क", en: "Homework" })}
           note={hwNote}
           end={<span className="text-[14.5px] font-semibold text-brand-600">{L({ hi: "देखें", en: "View" })}</span>}
@@ -402,7 +392,7 @@ function TodayRow({ i, href, tile, icon, title, note, end }: { i: number; href: 
   return (
     <li className="enter border-b border-ink-100 last:border-0" style={v(i)}>
       <Link href={href} onPointerDown={ripple} className="relative -mx-4 flex min-h-[72px] items-center gap-3.5 overflow-hidden px-4 py-3">
-        <span className={clsx("grid h-12 w-12 shrink-0 place-items-center rounded-xl", tile)}>{icon}</span>
+        <span className={clsx("grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-200 bg-white", tile)}>{icon}</span>
         <span className="min-w-0 flex-1">
           <span className="block text-[16px] font-semibold text-ink-900">{title}</span>
           <span className="block truncate text-[13px] text-ink-500">{note}</span>

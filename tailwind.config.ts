@@ -94,10 +94,10 @@ const config: Config = {
     extend: {
       colors: { slate: ink, ink, jade, emerald: jade, marigold, brand, night, rose, red: rose, canvas: "#FFFFFF", ajk },
       fontFamily: {
-        // Figtree for Latin and numbers; Hind fills in Devanagari.
-        sans: ["Figtree", "Hind", "'Noto Sans Devanagari'", "system-ui", "sans-serif"],
-        // Ask Teacher: Baloo 2 (made for Indian scripts, Latin and Devanagari together).
-        ajk: ["'Baloo 2'", "Hind", "system-ui", "sans-serif"],
+        // One face for the whole app: Inter for Latin and numbers, Noto Sans Devanagari for Hindi.
+        sans: ["'Inter Variable'", "'Noto Sans Devanagari Variable'", "system-ui", "sans-serif"],
+        // Ask Teacher uses the same face as the rest of the app.
+        ajk: ["'Inter Variable'", "'Noto Sans Devanagari Variable'", "system-ui", "sans-serif"],
       },
       fontSize: {
         // Parents read on small phones, often outdoors: the floor is 13px, body is 16px.

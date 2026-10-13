@@ -1,17 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource/figtree/400.css";
-import "@fontsource/figtree/500.css";
-import "@fontsource/figtree/600.css";
-import "@fontsource/figtree/700.css";
-import "@fontsource/hind/400.css";
-import "@fontsource/hind/500.css";
-import "@fontsource/hind/600.css";
-import "@fontsource/hind/700.css";
-import "@fontsource/baloo-2/400.css";
-import "@fontsource/baloo-2/500.css";
-import "@fontsource/baloo-2/600.css";
-import "@fontsource/baloo-2/700.css";
-import "@fontsource/baloo-2/800.css";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/noto-sans-devanagari";
 import "./globals.css";
 import { LangProvider } from "@/lib/i18n";
 
