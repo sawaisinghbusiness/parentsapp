@@ -23,7 +23,7 @@ export function Avatar({ name, url, size = 48, tint = 0 }: { name: string; url?:
   const [bg, fg] = TINTS[tint % TINTS.length];
   return url ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt="" width={size} height={size} className="shrink-0 rounded-full object-cover" style={{ width: size, height: size }} />
+    <img src={url} alt="" width={size} height={size} className="shrink-0 rounded-full object-cover object-[50%_22%]" style={{ width: size, height: size }} />
   ) : (
     <span className="grid shrink-0 place-items-center rounded-full font-bold" style={{ width: size, height: size, fontSize: size * 0.34, background: bg, color: fg }}>
       {initials(name)}

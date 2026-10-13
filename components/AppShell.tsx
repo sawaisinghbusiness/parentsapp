@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { CalendarDays, ChevronLeft, Home, IndianRupee, Plus, UserRound, type LucideIcon } from "lucide-react";
+import { CalendarDays, ChevronLeft, Home, IndianRupee, Menu as MenuIcon, Plus, UserRound, type LucideIcon } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { useL, type Bi } from "@/lib/i18n";
 import { Avatar, ErrorCard, OfflineNote } from "./ui";
 import { ChildSheet } from "./ChildSheet";
 import { TopActions } from "./TopActions";
+import { SideMenu } from "./SideMenu";
+import { PullRefresh } from "./PullRefresh";
+import { MenuContext } from "@/lib/menu";
 
 const TABS: { href: string; text: Bi; icon: LucideIcon }[] = [
   { href: "/", text: { hi: "होम", en: "Home" }, icon: Home },
@@ -32,7 +35,7 @@ interface PageInfo {
   big?: boolean;
   /** Big screen without the big title text (the buttons stay on the right). */
   noTitle?: boolean;
-  /** The screen draws its own header and background (Ask Teacher's Ajrakh look). */
+  /** The screen draws its own header (a chat shows the teacher's name there). */
   own?: boolean;
   /** No tab bar (a chat, whose message box sits at the bottom). */
   bare?: boolean;
@@ -58,7 +61,7 @@ const PAGES: Record<string, PageInfo> = {
   "/meetings/": { title: { hi: "मीटिंग", en: "Meetings" }, back: "/", perChild: true },
   "/meetings/detail/": { title: { hi: "मीटिंग", en: "Meeting" }, back: "/meetings/", perChild: true },
   "/search/": { title: { hi: "खोजें", en: "Search" }, back: "/" },
-  "/teachers/": { title: { hi: "टीचर से पूछें", en: "Ask Teacher" }, back: "/", perChild: true, own: true },
+  "/teachers/": { title: { hi: "टीचर से पूछें", en: "Ask Teacher" }, back: "/", perChild: true },
   "/teachers/chat/": { title: { hi: "टीचर से बात", en: "Chat" }, back: "/teachers/", perChild: true, own: true, bare: true },
 };
 
@@ -74,6 +77,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, child, stale, error, reload } = useParent();
   const L = useL();
   const [switching, setSwitching] = useState(false);
+  const [menu, setMenu] = useState(false);
   const page = PAGES[path];
   const isHome = path === "/";
   const big = !!page?.big;
@@ -82,11 +86,52 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
   const litIndex = TABS.findIndex((t) => t.href === lit);
 
+  // Swipe right anywhere on the screen to open the side menu (not on a chat, whose screen is all typing,
+  // and not when the swipe starts on something that scrolls sideways, like the month strip).
+  const touch = useRef<{ x: number; y: number; t: number } | null>(null);
+  useEffect(() => {
+    if (page?.bare) return;
+    const sideways = (el: Element | null) => {
+      for (let n = el; n && n !== document.body; n = n.parentElement) {
+        const o = getComputedStyle(n).overflowX;
+        if ((o === "auto" || o === "scroll") && n.scrollWidth > n.clientWidth + 2) return true;
+      }
+      return false;
+    };
+    const start = (e: TouchEvent) => {
+      const p = e.touches[0];
+      touch.current = e.touches.length === 1 && !sideways(e.target as Element) ? { x: p.clientX, y: p.clientY, t: Date.now() } : null;
+    };
+    const end = (e: TouchEvent) => {
+      const s0 = touch.current;
+      touch.current = null;
+      if (!s0) return;
+      const p = e.changedTouches[0];
+      const dx = p.clientX - s0.x;
+      const dy = Math.abs(p.clientY - s0.y);
+      if (dx > 70 && dy < dx * 0.5 && Date.now() - s0.t < 700) setMenu(true);
+    };
+    window.addEventListener("touchstart", start, { passive: true });
+    window.addEventListener("touchend", end, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", start);
+      window.removeEventListener("touchend", end);
+    };
+  }, [page?.bare]);
+
+  const menuButton = (
+    <button type="button" onClick={() => setMenu(true)} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100">
+      <MenuIcon className="h-6 w-6" strokeWidth={2} aria-hidden />
+    </button>
+  );
+
   return (
-    <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", own ? "bg-ajk-sand" : isHome || big ? "bg-ink-50" : "bg-white")}>
+    <MenuContext.Provider value={{ openMenu: () => setMenu(true) }}>
+    <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", own ? "bg-ink-50" : isHome || big ? "bg-ink-50" : "bg-white")}>
       {big && page && (
         <header className="pt-safe px-4">
-          <div className="flex items-center gap-2 pb-1 pt-4">
+          <div className="-ml-2.5 flex items-center gap-1 pb-1 pt-4">
+            {menuButton}
             <h1 className={clsx("min-w-0 flex-1 truncate text-[28px] font-extrabold tracking-[-0.01em] text-ink-950", page.noTitle && "invisible")}>{L(page.title)}</h1>
             <TopActions />
           </div>
@@ -100,7 +145,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <ChevronLeft className="h-6 w-6" aria-hidden />
               </Link>
             ) : (
-              <span />
+              menuButton
             )}
             <h1 className="truncate text-center text-[18px] font-bold">{page ? L(page.title) : ""}</h1>
             <span className="flex justify-end">
@@ -162,6 +207,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
+      {menu && <SideMenu onClose={() => setMenu(false)} onSwitchChild={() => setSwitching(true)} />}
+      {/* Pull down to refresh (not on a chat: it reloads itself, and pulling there means scrolling up). */}
+      <PullRefresh off={!!page?.bare || menu} />
     </div>
+    </MenuContext.Provider>
   );
 }

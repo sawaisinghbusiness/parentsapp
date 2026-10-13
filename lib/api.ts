@@ -81,6 +81,12 @@ export function hasSignInMark() {
   }
 }
 
+const REFRESH = "pa:refresh";
+/** Loads every screen's data again (pull to refresh). */
+export function refreshAll() {
+  window.dispatchEvent(new Event(REFRESH));
+}
+
 export function clearCache() {
   try {
     for (const k of Object.keys(localStorage)) if (k.startsWith(KEY)) localStorage.removeItem(k);
@@ -131,6 +137,14 @@ export function useApi<T>(path: string | null) {
     setError(null);
     setStale(false);
     load();
+  }, [path, load]);
+
+  // Pull to refresh (see AppShell) asks every screen on show to load again.
+  useEffect(() => {
+    if (!path) return;
+    const again = () => load();
+    window.addEventListener(REFRESH, again);
+    return () => window.removeEventListener(REFRESH, again);
   }, [path, load]);
 
   return { data, error, loading, stale, reload: load };

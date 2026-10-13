@@ -2,14 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import Link from "next/link";
-import { CalendarDays } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi, type Lang } from "@/lib/i18n";
 import { clock } from "@/lib/format";
 import type { EventRow } from "@/lib/events";
-import { EventPicture } from "@/components/art";
+import { EventRow as EventLine } from "@/components/EventRow";
 import { DAYS, DAYS_FULL, S } from "@/lib/text/study";
 import { Empty, ErrorCard, Skeleton } from "@/components/ui";
 
@@ -30,7 +28,7 @@ export default function CalendarPage() {
       <div className="relative grid grid-cols-2 rounded-full bg-[#E8F3F5] p-1 ring-1 ring-[#CFE6EA]" role="tablist" aria-label={L({ hi: "कैलेंडर", en: "Calendar" })}>
         <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[#177386] shadow-[0_2px_8px_rgba(23,115,134,.25)]" style={{ transform: tab === "timetable" ? "translateX(100%)" : "none" }} />
         {(["attendance", "timetable"] as const).map((k) => (
-          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={clsx("relative h-11 rounded-full text-[15px] transition-colors duration-300", tab === k ? "font-semibold text-white" : "font-medium text-ink-600")}>
+          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={clsx("relative h-10 rounded-full text-[14.5px] transition-colors duration-300", tab === k ? "font-semibold text-white" : "font-medium text-ink-600")}>
             {k === "attendance" ? L({ hi: "हाज़िरी", en: "Attendance" }) : L({ hi: "टाइम टेबल", en: "Time Table" })}
           </button>
         ))}
@@ -94,32 +92,50 @@ function Attendance({ studentId }: { studentId: string }) {
   // The whole session year (12 months from its first), so later months show where the year is going.
   const months = base ? Array.from({ length: 12 }, (_, i) => shift(base.firstMonth, i)) : [];
 
-  // The day list scrolls inside its own box, which fills the screen down to the tab bar,
-  // so the tabs and months stay put while the days move.
+  // The page itself doesn't scroll here: the months, the day list and the next event fill the
+  // screen down to the tab bar, and only the day list moves. So the top bar and tabs never shift.
+  const frame = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLElement>(null);
-  const [listH, setListH] = useState<number>();
+  const [frameH, setFrameH] = useState<number>();
   useEffect(() => {
+    window.scrollTo(0, 0);
+    const root = document.documentElement;
+    const was = [root.style.overflow, document.body.style.overflow];
+    root.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    // The shell leaves room under every page for the tab bar; here the frame already stops above it,
+    // and that extra room would make the page a little taller than the screen.
+    const main = document.querySelector("main");
+    const pad = main?.style.paddingBottom ?? "";
+    if (main) main.style.paddingBottom = "0";
     const fit = () => {
-      const el = list.current;
+      const el = frame.current;
       if (!el) return;
       const nav = document.querySelector('nav[aria-label="Main"]');
       const bottom = nav ? nav.getBoundingClientRect().top : window.innerHeight;
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      setListH(Math.max(240, Math.floor(bottom - top - 12)));
+      setFrameH(Math.max(300, Math.floor(bottom - el.getBoundingClientRect().top - 10)));
     };
     fit();
     window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, [!!base]);
-  // A new month starts from its 1st.
+    return () => {
+      window.removeEventListener("resize", fit);
+      [root.style.overflow, document.body.style.overflow] = was;
+      if (main) main.style.paddingBottom = pad;
+    };
+  }, []);
+  // This month opens at today (the bottom of the list); an earlier month opens at its 1st.
+  const shownMonth = shown?.month;
   useEffect(() => {
-    list.current?.scrollTo({ top: 0 });
-  }, [current]);
+    const el = list.current;
+    if (!el || !shownMonth || !base) return;
+    el.scrollTop = shownMonth === base.today.slice(0, 7) ? el.scrollHeight : 0;
+  }, [shownMonth, base]);
 
   // Keep the chosen month in the middle of the strip.
   useEffect(() => {
-    const el = strip.current?.querySelector<HTMLElement>('[aria-selected="true"]');
-    el?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    const box = strip.current;
+    const el = box?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (box && el) box.scrollTo({ left: el.offsetLeft - (box.clientWidth - el.clientWidth) / 2, behavior: "smooth" });
   }, [current, months.length]);
 
   if (!shown && !base && error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
@@ -128,11 +144,11 @@ function Attendance({ studentId }: { studentId: string }) {
   const days = shown ? shown.days.filter((d) => d.date <= shown.today) : [];
 
   return (
-    <div className="space-y-4">
+    <div ref={frame} style={{ height: frameH }} className="flex flex-col gap-3">
       {/* Months of the session, sideways. Months still to come are shown but can't be opened. */}
-      <div ref={strip} className="no-scrollbar -mx-4 -my-2 flex snap-x gap-2 overflow-x-auto scroll-px-4 px-4 py-2" role="tablist" aria-label={L({ hi: "महीना", en: "Month" })}>
+      <div ref={strip} className="no-scrollbar relative -mx-4 -my-1.5 flex shrink-0 snap-x gap-2 overflow-x-auto scroll-px-4 px-4 pb-2 pt-1.5" role="tablist" aria-label={L({ hi: "महीना", en: "Month" })}>
         {!base
-          ? Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-[60px] w-[88px] shrink-0 rounded-[7px]" />)
+          ? Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-[50px] w-[74px] shrink-0 rounded-[7px]" />)
           : months.map((m) => {
               const on = m === current;
               const later = m > thisMonth;
@@ -144,19 +160,21 @@ function Attendance({ studentId }: { studentId: string }) {
                   disabled={later}
                   onClick={() => setMonth(m)}
                   className={clsx(
-                    "flex h-[60px] w-[88px] shrink-0 snap-center flex-col items-center justify-center rounded-[7px] border transition-colors",
-                    on ? "border-[#177386] bg-[#177386] text-white shadow-[0_4px_12px_rgba(23,115,134,.25)]" : later ? "border-ink-100 bg-white text-ink-300" : "border-ink-100 bg-white text-ink-900 active:bg-ink-50"
+                    "relative flex h-[50px] w-[74px] shrink-0 snap-center flex-col items-center justify-center rounded-[7px] border border-ink-100 bg-white transition-colors",
+                    later ? "text-ink-300" : "text-ink-900 active:bg-ink-50"
                   )}
                 >
-                  <span className="text-[16px] font-bold leading-tight">{monthShort(m, lang)}</span>
-                  <span className={clsx("tnum text-[12px] leading-tight", on ? "text-white/80" : "text-ink-400")}>{m.slice(0, 4)}</span>
+                  <span className={clsx("text-[14.5px] leading-tight", on ? "font-bold" : "font-semibold")}>{monthShort(m, lang)}</span>
+                  <span className={clsx("tnum text-[11px] leading-tight", later ? "text-ink-300" : "text-ink-400")}>{m.slice(0, 4)}</span>
+                  {/* The month on screen: a small red dot under its card. */}
+                  {on && <span aria-hidden className="absolute -bottom-[5px] left-1/2 h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-rose-600" />}
                 </button>
               );
             })}
       </div>
 
       {/* The month as a list of days on one line: date, a dot in the day's colour, and what it was. */}
-      <section ref={list} style={{ height: listH }} className="no-scrollbar overflow-y-auto rounded-[20px] border border-ink-100 bg-white px-4 py-2 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
+      <section ref={list} className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl border border-ink-100 bg-white px-3.5 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
         {!shown ? (
           <div className="space-y-4 py-3">
             {Array.from({ length: 6 }, (_, i) => (
@@ -175,19 +193,19 @@ function Attendance({ studentId }: { studentId: string }) {
               const isToday = d.date === shown.today;
               const quiet = d.sunday && !d.mark;
               return (
-                <li key={d.date} className={clsx("grid grid-cols-[44px_24px_1fr] items-center gap-x-2", quiet ? "min-h-[40px]" : "min-h-[54px]")}>
+                <li key={d.date} className={clsx("grid grid-cols-[38px_20px_1fr] items-center gap-x-2", quiet ? "min-h-[36px]" : "min-h-[48px]")}>
                   <span className={clsx("text-center leading-tight", quiet && "opacity-60")}>
-                    <b className={clsx("tnum block font-bold", quiet ? "text-[15px] text-ink-500" : "text-[20px] text-ink-900")}>{+d.date.slice(8)}</b>
-                    <span className="block text-[12px] text-ink-400">{weekday(d.date, lang)}</span>
+                    <b className={clsx("tnum block font-semibold", quiet ? "text-[13.5px] text-ink-500" : "text-[16.5px] text-ink-900")}>{+d.date.slice(8)}</b>
+                    <span className="block text-[11px] text-ink-400">{weekday(d.date, lang)}</span>
                   </span>
                   {/* The line runs through every row; it stops at the first and last day. */}
                   <span className="relative h-full" aria-hidden>
                     <span className={clsx("absolute left-1/2 w-0.5 -translate-x-1/2 bg-ink-100", i === 0 ? "top-1/2" : "top-0", i === days.length - 1 ? "bottom-1/2" : "bottom-0")} />
-                    <span className={clsx("absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-4 ring-white", quiet ? "h-2 w-2" : "h-3.5 w-3.5", k.dot)} />
+                    <span className={clsx("absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-4 ring-white", quiet ? "h-1.5 w-1.5" : "h-2.5 w-2.5", k.dot)} />
                   </span>
                   <span className="min-w-0">
-                    <span className={clsx("block truncate font-semibold", quiet ? "text-[14px]" : "text-[16px]", k.text)}>{k.word}</span>
-                    {(k.note || isToday) && <span className="block truncate text-[13px] text-ink-500">{isToday ? L({ hi: "आज", en: "Today" }) : k.note}</span>}
+                    <span className={clsx("block truncate font-semibold", quiet ? "text-[13px]" : "text-[14.5px]", k.text)}>{k.word}</span>
+                    {(k.note || isToday) && <span className="block truncate text-[12px] text-ink-500">{isToday ? L({ hi: "आज", en: "Today" }) : k.note}</span>}
                   </span>
                 </li>
               );
@@ -201,27 +219,16 @@ function Attendance({ studentId }: { studentId: string }) {
   );
 }
 
-/** The next school event as a photo banner: date, how many days to go, and the name. */
+/** The next school event as one plain row (date box, name, when), under the day list. */
 function NextEvent({ today }: { today?: string }) {
-  const L = useL();
-  const { lang } = useT();
   const { data } = useApi<{ events: EventRow[] }>("/events");
   const day = today || new Date().toISOString().slice(0, 10);
   const next = (data?.events || []).filter((e) => e.date >= day).sort((a, b) => a.date.localeCompare(b.date))[0];
   if (!next) return null;
-  const n = Math.round((Date.parse(next.date + "T00:00:00Z") - Date.parse(day + "T00:00:00Z")) / 864e5);
   return (
-    <Link href={`/events/album/?id=${encodeURIComponent(next.id)}`} className="relative block overflow-hidden rounded-[20px] active:opacity-90">
-      <EventPicture url={next.coverUrl} scene={next.scene} alt="" className="!aspect-[16/7]" />
-      <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-      <span className="absolute inset-x-4 bottom-3 text-white">
-        <span className="line-clamp-1 block text-[19px] font-bold">{next.title}</span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[13px] text-white/90">
-          <CalendarDays className="h-3.5 w-3.5" aria-hidden />
-          {dayLine(next.date, lang)} · {n <= 0 ? L({ hi: "आज", en: "Today" }) : n === 1 ? L({ hi: "कल", en: "Tomorrow" }) : L({ hi: `${n} दिन में`, en: `In ${n} days` })}
-        </span>
-      </span>
-    </Link>
+    <div className="shrink-0 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-[0_1px_2px_rgba(15,23,42,.04)]">
+      <EventLine id={next.id} title={next.title} date={next.date} today={day} coverUrl={next.coverUrl} scene={next.scene} />
+    </div>
   );
 }
 

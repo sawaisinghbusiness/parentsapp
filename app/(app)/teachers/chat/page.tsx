@@ -2,21 +2,25 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCheck, SendHorizontal } from "lucide-react";
+import { CheckCheck, ChevronLeft, SendHorizontal } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Lang } from "@/lib/i18n";
 import { ampm } from "@/lib/meetings";
-import { clockOf, dayLine, initials, shade, type ChatMessage, type Thread } from "@/lib/teachers";
-import { AjrakhHeader } from "@/components/AjrakhHeader";
-import { ErrorCard, Skeleton } from "@/components/ui";
+import { clockOf, dayLine, type ChatMessage, type Thread } from "@/lib/teachers";
+import { Avatar, ErrorCard, Skeleton } from "@/components/ui";
 
 /** New replies show without a refresh: the chat is asked again this often while it is on screen. */
 const POLL_MS = 8000;
 
-const monthDay = (iso: string, lang: Lang) => new Date(iso + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { weekday: "short", month: "long" });
+/** "Fri, October": weekday and month formatted apart (together, some browsers print "Fri (month: October)"). */
+const monthDay = (iso: string, lang: Lang) => {
+  const d = new Date(iso + "T00:00:00");
+  const loc = lang === "hi" ? "hi-IN" : "en-IN";
+  return `${d.toLocaleDateString(loc, { weekday: "short" })}, ${d.toLocaleDateString(loc, { month: "long" })}`;
+};
 
-/** One conversation with one of the child's teachers. */
+/** One conversation with one of the child's teachers. Same look as the rest of the app. */
 export default function TeacherChatPage() {
   const { child } = useParent();
   const L = useL();
@@ -84,22 +88,27 @@ export default function TeacherChatPage() {
   const role = t ? [t.classTeacher ? L({ hi: "क्लास टीचर", en: "Class teacher" }) : "", t.subjects.join(", ")].filter(Boolean).join(" · ") : "";
 
   return (
-    <div className="flex min-h-[100dvh] flex-col font-ajk text-ajk-ink">
-      <AjrakhHeader back="/teachers/">
-        {t ? (
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ajk-y text-[13px] font-bold text-ajk-ink">{initials(t.name)}</span>
-            <div className="min-w-0">
-              <p className="truncate text-[17px] font-bold leading-tight">{t.name}</p>
-              {role && <p className="truncate text-[13px] text-ajk-pink">{role}</p>}
-            </div>
-          </div>
-        ) : (
-          <div className="h-10" />
-        )}
-      </AjrakhHeader>
+    <div className="flex min-h-[100dvh] flex-col bg-ink-50">
+      <header className="pt-safe sticky top-0 z-20 border-b border-ink-100 bg-white">
+        <div className="flex h-14 items-center gap-2 pl-1.5 pr-4">
+          <Link href="/teachers/" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={L({ hi: "वापस", en: "Back" })}>
+            <ChevronLeft className="h-6 w-6" aria-hidden />
+          </Link>
+          {t ? (
+            <>
+              <Avatar name={t.name} url={t.photoUrl} size={36} />
+              <div className="min-w-0">
+                <p className="truncate text-[16px] font-semibold leading-tight text-ink-900">{t.name}</p>
+                {role && <p className="truncate text-[12.5px] text-ink-500">{role}</p>}
+              </div>
+            </>
+          ) : (
+            <Skeleton className="h-9 w-40 rounded-lg" />
+          )}
+        </div>
+      </header>
 
-      <div className="flex-1 px-3.5 pb-28 pt-3" aria-live="polite">
+      <div className="flex-1 px-4 pb-28 pt-3" aria-live="polite">
         {!data ? (
           error ? (
             <ErrorCard offline={error.status === 0} onRetry={load} />
@@ -110,14 +119,12 @@ export default function TeacherChatPage() {
             </div>
           )
         ) : data.messages.length === 0 ? (
-          <div className="mx-auto mt-10 max-w-[280px] text-center">
-            <span className="mx-auto grid h-16 w-16 place-items-center rounded-full text-[22px] font-bold text-white" style={{ background: shade(data.teacher.name) }}>
-              {initials(data.teacher.name)}
+          <div className="mx-auto mt-12 max-w-[280px] text-center">
+            <span className="mx-auto block w-fit">
+              <Avatar name={data.teacher.name} url={data.teacher.photoUrl} size={64} />
             </span>
-            <p className="mt-3 text-[17px] font-bold">{data.teacher.name}</p>
-            <p className="mt-1 text-[14.5px] leading-snug text-ajk-mute">
-              {L({ hi: "अपने बच्चे के बारे में कुछ भी पूछें। टीचर यहीं जवाब देंगे।", en: "Ask anything about your child. The teacher will reply here." })}
-            </p>
+            <p className="mt-3 text-[17px] font-semibold text-ink-900">{data.teacher.name}</p>
+            <p className="mt-1 text-[14.5px] leading-snug text-ink-500">{L({ hi: "अपने बच्चे के बारे में कुछ भी पूछें। टीचर यहीं जवाब देंगे।", en: "Ask anything about your child. The teacher will reply here." })}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -125,7 +132,7 @@ export default function TeacherChatPage() {
               const newDay = i === 0 || new Date(m.at).toDateString() !== new Date(data.messages[i - 1].at).toDateString();
               return (
                 <Fragment key={m.id}>
-                  {newDay && <p className="self-center pb-0.5 pt-2 text-[12.5px] font-semibold text-ajk-mute">{dayLine(m.at, lang)}</p>}
+                  {newDay && <p className="self-center pb-0.5 pt-2 text-[12.5px] font-medium text-ink-400">{dayLine(m.at, lang)}</p>}
                   {m.meeting ? <MeetCard m={m} today={data.today} busy={busy} onAnswer={(a) => post("/teachers/meet", { message: m.id, answer: a })} /> : <Bubble m={m} lang={lang} />}
                 </Fragment>
               );
@@ -135,7 +142,7 @@ export default function TeacherChatPage() {
         <div ref={end} />
       </div>
 
-      <div className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t-[1.5px] border-ajk-sand2 bg-white">
+      <div className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-100 bg-white">
         {fail && (
           <p className="px-4 pt-2 text-[13px] text-rose-600" role="alert">
             {fail}
@@ -157,10 +164,10 @@ export default function TeacherChatPage() {
             value={text}
             maxLength={1000}
             onChange={(e) => setText(e.target.value)}
-            placeholder={L({ hi: "संदेश लिखें", en: "Message" })}
-            className="max-h-32 min-h-[46px] flex-1 resize-none rounded-xl bg-ajk-sand px-3.5 py-[11px] text-[16px] leading-snug text-ajk-ink outline-none placeholder:text-ajk-mute focus:ring-2 focus:ring-ajk-y"
+            placeholder={L({ hi: "संदेश लिखें", en: "Write a message" })}
+            className="max-h-32 min-h-[46px] flex-1 resize-none rounded-xl border border-ink-200 bg-white px-3.5 py-[11px] text-[16px] leading-snug text-ink-900 outline-none placeholder:text-ink-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
           />
-          <button type="submit" disabled={busy || !text.trim() || !data} aria-label={L({ hi: "भेजें", en: "Send" })} className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl bg-ajk-y text-ajk-ink transition-opacity disabled:opacity-40">
+          <button type="submit" disabled={busy || !text.trim() || !data} aria-label={L({ hi: "भेजें", en: "Send" })} className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl bg-brand-700 text-white transition-opacity disabled:opacity-40">
             <SendHorizontal className="h-5 w-5" aria-hidden />
           </button>
         </form>
@@ -172,9 +179,9 @@ export default function TeacherChatPage() {
 function Bubble({ m, lang }: { m: ChatMessage; lang: Lang }) {
   const mine = m.from === "parent";
   return (
-    <div className={mine ? "max-w-[80%] self-end rounded-2xl rounded-br-[5px] bg-ajk-m px-3 pb-1.5 pt-2 text-white" : "max-w-[80%] self-start rounded-2xl rounded-bl-[5px] border-[1.5px] border-ajk-sand2 bg-white px-3 pb-1.5 pt-2"}>
+    <div className={mine ? "max-w-[80%] self-end rounded-2xl rounded-br-md bg-brand-700 px-3.5 pb-1.5 pt-2 text-white" : "max-w-[80%] self-start rounded-2xl rounded-bl-md border border-ink-100 bg-white px-3.5 pb-1.5 pt-2 text-ink-900"}>
       <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.text}</p>
-      <p className={`mt-0.5 flex items-center justify-end gap-1 text-[11px] ${mine ? "text-ajk-pink" : "text-ajk-mute"}`}>
+      <p className={`mt-0.5 flex items-center justify-end gap-1 text-[11px] ${mine ? "text-white/70" : "text-ink-400"}`}>
         {clockOf(m.at, lang)}
         {mine && <CheckCheck className="h-3.5 w-3.5" aria-hidden />}
       </p>
@@ -190,37 +197,39 @@ function MeetCard({ m, today, busy, onAnswer }: { m: ChatMessage; today: string;
   const past = x.date < today;
   const place = { school: L({ hi: "स्कूल में", en: "In school" }), call: L({ hi: "फ़ोन पर", en: "Phone call" }), online: L({ hi: "ऑनलाइन", en: "Online" }) }[x.place];
   return (
-    <div className="w-[84%] max-w-[320px] self-start overflow-hidden rounded-2xl border-[1.5px] border-ajk-y bg-white">
-      <p className="bg-ajk-y px-3.5 py-1.5 text-[13px] font-bold">{L({ hi: "मिलने का समय", en: "Meeting time" })}</p>
-      <div className="flex items-center gap-3 px-3.5 py-2.5">
-        <b className="text-[34px] font-extrabold leading-none text-ajk-m">{+x.date.slice(8)}</b>
-        <span className="text-[14px] leading-tight text-ajk-mute">
+    <div className="w-[84%] max-w-[320px] self-start overflow-hidden rounded-2xl border border-ink-100 bg-white">
+      <p className="px-4 pt-3 text-[12.5px] font-semibold text-ink-500">{L({ hi: "मिलने का समय", en: "Meeting time" })}</p>
+      <div className="flex items-center gap-3 px-4 pb-3 pt-1">
+        <b className="tnum text-[32px] font-bold leading-none text-brand-700">{+x.date.slice(8)}</b>
+        <span className="text-[14px] leading-snug text-ink-700">
           {monthDay(x.date, lang)} · {ampm(x.time)}
           <br />
-          {place} · {x.minutes} {L({ hi: "मिनट", en: "min" })}
+          <span className="text-ink-500">
+            {place} · {x.minutes} {L({ hi: "मिनट", en: "min" })}
+          </span>
         </span>
       </div>
       {x.status === "waiting" && !past ? (
-        <div className="grid grid-cols-2 gap-2 px-3 pb-3">
-          <button disabled={busy} onClick={() => onAnswer("yes")} className="h-10 rounded-[10px] bg-ajk-m text-[14.5px] font-bold text-white disabled:opacity-50">
+        <div className="grid grid-cols-2 gap-2 border-t border-ink-100 p-3">
+          <button disabled={busy} onClick={() => onAnswer("yes")} className="h-10 rounded-xl bg-brand-700 text-[14.5px] font-semibold text-white disabled:opacity-50">
             {L({ hi: "ठीक है", en: "Okay" })}
           </button>
-          <button disabled={busy} onClick={() => onAnswer("other")} className="h-10 rounded-[10px] bg-ajk-sand text-[14.5px] font-bold text-ajk-ink disabled:opacity-50">
+          <button disabled={busy} onClick={() => onAnswer("other")} className="h-10 rounded-xl border border-ink-200 bg-white text-[14.5px] font-semibold text-ink-800 disabled:opacity-50">
             {L({ hi: "दूसरा समय", en: "Another time" })}
           </button>
         </div>
       ) : (
-        <p className="flex items-center gap-1.5 border-t-[1.5px] border-dashed border-ajk-sand2 px-3.5 py-2 text-[13.5px] font-semibold">
+        <p className="flex items-center gap-1.5 border-t border-ink-100 px-4 py-2.5 text-[13.5px] font-medium">
           {x.status === "yes" ? (
             <>
               <span className="h-2 w-2 rounded-full bg-jade-600" aria-hidden />
               <span className="text-jade-700">{L({ hi: "आप आएँगे", en: "You're coming" })}</span>
-              <Link href="/meetings/" className="ml-auto text-ajk-m underline underline-offset-2">
+              <Link href="/meetings/" className="ml-auto font-semibold text-brand-700">
                 {L({ hi: "मीटिंग देखें", en: "See in Meetings" })}
               </Link>
             </>
           ) : (
-            <span className="text-ajk-mute">{x.status === "other" ? L({ hi: "दूसरा समय माँगा", en: "You asked for another time" }) : L({ hi: "यह समय निकल गया", en: "This time has passed" })}</span>
+            <span className="text-ink-500">{x.status === "other" ? L({ hi: "दूसरा समय माँगा", en: "You asked for another time" }) : L({ hi: "यह समय निकल गया", en: "This time has passed" })}</span>
           )}
         </p>
       )}

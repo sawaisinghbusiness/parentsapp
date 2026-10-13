@@ -4,6 +4,8 @@ import type { Lang } from "./i18n";
 export interface TeacherRow {
   id: string;
   name: string;
+  /** The teacher's photo from the ERP; older servers send none. */
+  photoUrl?: string | null;
   classTeacher: boolean;
   subjects: string[];
   last: { from: "parent" | "teacher"; text: string; at: string } | null;
@@ -27,7 +29,7 @@ export interface ChatMessage {
 }
 
 export interface Thread {
-  teacher: { id: string; name: string; classTeacher: boolean; subjects: string[] };
+  teacher: { id: string; name: string; photoUrl?: string | null; classTeacher: boolean; subjects: string[] };
   today: string;
   messages: ChatMessage[];
 }

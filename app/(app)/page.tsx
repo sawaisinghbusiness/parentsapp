@@ -21,6 +21,7 @@ import {
   Images,
   IndianRupee,
   Megaphone,
+  Menu as MenuIcon,
   PartyPopper,
   Search,
   X,
@@ -30,13 +31,14 @@ import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
 import { dayMonth, rupees } from "@/lib/format";
-import { EventPicture } from "@/components/art";
 import { Avatar, ErrorCard, OfflineNote, SchoolMark, Skeleton } from "@/components/ui";
 import { ChildSheet } from "@/components/ChildSheet";
 import { ProfilePeek } from "@/components/ProfilePeek";
-import { ripple, tilt } from "@/lib/motion";
+import { EventRow } from "@/components/EventRow";
+import { useMenu } from "@/lib/menu";
+import { ripple } from "@/lib/motion";
 
-interface EventRow {
+interface HomeEvent {
   id: string;
   title: string;
   date: string;
@@ -48,7 +50,7 @@ interface Home {
   attendance: { status: "Present" | "Absent" | "Leave" | "HalfDay" | null; holiday: string | null };
   fees: { dueNow: number; fine: number; balance: number; next: { name: string; due: string; amount: number } | null } | null;
   homework: { id: string; subject: string; title: string; assignedOn: string }[];
-  events?: EventRow[];
+  events?: HomeEvent[];
   noticeCount?: number;
 }
 
@@ -76,7 +78,6 @@ let arrived = false;
 /** Place in the arrival order (see .enter / .pop-in in globals.css). */
 const v = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
-const daysUntil = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / 864e5);
 
 /** "Thu, 09 Oct 2026" / "गुरुवार, 9 अक्टूबर" */
 const todayText = (iso: string, lang: "hi" | "en") =>
@@ -96,12 +97,13 @@ export default function HomePage() {
   // Every action shows from the start; "Show less" folds it to the first row.
   const [more, setMore] = useState(true);
   const [peek, setPeek] = useState(false);
+  const { openMenu } = useMenu();
   const many = (me?.children.length || 0) > 1;
   const tint = Math.max(0, me?.children.findIndex((c) => c.id === child?.id) ?? 0);
   const first = child?.name.split(" ")[0] || "";
   const school = me?.school;
   const unread = data?.noticeCount || 0;
-  const events = (data?.events || []).slice(0, 2);
+  const events = (data?.events || []).slice(0, 3);
   // The arrival plays once per visit to the app; coming back to Home later, it is simply there.
   const [calm] = useState(arrived);
   useEffect(() => {
@@ -113,6 +115,10 @@ export default function HomePage() {
       <header className="pt-safe px-4">
         {/* One row like the reference: school, then language, search, notices and the child, all at the top. */}
         <div className="enter flex items-center gap-1.5 pt-4" style={v(0)}>
+          {/* The side menu opens from here; the logo sits just right of it. */}
+          <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="-ml-2 mr-0.5 grid h-11 w-10 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100">
+            <MenuIcon className="h-6 w-6" strokeWidth={2} aria-hidden />
+          </button>
           {school ? <SchoolMark name={school.name} url={school.logoUrl} size={44} /> : <Skeleton className="h-11 w-11 rounded-xl" />}
           <div className="ml-0.5 min-w-0 flex-1">
             {school ? (
@@ -221,26 +227,13 @@ export default function HomePage() {
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>
-            {/* 16:9 cards; with more than one, they sit in a row that swipes sideways. */}
-            <ul className={clsx(events.length > 1 ? "no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1" : "grid")}>
-              {events.map((e, k) => {
-                const n = daysUntil(data.date, e.date);
-                return (
-                  <li key={e.id} className={clsx("enter", events.length > 1 && "w-[84%] shrink-0 snap-start")} style={v(6 + k * 1.5)}>
-                    <Link href={`/events/album/?id=${encodeURIComponent(e.id)}`} className="event-card tilt" {...tilt}>
-                      <EventPicture url={e.coverUrl} scene={e.scene} alt="" className="!aspect-[16/9]" />
-                      <i className="glare" aria-hidden />
-                      <span className="absolute inset-x-3 bottom-3 text-white">
-                        <span className="line-clamp-2 block text-[16px] font-semibold leading-snug">{e.title}</span>
-                        <span className="mt-1 flex items-center gap-1 text-[12.5px] text-white/90">
-                          <Clock3 className="h-3.5 w-3.5" aria-hidden />
-                          {dayMonth(e.date, lang)} · {n <= 0 ? L({ hi: "आज", en: "Today" }) : n === 1 ? L({ hi: "कल", en: "Tomorrow" }) : L({ hi: `${n} दिन में`, en: `In ${n} days` })}
-                        </span>
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
+            {/* Plain rows in one card: date box, name, when. No photos. */}
+            <ul className="divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-[0_1px_2px_rgba(15,23,42,.04)]">
+              {events.map((e) => (
+                <li key={e.id}>
+                  <EventRow id={e.id} title={e.title} date={e.date} today={data.date} coverUrl={e.coverUrl} scene={e.scene} />
+                </li>
+              ))}
             </ul>
           </section>
         )}

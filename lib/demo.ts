@@ -441,6 +441,27 @@ function leaveRules() {
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Answers /api/parent/* like the backend would. Errors carry the same status codes. */
+/** Ask Teacher in demo mode: the class teacher and two subject teachers, with a short chat (kept in memory only). */
+const hoursAgo = (h: number) => new Date(Date.now() - h * 36e5).toISOString();
+const inDays = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+const DEMO_TEACHERS: { id: string; name: string; classTeacher: boolean; subjects: string[]; unread: number; thread: { id: string; from: "parent" | "teacher"; text: string; at: string; meeting: any }[] }[] = [
+  {
+    id: "t-neha",
+    name: "Neha Sharma",
+    classTeacher: true,
+    subjects: ["English"],
+    unread: 1,
+    thread: [
+      { id: "m1", from: "parent", text: "Namaste ma'am, Laxman was unwell yesterday. Which pages should he finish at home?", at: hoursAgo(26), meeting: null },
+      { id: "m2", from: "teacher", text: "Namaste. Please do pages 14 and 15 of the English book. Hope he feels better.", at: hoursAgo(25), meeting: null },
+      { id: "m3", from: "teacher", text: "Can we meet once about his reading?", at: hoursAgo(3), meeting: null },
+      { id: "m4", from: "teacher", text: "", at: hoursAgo(3), meeting: { date: inDays(3), time: "11:30", minutes: 15, place: "school", placeText: "In school", status: "waiting", meetingId: null } },
+    ],
+  },
+  { id: "t-rakesh", name: "Rakesh Choudhary", classTeacher: false, subjects: ["Mathematics"], unread: 0, thread: [{ id: "m5", from: "teacher", text: "Good work in the class test today.", at: hoursAgo(50), meeting: null }] },
+  { id: "t-kamla", name: "Kamla Devi", classTeacher: false, subjects: ["Hindi"], unread: 0, thread: [] },
+];
+
 export async function demoApi(path: string, method: string, body: any): Promise<unknown> {
   await wait(250); // feel like a network, so loading states are seen once
   const u = new URL(path, "http://demo");
@@ -577,6 +598,22 @@ export async function demoApi(path: string, method: string, body: any): Promise<
           school: { name: SCHOOL.name, shortName: SCHOOL.shortName, logoUrl: SCHOOL.logoUrl, address: SCHOOL.address, officePhone: SCHOOL.officePhone },
           session: "2026-27",
         };
+      case "/teachers":
+        return { child: { name: kid.name, classSec: kid.classSec }, teachers: DEMO_TEACHERS.map(({ thread, ...t }) => ({ ...t, last: thread.length ? { from: thread[thread.length - 1].from, text: thread[thread.length - 1].text, at: thread[thread.length - 1].at } : null })) };
+      case "/teachers/chat":
+      case "/teachers/send":
+      case "/teachers/meet": {
+        const id = u.searchParams.get("teacher") || body?.teacher || DEMO_TEACHERS.find((x) => x.thread.some((m) => m.id === body?.message))?.id;
+        const tr = DEMO_TEACHERS.find((x) => x.id === id);
+        if (!tr) throw new DemoError(404, "Teacher not found.");
+        if (p === "/teachers/send") tr.thread.push({ id: `m-${Date.now()}`, from: "parent", text: String(body?.text || "").trim(), at: new Date().toISOString(), meeting: null });
+        if (p === "/teachers/meet") {
+          const m = tr.thread.find((x) => x.id === body?.message);
+          if (m?.meeting) m.meeting.status = body?.answer === "yes" ? "yes" : "other";
+        }
+        tr.unread = 0;
+        return { teacher: { id: tr.id, name: tr.name, classTeacher: tr.classTeacher, subjects: tr.subjects }, today: t, messages: tr.thread };
+      }
       case "/report-card":
         return reportCard(kid, u.searchParams.get("exam"));
       case "/exams/schedule":
