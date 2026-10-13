@@ -261,7 +261,7 @@ export default function StudyPage() {
 
       <div className="relative space-y-4">
         {/* Timer or Pomodoro: stays under the top bar while the page scrolls. */}
-        <div className="glass sticky top-[env(safe-area-inset-top)] z-10 grid grid-cols-2 rounded-2xl p-1" style={{ background: "rgb(255 255 255 / 0.9)" }} role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
+        <div className="glass sticky top-[calc(env(safe-area-inset-top)+0.5rem)] z-10 mt-4 grid grid-cols-2 rounded-2xl p-1" style={{ background: "rgb(255 255 255 / 0.9)" }} role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
           {(["timer", "pomodoro"] as const).map((m) => (
             <button
               key={m}
@@ -270,7 +270,7 @@ export default function StudyPage() {
               aria-selected={mode === m}
               disabled={busy}
               onClick={() => setMode(m)}
-              className={clsx("h-10 rounded-xl text-[14.5px] font-semibold transition-all disabled:opacity-60", mode === m ? "glass-chip text-ink-900" : "text-ink-500")}
+              className={clsx("h-10 rounded-xl border-[1.5px] text-[14.5px] font-semibold transition-all disabled:opacity-60", mode === m ? "glass-chip border-ink-900 text-ink-900" : "border-transparent text-ink-500")}
             >
               {m === "timer" ? L({ hi: "टाइमर", en: "Timer" }) : L({ hi: "पोमोडोरो", en: "Pomodoro" })}
             </button>
