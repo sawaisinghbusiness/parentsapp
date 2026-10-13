@@ -20,6 +20,7 @@ import {
   LogOut,
   Megaphone,
   MessageCircle,
+  Timer,
   UserRound,
   X,
   type LucideIcon,
@@ -36,6 +37,7 @@ const MAIN: Item[] = [
   { href: "/calendar/", text: { hi: "हाज़िरी और कैलेंडर", en: "Attendance & Calendar" }, icon: CalendarDays },
   { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: IndianRupee },
   { href: "/homework/", text: { hi: "होमवर्क", en: "Homework" }, icon: BookOpen },
+  { href: "/study/", text: { hi: "पढ़ाई (टाइमर)", en: "Study timer" }, icon: Timer },
 ];
 const SCHOOL: Item[] = [
   { href: "/teachers/", text: { hi: "टीचर से पूछें", en: "Ask Teacher" }, icon: MessageCircle },

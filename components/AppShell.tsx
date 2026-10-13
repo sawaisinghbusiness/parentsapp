@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { CalendarDays, ChevronLeft, Home, IndianRupee, Menu as MenuIcon, Plus, UserRound, type LucideIcon } from "lucide-react";
+import { CalendarDays, ChevronLeft, Home, IndianRupee, Menu as MenuIcon, Plus, Timer, UserRound, type LucideIcon } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { useL, type Bi } from "@/lib/i18n";
 import { Avatar, ErrorCard, OfflineNote } from "./ui";
@@ -14,9 +14,11 @@ import { SideMenu } from "./SideMenu";
 import { PullRefresh } from "./PullRefresh";
 import { MenuContext } from "@/lib/menu";
 
-const TABS: { href: string; text: Bi; icon: LucideIcon }[] = [
+/** Five tabs; Study sits in the middle as a raised round button. */
+const TABS: { href: string; text: Bi; icon: LucideIcon; center?: boolean }[] = [
   { href: "/", text: { hi: "होम", en: "Home" }, icon: Home },
   { href: "/calendar/", text: { hi: "कैलेंडर", en: "Calendar" }, icon: CalendarDays },
+  { href: "/study/", text: { hi: "पढ़ाई", en: "Study" }, icon: Timer, center: true },
   { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: IndianRupee },
   { href: "/profile/", text: { hi: "प्रोफ़ाइल", en: "Profile" }, icon: UserRound },
 ];
@@ -47,6 +49,7 @@ const PAGES: Record<string, PageInfo> = {
   "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/profile/": { title: { hi: "प्रोफ़ाइल", en: "Profile" } },
+  "/study/": { title: { hi: "पढ़ाई", en: "Study" }, perChild: true },
   "/id-card/": { title: { hi: "आईडी कार्ड", en: "ID Card" }, back: "/profile/", tab: "/profile/", perChild: true },
   "/exam/": { title: { hi: "परीक्षा", en: "Exam" }, back: "/", perChild: true },
   "/report-card/": { title: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, back: "/", perChild: true },
@@ -180,17 +183,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {!page?.bare && (
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-100 bg-white" aria-label="Main">
-        <ul className="relative grid grid-cols-4">
-          {/* One blue pill that slides to the lit tab. */}
+        <ul className="relative grid grid-cols-5">
+          {/* One blue pill that slides to the lit tab (Study has its own round button instead). */}
           <span
             aria-hidden
-            className="slide-pill pointer-events-none absolute left-0 top-[9px] flex w-1/4 justify-center"
-            style={{ transform: `translateX(${Math.max(0, litIndex) * 100}%)`, opacity: litIndex < 0 ? 0 : 1 }}
+            className="slide-pill pointer-events-none absolute left-0 top-[9px] flex w-1/5 justify-center"
+            style={{ transform: `translateX(${Math.max(0, litIndex) * 100}%)`, opacity: litIndex < 0 || TABS[litIndex]?.center ? 0 : 1 }}
           >
             <span className="h-8 w-[52px] rounded-[10px] bg-brand-600" />
           </span>
-          {TABS.map(({ href, text, icon: Icon }) => {
+          {TABS.map(({ href, text, icon: Icon, center }) => {
             const on = lit === href;
+            if (center)
+              return (
+                <li key={href} className="relative">
+                  {/* Half of the circle rises above the bar; the white ring cuts it out of the bar's top line. */}
+                  <Link href={href} aria-current={on ? "page" : undefined} className="flex h-[66px] flex-col items-center justify-end pb-[9px] text-[12px]">
+                    <span
+                      className={clsx(
+                        "absolute -top-[26px] left-1/2 grid h-[58px] w-[58px] -translate-x-1/2 place-items-center rounded-full text-white ring-[5px] ring-white transition-transform duration-200 active:scale-95",
+                        on ? "bg-[#33a811] shadow-[0_6px_16px_rgba(57,188,19,.45)]" : "bg-[#39bc13] shadow-[0_4px_12px_rgba(57,188,19,.35)]"
+                      )}
+                    >
+                      <Icon className="h-[26px] w-[26px]" strokeWidth={2} aria-hidden />
+                    </span>
+                    <span className={clsx("font-semibold", on ? "text-[#2c9010]" : "text-[#2f9c10]")}>{L(text)}</span>
+                  </Link>
+                </li>
+              );
             return (
               <li key={href} className="relative">
                 <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[66px] flex-col items-center justify-center gap-0.5 text-[12px] transition-colors duration-300", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
