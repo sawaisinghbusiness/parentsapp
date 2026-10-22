@@ -61,6 +61,7 @@ const dayLine = (iso: string, lang: Lang) => new Date(iso + "T00:00:00").toLocal
 const loc = (lang: Lang) => (lang === "hi" ? "hi-IN" : "en-IN");
 const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const monthShort = (m: string, lang: Lang) => (lang === "en" ? MONTHS_EN[+m.slice(5, 7) - 1] : new Date(m + "-01T00:00:00").toLocaleDateString(loc(lang), { month: "short" }));
+const WEEK: Record<Lang, string[]> = { en: ["S", "M", "T", "W", "T", "F", "S"], hi: ["र", "सो", "मं", "बु", "गु", "शु", "श"] };
 const weekday = (iso: string, lang: Lang) => new Date(iso + "T00:00:00").toLocaleDateString(loc(lang), { weekday: "short" });
 
 /** How one day reads in the list: the dot on the line and the coloured word. */
@@ -95,7 +96,6 @@ function Attendance({ studentId }: { studentId: string }) {
   // The page itself doesn't scroll here: the months, the day list and the next event fill the
   // screen down to the tab bar, and only the day list moves. So the top bar and tabs never shift.
   const frame = useRef<HTMLDivElement>(null);
-  const list = useRef<HTMLElement>(null);
   const [frameH, setFrameH] = useState<number>();
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -123,14 +123,6 @@ function Attendance({ studentId }: { studentId: string }) {
       if (main) main.style.paddingBottom = pad;
     };
   }, []);
-  // This month opens at today (the bottom of the list); an earlier month opens at its 1st.
-  const shownMonth = shown?.month;
-  useEffect(() => {
-    const el = list.current;
-    if (!el || !shownMonth || !base) return;
-    el.scrollTop = shownMonth === base.today.slice(0, 7) ? el.scrollHeight : 0;
-  }, [shownMonth, base]);
-
   // Keep the chosen month in the middle of the strip.
   useEffect(() => {
     const box = strip.current;
@@ -140,8 +132,9 @@ function Attendance({ studentId }: { studentId: string }) {
 
   if (!shown && !base && error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
 
-  // Day 1 down to today (or the month's last day for a past month); future days aren't listed.
-  const days = shown ? shown.days.filter((d) => d.date <= shown.today) : [];
+  // Empty cells before the 1st, so it falls under its weekday (weeks start on Sunday).
+  const lead = shown?.days.length ? new Date(shown.days[0].date + "T00:00:00").getDay() : 0;
+  const t = shown?.totals;
 
   return (
     <div ref={frame} style={{ height: frameH }} className="flex flex-col gap-3">
@@ -173,44 +166,67 @@ function Attendance({ studentId }: { studentId: string }) {
             })}
       </div>
 
-      {/* The month as a list of days on one line: date, a dot in the day's colour, and what it was. */}
-      <section ref={list} className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl border border-ink-100 bg-white px-3.5 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
+      {/* The month as a calendar grid: each date with a small dot in that day's colour under it. */}
+      <section className="no-scrollbar min-h-0 overflow-y-auto rounded-2xl border border-ink-100 bg-white px-3 pb-3 pt-3.5 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
         {!shown ? (
-          <div className="space-y-4 py-3">
-            {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-9 w-10" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-            ))}
-          </div>
-        ) : days.length === 0 ? (
-          <p className="py-6 text-center text-[14px] text-ink-500">{L({ hi: "इस महीने अभी कुछ नहीं", en: "Nothing for this month yet" })}</p>
+          <Skeleton className="h-64 w-full rounded-xl" />
         ) : (
-          <ol>
-            {days.map((d, i) => {
-              const k = dayLook(d, shown.today, L);
-              const isToday = d.date === shown.today;
-              const quiet = d.sunday && !d.mark;
-              return (
-                <li key={d.date} className={clsx("grid grid-cols-[38px_20px_1fr] items-center gap-x-2", quiet ? "min-h-[36px]" : "min-h-[48px]")}>
-                  <span className={clsx("text-center leading-tight", quiet && "opacity-60")}>
-                    <b className={clsx("tnum block font-semibold", quiet ? "text-[13.5px] text-ink-500" : "text-[16.5px] text-ink-900")}>{+d.date.slice(8)}</b>
-                    <span className="block text-[11px] text-ink-400">{weekday(d.date, lang)}</span>
+          <>
+            <div className="mb-2 px-1">
+              <h2 className="text-[16px] font-bold">{new Date(shown.month + "-01T00:00:00").toLocaleDateString(loc(lang), { month: "long", year: "numeric" })}</h2>
+            </div>
+            <div className="grid grid-cols-7 text-center" role="grid" aria-label={L({ hi: "हाज़िरी", en: "Attendance" })}>
+              {WEEK[lang].map((w, i) => (
+                <span key={i} className={clsx("pb-1.5 text-[12px] font-semibold", i === 0 ? "text-rose-500" : "text-ink-400")}>
+                  {w}
+                </span>
+              ))}
+              {Array.from({ length: lead }, (_, i) => (
+                <span key={`e${i}`} />
+              ))}
+              {shown.days.map((d) => {
+                const later = d.date > shown.today;
+                const isToday = d.date === shown.today;
+                const k = dayLook(d, shown.today, L);
+                // A school day with a mark is a full circle in its colour. A Sunday or holiday stays a red date, never a circle.
+                const off = d.sunday || !!d.holiday;
+                const fill = !later && !off && d.mark ? k.dot : null;
+                return (
+                  <span key={d.date} role="gridcell" aria-label={`${+d.date.slice(8)} · ${later ? "" : k.word}`} className="flex h-[46px] items-center justify-center">
+                    <span
+                      className={clsx(
+                        "tnum grid h-9 w-9 place-items-center rounded-full text-[15px]",
+                        fill ? `${fill} font-bold text-white` : isToday ? "bg-brand-600 font-bold text-white" : later ? "text-ink-300" : off ? "font-semibold text-rose-500" : "font-semibold text-ink-900",
+                        // Today, once marked, keeps a blue ring so it can still be found.
+                        isToday && fill && "ring-2 ring-brand-600 ring-offset-2"
+                      )}
+                    >
+                      {+d.date.slice(8)}
+                    </span>
                   </span>
-                  {/* The line runs through every row; it stops at the first and last day. */}
-                  <span className="relative h-full" aria-hidden>
-                    <span className={clsx("absolute left-1/2 w-0.5 -translate-x-1/2 bg-ink-100", i === 0 ? "top-1/2" : "top-0", i === days.length - 1 ? "bottom-1/2" : "bottom-0")} />
-                    <span className={clsx("absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-4 ring-white", quiet ? "h-1.5 w-1.5" : "h-2.5 w-2.5", k.dot)} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className={clsx("block truncate font-semibold", quiet ? "text-[13px]" : "text-[14.5px]", k.text)}>{k.word}</span>
-                    {(k.note || isToday) && <span className="block truncate text-[12px] text-ink-500">{isToday ? L({ hi: "आज", en: "Today" }) : k.note}</span>}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
+                );
+              })}
+            </div>
+            {t && (
+              <div className="tnum mt-2 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-ink-100 px-1 pt-3 text-[13px] text-ink-600">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-jade-600" aria-hidden />
+                  {L(NAME.P)} <b className="text-ink-900">{t.present}</b>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-rose-600" aria-hidden />
+                  {L(NAME.A)} <b className="text-ink-900">{t.absent}</b>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-marigold-500" aria-hidden />
+                  {L({ hi: "छुट्टी / आधा दिन", en: "Leave / half" })} <b className="text-ink-900">{t.leave + t.half}</b>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="font-semibold text-rose-500">{L({ hi: "स्कूल बंद", en: "Holiday" })}</span>
+                </span>
+              </div>
+            )}
+          </>
         )}
       </section>
 

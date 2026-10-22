@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import {
@@ -31,7 +31,7 @@ import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
 import { dayMonth, rupees } from "@/lib/format";
-import { Avatar, ErrorCard, OfflineNote, SchoolMark, Skeleton } from "@/components/ui";
+import { Avatar, ErrorCard, OfflineNote, Skeleton } from "@/components/ui";
 import { ChildSheet } from "@/components/ChildSheet";
 import { ProfilePeek } from "@/components/ProfilePeek";
 import { EventRow } from "@/components/EventRow";
@@ -54,23 +54,30 @@ interface Home {
   noticeCount?: number;
 }
 
-type Action = { href: string; text: Bi; icon: LucideIcon };
+type Action = { href: string; text: Bi; icon: LucideIcon; tone: string };
+// Soft tinted icon backgrounds, phone-app style; full class strings so Tailwind keeps them.
+const BLUE = "bg-[#E8F0FE] text-[#1A56C4]";
+const GREEN = "bg-[#E6F6EC] text-[#138A43]";
+const ORANGE = "bg-[#FFF0E0] text-[#C2610C]";
+const PURPLE = "bg-[#F1EBFD] text-[#6D3FC9]";
+const TEAL = "bg-[#E2F5F4] text-[#0F7C77]";
+const PINK = "bg-[#FDEBEE] text-[#C4314B]";
 const QUICK: Action[] = [
-  { href: "/calendar/", text: { hi: "हाज़िरी", en: "Attendance" }, icon: CalendarCheck },
-  { href: "/homework/", text: { hi: "होमवर्क", en: "Homework" }, icon: BookOpen },
-  { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: IndianRupee },
-  { href: "/bus/", text: { hi: "बस", en: "Bus" }, icon: Bus },
+  { href: "/calendar/", text: { hi: "हाज़िरी", en: "Attendance" }, icon: CalendarCheck, tone: GREEN },
+  { href: "/homework/", text: { hi: "होमवर्क", en: "Homework" }, icon: BookOpen, tone: BLUE },
+  { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: IndianRupee, tone: ORANGE },
+  { href: "/bus/", text: { hi: "बस", en: "Bus" }, icon: Bus, tone: TEAL },
 ];
 // Behind "More" (and "View all"): the rest, opened in place.
 const MORE: Action[] = [
-  { href: "/teachers/", text: { hi: "टीचर से पूछें", en: "Ask Teacher" }, icon: MessageCircle },
-  { href: "/meetings/", text: { hi: "मीटिंग", en: "Meetings" }, icon: Handshake },
-  { href: "/exam/", text: { hi: "परीक्षा", en: "Exam" }, icon: ClipboardList },
-  { href: "/report-card/", text: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, icon: FileText },
-  { href: "/leave/", text: { hi: "छुट्टी", en: "Leave" }, icon: CalendarX2 },
-  { href: "/events/", text: { hi: "कार्यक्रम", en: "Events" }, icon: Images },
-  { href: "/notice/", text: { hi: "सूचना", en: "Notice" }, icon: Megaphone },
-  { href: "/id-card/", text: { hi: "आईडी कार्ड", en: "ID Card" }, icon: IdCard },
+  { href: "/teachers/", text: { hi: "टीचर से पूछें", en: "Ask Teacher" }, icon: MessageCircle, tone: PURPLE },
+  { href: "/meetings/", text: { hi: "मीटिंग", en: "Meetings" }, icon: Handshake, tone: PINK },
+  { href: "/exam/", text: { hi: "परीक्षा", en: "Exam" }, icon: ClipboardList, tone: BLUE },
+  { href: "/report-card/", text: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, icon: FileText, tone: GREEN },
+  { href: "/leave/", text: { hi: "छुट्टी", en: "Leave" }, icon: CalendarX2, tone: ORANGE },
+  { href: "/events/", text: { hi: "कार्यक्रम", en: "Events" }, icon: Images, tone: PINK },
+  { href: "/notice/", text: { hi: "सूचना", en: "Notice" }, icon: Megaphone, tone: TEAL },
+  { href: "/id-card/", text: { hi: "आईडी कार्ड", en: "ID Card" }, icon: IdCard, tone: PURPLE },
 ];
 
 let arrived = false;
@@ -110,26 +117,51 @@ export default function HomePage() {
     arrived = true;
   }, []);
 
+  // Scrolling, as in the staff app: the top row stays put on a solid teal strip and everything else slides
+  // up under it. The teal band holds still too, until the Today card reaches where the banner was.
+  const headRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const todayRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = document.documentElement.style;
+    let frame = 0;
+    const paint = () => {
+      frame = 0;
+      const y = Math.max(0, window.scrollY);
+      const img = imgRef.current, today = todayRef.current, head = headRef.current;
+      const stop = img && today ? today.offsetTop - img.offsetTop : 0;
+      root.setProperty("--band-y", `${Math.min(y, stop)}px`);
+      // A soft edge under the strip once something has gone under it.
+      if (head) head.style.boxShadow = y > 4 ? "0 4px 12px rgba(15,47,60,0.18)" : "none";
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+    paint();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+      root.removeProperty("--band-y");
+    };
+  }, []);
+
   return (
     <div className={clsx("animate-fadeIn", calm && "calm")}>
-      <header className="pt-safe px-4">
-        {/* One row like the reference: school, then language, search, notices and the child, all at the top. */}
+      {/* One row like the staff app: menu, search, then language, notices and the child.
+          It stays at the top on a solid teal strip; the page slides under it. */}
+      <div ref={headRef} className="pt-safe sticky top-0 z-20 bg-[#3099a4] px-4 pb-2 transition-shadow duration-300">
         <div className="enter flex items-center gap-1.5 pt-4" style={v(0)}>
-          {/* The side menu opens from here; the logo sits just right of it. */}
-          <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="-ml-2 mr-0.5 grid h-11 w-10 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100">
+          <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="-ml-2 mr-0.5 grid h-11 w-10 shrink-0 place-items-center rounded-full text-white active:bg-white/15">
             <MenuIcon className="h-6 w-6" strokeWidth={2} aria-hidden />
           </button>
-          {school ? <SchoolMark name={school.name} url={school.logoUrl} size={44} /> : <Skeleton className="h-11 w-11 rounded-xl" />}
-          <div className="ml-0.5 min-w-0 flex-1">
-            {school ? (
-              <>
-                <p className="line-clamp-2 text-[13.5px] font-semibold leading-tight text-brand-800">{school.name}</p>
-                {school.address && <p className="mt-0.5 truncate text-[11.5px] text-ink-500">{school.address}</p>}
-              </>
-            ) : (
-              <Skeleton className="h-4 w-24" />
-            )}
-          </div>
+          {/* Search fills the room between the menu and the language switch. */}
+          <Link href="/search/" className="glass-search ml-1 mr-0.5 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full px-3 text-ink-500" aria-label={L({ hi: "खोजें", en: "Search" })}>
+            <Search className="h-[18px] w-[18px] shrink-0 text-brand-800" strokeWidth={2.2} aria-hidden />
+            <span className="truncate text-[14px]">{L({ hi: "खोजें", en: "Search" })}</span>
+          </Link>
           <div className="relative flex shrink-0 rounded-full border border-ink-200 bg-white p-0.5" role="group" aria-label={L({ hi: "भाषा", en: "Language" })}>
             <span aria-hidden className="slide-pill absolute left-0.5 top-0.5 h-7 w-[30px] rounded-full bg-brand-600" style={{ transform: lang === "hi" ? "translateX(30px)" : "none" }} />
             {(["en", "hi"] as const).map((k) => (
@@ -143,13 +175,10 @@ export default function HomePage() {
               </button>
             ))}
           </div>
-          <Link href="/search/" className="grid h-10 w-9 shrink-0 place-items-center rounded-full text-brand-800 active:bg-ink-100" aria-label={L({ hi: "खोजें", en: "Search" })}>
-            <Search className="h-[21px] w-[21px]" strokeWidth={2} aria-hidden />
-          </Link>
-          <Link href="/notice/" className="relative grid h-10 w-9 shrink-0 place-items-center rounded-full text-brand-800 active:bg-ink-100" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
+          <Link href="/notice/" className="relative grid h-10 w-9 shrink-0 place-items-center rounded-full text-white active:bg-white/15" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
             <Bell className={clsx("h-[21px] w-[21px]", unread > 0 && "bell-ring")} strokeWidth={2} aria-hidden />
             {unread > 0 && (
-              <span className="badge-pop absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-ink-50 bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
+              <span className="badge-pop absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-[#3099a4] bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
@@ -167,15 +196,17 @@ export default function HomePage() {
             <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-full" />
           )}
         </div>
+      </div>
 
-        <div className="mt-5">
+      <header className="px-4">
+        <div className="mt-3">
           <div className="min-w-0">
             {child ? (
               <>
                 {many ? (
                   <button onClick={() => setSwitching(true)} className="flex max-w-full items-center gap-1.5 text-left" aria-label={`${L({ hi: "बच्चा बदलें", en: "Switch child" })}: ${child.name}`}>
                     <Greeting name={first} />
-                    <ChevronDown className="enter h-5 w-5 shrink-0 text-brand-800" style={v(3)} strokeWidth={2.4} aria-hidden />
+                    <ChevronDown className="enter h-5 w-5 shrink-0 text-white" style={v(3)} strokeWidth={2.4} aria-hidden />
                   </button>
                 ) : (
                   <Greeting name={first} />
@@ -183,8 +214,8 @@ export default function HomePage() {
               </>
             ) : (
               <div className="space-y-2 py-1">
-                <Skeleton className="h-7 w-44" />
-                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-7 w-44 bg-white/25" />
+                <Skeleton className="h-4 w-32 bg-white/25" />
               </div>
             )}
           </div>
@@ -197,9 +228,11 @@ export default function HomePage() {
 
         {/* The school's banner, right under the greeting. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/img/home-banner-2.webp" alt={school?.name || ""} width={1280} height={720} className="enter block aspect-[1280/720] w-full rounded-2xl object-cover shadow-card" style={v(3)} />
+        <img ref={imgRef} src="/img/home-banner-2.webp" alt={school?.name || ""} width={1280} height={720} className="enter block aspect-[1280/720] w-full rounded-2xl object-cover shadow-card" style={v(3)} />
 
-        <Today data={data} />
+        <div ref={todayRef}>
+          <Today data={data} />
+        </div>
 
         <section className="enter" style={v(4)}>
           <div className="mb-3 flex items-center justify-between">
@@ -210,7 +243,7 @@ export default function HomePage() {
             </button>
           </div>
           {/* Twelve actions, four to a row; folded, only the first row shows. */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-x-1 gap-y-3">
             {QUICK.map((a, k) => (
               <QuickTile key={a.href} {...a} i={k} />
             ))}
@@ -249,7 +282,7 @@ export default function HomePage() {
 function Greeting({ name }: { name: string }) {
   const L = useL();
   return (
-    <h1 className="truncate text-[clamp(21px,6.4vw,26px)] font-bold leading-tight text-brand-800">
+    <h1 className="truncate text-[clamp(21px,6.4vw,26px)] font-bold leading-tight text-white">
       <span className="reveal">
         <span style={v(0)}>{L({ hi: "नमस्ते,", en: "Hello," })}</span>
       </span>{" "}
@@ -260,11 +293,11 @@ function Greeting({ name }: { name: string }) {
   );
 }
 
-function QuickTile({ href, text, icon: Icon, i }: Action & { i: number }) {
+function QuickTile({ href, text, icon: Icon, tone, i }: Action & { i: number }) {
   const L = useL();
   return (
     <Link href={href} onPointerDown={ripple} className="quick-tile pop-in" style={v(i)}>
-      <span>
+      <span className={tone}>
         <Icon className="h-6 w-6" strokeWidth={1.8} aria-hidden />
       </span>
       {L(text)}
@@ -294,14 +327,14 @@ function Today({ data }: { data: Home | undefined }) {
   const a = data.attendance;
   const att: { icon: React.ReactNode; tile: string; note: string } =
     a.status === "Present"
-      ? { icon: <Mark className="bg-jade-600" icon={Check} draw />, tile: "", note: L({ hi: "आज उपस्थित", en: "Present today" }) }
+      ? { icon: <Mark className="bg-jade-600" icon={Check} draw />, tile: GREEN, note: L({ hi: "आज उपस्थित", en: "Present today" }) }
       : a.status === "Absent"
-        ? { icon: <Mark className="bg-rose-600" icon={X} />, tile: "", note: L({ hi: "आज अनुपस्थित", en: "Absent today" }) }
+        ? { icon: <Mark className="bg-rose-600" icon={X} />, tile: PINK, note: L({ hi: "आज अनुपस्थित", en: "Absent today" }) }
         : a.status === "Leave" || a.status === "HalfDay"
-          ? { icon: <Mark className="bg-marigold-500" icon={Check} />, tile: "", note: a.status === "Leave" ? L({ hi: "आज छुट्टी पर", en: "On leave today" }) : L({ hi: "आज आधा दिन", en: "Half day today" }) }
+          ? { icon: <Mark className="bg-marigold-500" icon={Check} />, tile: ORANGE, note: a.status === "Leave" ? L({ hi: "आज छुट्टी पर", en: "On leave today" }) : L({ hi: "आज आधा दिन", en: "Half day today" }) }
           : a.holiday
-            ? { icon: <PartyPopper className="h-6 w-6 text-ink-900" strokeWidth={1.8} aria-hidden />, tile: "", note: a.holiday === "Sunday" ? L({ hi: "आज रविवार है", en: "Sunday" }) : a.holiday }
-            : { icon: <Clock3 className="h-6 w-6 text-ink-900" strokeWidth={1.8} aria-hidden />, tile: "", note: L({ hi: "अभी हाज़िरी नहीं लगी", en: "Not marked yet" }) };
+            ? { icon: <PartyPopper className="h-6 w-6" strokeWidth={1.8} aria-hidden />, tile: PURPLE, note: a.holiday === "Sunday" ? L({ hi: "आज रविवार है", en: "Sunday" }) : a.holiday }
+            : { icon: <Clock3 className="h-6 w-6" strokeWidth={1.8} aria-hidden />, tile: GREEN, note: L({ hi: "अभी हाज़िरी नहीं लगी", en: "Not marked yet" }) };
 
   const f = data.fees;
   const due = f ? f.dueNow + f.fine : 0;
@@ -327,8 +360,8 @@ function Today({ data }: { data: Home | undefined }) {
         <TodayRow
           i={5}
           href={due > 0 ? "/fees/pay/" : "/fees/"}
-          tile=""
-          icon={<IndianRupee className="h-6 w-6 text-ink-900" strokeWidth={1.8} aria-hidden />}
+          tile={ORANGE}
+          icon={<IndianRupee className="h-6 w-6" strokeWidth={1.8} aria-hidden />}
           title={L({ hi: "फ़ीस", en: "Fees" })}
           note={feeNote}
           end={
@@ -340,8 +373,8 @@ function Today({ data }: { data: Home | undefined }) {
         <TodayRow
           i={6}
           href="/homework/"
-          tile=""
-          icon={<BookOpen className="h-6 w-6 text-ink-900" strokeWidth={1.8} aria-hidden />}
+          tile={BLUE}
+          icon={<BookOpen className="h-6 w-6" strokeWidth={1.8} aria-hidden />}
           title={L({ hi: "होमवर्क", en: "Homework" })}
           note={hwNote}
           end={<span className="text-[14.5px] font-semibold text-brand-600">{L({ hi: "देखें", en: "View" })}</span>}
@@ -385,7 +418,7 @@ function TodayRow({ i, href, tile, icon, title, note, end }: { i: number; href: 
   return (
     <li className="enter border-b border-ink-100 last:border-0" style={v(i)}>
       <Link href={href} onPointerDown={ripple} className="relative -mx-4 flex min-h-[72px] items-center gap-3.5 overflow-hidden px-4 py-3">
-        <span className={clsx("grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-200 bg-white", tile)}>{icon}</span>
+        <span className={clsx("grid h-12 w-12 shrink-0 place-items-center rounded-2xl", tile)}>{icon}</span>
         <span className="min-w-0 flex-1">
           <span className="block text-[16px] font-semibold text-ink-900">{title}</span>
           <span className="block truncate text-[13px] text-ink-500">{note}</span>

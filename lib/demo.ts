@@ -614,6 +614,34 @@ export async function demoApi(path: string, method: string, body: any): Promise<
         tr.unread = 0;
         return { teacher: { id: tr.id, name: tr.name, classTeacher: tr.classTeacher, subjects: tr.subjects }, today: t, messages: tr.thread };
       }
+      case "/assistant": {
+        // School Sahayak in demo: no AI, a few set answers worked out from the same sample data.
+        const turns = Array.isArray(body?.messages) ? body.messages : [];
+        const q = String(turns[turns.length - 1]?.content || "").toLowerCase();
+        const first = kid.name.split(" ")[0];
+        const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+        let reply = `Main ${first} ki hazri, fees, homework, exam aur bus ke baare mein bata sakta hoon. Kya jaanna hai?`;
+        if (/fee|फ़ीस|फीस|paisa|baaki|due/.test(q)) {
+          const f = feesFor(kid, s);
+          const open = f.instalments.filter((i) => i.outstanding > 0);
+          reply =
+            f.session.balance > 0
+              ? `${first} ki abhi ${inr(f.dueNow)} fees bharni hai${f.fine ? `, saath mein ${inr(f.fine)} late fine – kul ${inr(f.dueNow + f.fine)}` : ""}.\nPoore session ki ${inr(f.session.balance)} baaki hai:\n${open.map((i) => `${i.name}: ${inr(i.outstanding)}`).join("\n")}`
+              : `${first} ki is session ki poori fees jama hai.`;
+        } else if (/hazri|attendance|हाज़िरी|present|absent/.test(q)) {
+          const m = attendanceMonth(kid, t.slice(0, 7)).totals;
+          reply = `Is mahine ${first} ${m.present} din present, ${m.absent} din absent rahe (${m.workingDays} school ke din mein se).`;
+        } else if (/homework|होमवर्क|kaam/.test(q)) {
+          const hw = homework(kid).items.slice(0, 3);
+          reply = hw.length ? `Abhi ke homework:\n${hw.map((h) => `${h.subject} – ${h.title}`).join("\n")}` : "Abhi koi homework nahi hai.";
+        } else if (/exam|test|परीक्षा|pariksha/.test(q)) {
+          const x = examSchedule(kid);
+          reply = `Agla exam ${x.exam.title} hai, ${x.exam.startDate} se ${x.exam.endDate} tak. Pehla paper ${x.papers[0].subject} ka, ${x.papers[0].start} baje.`;
+        } else if (/bus|बस/.test(q)) {
+          reply = kid.bus ? `${first} ${kid.busRoute} bus se aate-jaate hain. Live location Bus page par dikhti hai.` : `${first} school bus nahi lete.`;
+        }
+        return { reply };
+      }
       case "/report-card":
         return reportCard(kid, u.searchParams.get("exam"));
       case "/exams/schedule":

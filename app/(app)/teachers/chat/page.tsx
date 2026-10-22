@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCheck, ChevronLeft, SendHorizontal } from "lucide-react";
+import { CheckCheck, ChevronLeft, Clock3, SendHorizontal } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Lang } from "@/lib/i18n";
@@ -11,7 +11,7 @@ import { clockOf, dayLine, type ChatMessage, type Thread } from "@/lib/teachers"
 import { Avatar, ErrorCard, Skeleton } from "@/components/ui";
 
 /** New replies show without a refresh: the chat is asked again this often while it is on screen. */
-const POLL_MS = 8000;
+const POLL_MS = 3000;
 
 /** "Fri, October": weekday and month formatted apart (together, some browsers print "Fri (month: October)"). */
 const monthDay = (iso: string, lang: Lang) => {
@@ -33,6 +33,10 @@ export default function TeacherChatPage() {
   const [fail, setFail] = useState("");
   const end = useRef<HTMLDivElement>(null);
   const count = useRef(0);
+  // While a message is on its way, a poll answer (made before it arrived) must not wipe it off the screen.
+  const sending = useRef(false);
+  // Bumped on every send, so an older poll that comes back late is thrown away.
+  const gen = useRef(0);
 
   useEffect(() => {
     setTeacherId(new URLSearchParams(window.location.search).get("id") || "");
@@ -41,7 +45,9 @@ export default function TeacherChatPage() {
   const load = useCallback(async () => {
     if (!child || !teacherId) return;
     try {
-      setData(await api<Thread>(`/teachers/chat?student=${child.id}&teacher=${teacherId}`));
+      const g = gen.current;
+      const fresh = await api<Thread>(`/teachers/chat?student=${child.id}&teacher=${teacherId}`);
+      if (!sending.current && g === gen.current) setData(fresh);
       setError(null);
     } catch (e) {
       const err = e instanceof ApiError ? e : new ApiError(0, "offline");
@@ -78,10 +84,22 @@ export default function TeacherChatPage() {
     }
   }
 
+  /** The message shows at once (with a clock) and the box empties; if it can't be sent, it comes back. */
   async function send() {
     const msg = text.trim();
-    if (!msg) return;
-    if (await post("/teachers/send", { teacher: teacherId, text: msg })) setText("");
+    if (!msg || busy) return;
+    const tmp: ChatMessage = { id: `tmp-${Date.now()}`, from: "parent", text: msg, at: new Date().toISOString(), pending: true, meeting: null };
+    setData((d) => d && { ...d, messages: [...d.messages, tmp] });
+    setText("");
+    sending.current = true;
+    gen.current++;
+    const ok = await post("/teachers/send", { teacher: teacherId, text: msg });
+    sending.current = false;
+    gen.current++;
+    if (!ok) {
+      setData((d) => d && { ...d, messages: d.messages.filter((m) => m.id !== tmp.id) });
+      setText(msg);
+    }
   }
 
   const t = data?.teacher;
@@ -183,7 +201,7 @@ function Bubble({ m, lang }: { m: ChatMessage; lang: Lang }) {
       <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.text}</p>
       <p className={`mt-0.5 flex items-center justify-end gap-1 text-[11px] ${mine ? "text-white/70" : "text-ink-400"}`}>
         {clockOf(m.at, lang)}
-        {mine && <CheckCheck className="h-3.5 w-3.5" aria-hidden />}
+        {mine && (m.pending ? <Clock3 className="h-3 w-3" aria-label="Sending" /> : <CheckCheck className="h-3.5 w-3.5" aria-hidden />)}
       </p>
     </div>
   );

@@ -43,11 +43,13 @@ interface PageInfo {
   bare?: boolean;
   /** No top bar at all (no menu button, no title). */
   noHeader?: boolean;
+  /** Normal top bar on a warm paper page, so the white fee bill stands out (Fees). */
+  warm?: boolean;
 }
 
 const PAGES: Record<string, PageInfo> = {
   "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true, big: true, noTitle: true },
-  "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true },
+  "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true, warm: true },
   "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true },
   "/profile/": { title: { hi: "प्रोफ़ाइल", en: "Profile" } },
@@ -68,6 +70,7 @@ const PAGES: Record<string, PageInfo> = {
   "/search/": { title: { hi: "खोजें", en: "Search" }, back: "/" },
   "/teachers/": { title: { hi: "टीचर से पूछें", en: "Ask Teacher" }, back: "/", perChild: true },
   "/teachers/chat/": { title: { hi: "टीचर से बात", en: "Chat" }, back: "/teachers/", perChild: true, own: true, bare: true },
+  "/assistant/": { title: { hi: "स्कूल सहायक", en: "School Sahayak" }, back: "/", perChild: true, own: true, bare: true },
 };
 
 const norm = (p: string) => (p.endsWith("/") ? p : p + "/");
@@ -89,7 +92,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const own = !!page?.own;
   const canSwitch = !!page?.perChild && (me?.children.length || 0) > 1 && !!child;
   const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
-  const litIndex = TABS.findIndex((t) => t.href === lit);
 
   // Swipe right anywhere on the screen to open the side menu (not on a chat, whose screen is all typing,
   // and not when the swipe starts on something that scrolls sideways, like the month strip).
@@ -132,7 +134,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <MenuContext.Provider value={{ openMenu: () => setMenu(true) }}>
-    <div className={clsx("mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", own ? "bg-ink-50" : isHome || big ? "bg-ink-50" : "bg-white")}>
+    <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-[#e3ecec]" : own || big ? "bg-ink-50" : page?.warm ? "bg-[#FFF4E5]" : "bg-white")}>
+      {/* The teal band on Home, as in the staff app: under the header, down to the middle of the banner. */}
+      {isHome && <div aria-hidden className="teal-band" style={{ height: "calc(env(safe-area-inset-top, 0px) + 220px)", transform: "translate3d(0,var(--band-y,0px),0)", willChange: "transform" }} />}
       {big && page && (
         <header className="pt-safe px-4">
           <div className="-ml-2.5 flex items-center gap-1 pb-1 pt-4">
@@ -144,7 +148,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
       {page?.noHeader && <div className="pt-safe" aria-hidden />}
       {!isHome && !big && !own && !page?.noHeader && (
-        <header className="pt-safe sticky top-0 z-20 bg-white/95 backdrop-blur-sm">
+        <header className={clsx("pt-safe sticky top-0 z-20 backdrop-blur-sm", page?.warm ? "bg-[#FFF4E5]/95" : "bg-white/95")}>
           <div className="grid h-14 grid-cols-[48px_1fr_48px] items-center px-1.5">
             {page?.back ? (
               <Link href={page.back} className="grid h-11 w-11 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={L({ hi: "वापस", en: "Back" })}>
@@ -169,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
       )}
 
-      <main className={clsx("flex-1", !page?.bare && "pb-28", !isHome && !own && "space-y-3.5 px-4", !isHome && !own && (big ? "pt-3" : "pt-1"))}>
+      <main className={clsx("relative z-10 flex-1", !page?.bare && "pb-28", !isHome && !own && "space-y-3.5 px-4", !isHome && !own && (big ? "pt-3" : "pt-1"))}>
         {!isHome && !own && <OfflineNote show={stale && !!me} />}
         {error && error.status !== 401 ? (
           <div className={clsx(isHome && "px-4 pt-6")}>
@@ -184,31 +188,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </main>
 
+      {/* School Sahayak (the AI chat): a round button floating above the tab bar, on every tab screen. */}
       {!page?.bare && (
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-100 bg-white" aria-label="Main">
-        <ul className="relative grid grid-cols-5">
-          {/* One blue pill that slides to the lit tab (Study has its own round button instead). */}
-          <span
-            aria-hidden
-            className="slide-pill pointer-events-none absolute left-0 top-[9px] flex w-1/5 justify-center"
-            style={{ transform: `translateX(${Math.max(0, litIndex) * 100}%)`, opacity: litIndex < 0 || TABS[litIndex]?.center ? 0 : 1 }}
-          >
-            <span className="h-8 w-[52px] rounded-[10px] bg-brand-600" />
-          </span>
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(92px+env(safe-area-inset-bottom,0px))] z-20 mx-auto flex max-w-[560px] justify-end px-4">
+          <Link href="/assistant/" aria-label={L({ hi: "स्कूल सहायक से पूछें", en: "Ask School Sahayak" })} className="sahayak-orb sahayak-float pointer-events-auto flex h-14 w-14 items-center justify-center gap-2 rounded-full border-[3px] border-white transition-transform duration-200 active:scale-90">
+            {/* The same purple orb as on the chat screen, small. */}
+            <span className="sahayak-eye h-3 w-[6px] rounded-full bg-white" aria-hidden />
+            <span className="sahayak-eye h-3 w-[6px] rounded-full bg-white" aria-hidden />
+          </Link>
+        </div>
+      )}
+
+      {!page?.bare && (
+      // Same as the staff app's design C (user, 2026-10-19): a floating 50% glass capsule, no pill behind
+      // the lit tab (its icon is filled inside instead), and Study rising above it as the green disc.
+      <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] px-2.5 pb-[calc(12px+env(safe-area-inset-bottom,0px))]" aria-label="Main">
+        <ul className="nav-capsule pointer-events-auto relative grid h-16 grid-cols-5 rounded-3xl">
           {TABS.map(({ href, text, icon: Icon, center }) => {
             const on = lit === href;
             if (center)
               return (
                 <li key={href} className="relative">
-                  {/* Half of the circle rises above the bar; the white ring cuts it out of the bar's top line. */}
-                  <Link href={href} aria-current={on ? "page" : undefined} className="flex h-[66px] flex-col items-center justify-end pb-[9px] text-[12px]">
+                  {/* The disc rises above the capsule; its ring is the page colour. */}
+                  <Link href={href} aria-current={on ? "page" : undefined} className="flex h-16 flex-col items-center justify-end pb-[9px] text-[11px]">
                     <span
                       className={clsx(
-                        "absolute -top-[26px] left-1/2 grid h-[58px] w-[58px] -translate-x-1/2 place-items-center rounded-full text-white ring-[5px] ring-white transition-transform duration-200 active:scale-95",
+                        "absolute -top-[22px] left-1/2 grid h-[54px] w-[54px] -translate-x-1/2 place-items-center rounded-full border-4 text-white transition-transform duration-200 active:scale-95",
+                        isHome ? "border-[#e3ecec]" : big || own ? "border-ink-50" : "border-white",
                         on ? "bg-[#33a811] shadow-[0_6px_16px_rgba(57,188,19,.45)]" : "bg-[#39bc13] shadow-[0_4px_12px_rgba(57,188,19,.35)]"
                       )}
                     >
-                      <Icon className="h-[26px] w-[26px]" strokeWidth={2} aria-hidden />
+                      <Icon className="h-[25px] w-[25px]" strokeWidth={2} aria-hidden />
                     </span>
                     <span className={clsx("font-semibold", on ? "text-[#2c9010]" : "text-[#2f9c10]")}>{L(text)}</span>
                   </Link>
@@ -216,9 +226,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               );
             return (
               <li key={href} className="relative">
-                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-[66px] flex-col items-center justify-center gap-0.5 text-[12px] transition-colors duration-300", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
-                  <span className={clsx("grid h-8 w-[52px] place-items-center rounded-[10px] transition-colors duration-300", on && "text-white")}>
-                    <Icon key={on ? "on" : "off"} className={clsx("h-[22px] w-[22px]", on && "tab-icon-on")} strokeWidth={on ? 2.1 : 1.7} aria-hidden />
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-16 flex-col items-center justify-center gap-0.5 text-[11px] transition-colors duration-300", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
+                  <span className="grid h-7 w-[52px] place-items-center">
+                    <Icon key={on ? "on" : "off"} className={clsx("h-[27px] w-[27px]", on && "tab-icon-on")} strokeWidth={on ? 2 : 1.7} fill={on ? "currentColor" : "none"} fillOpacity={on ? 0.22 : undefined} aria-hidden />
                   </span>
                   {L(text)}
                 </Link>
