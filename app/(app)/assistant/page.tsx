@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
 import { Thinking, Thought, TypeOut } from "@/components/SahayakThinking";
+import { SahayakOwl } from "@/components/SahayakOwl";
 
 /** `thought` and `fresh` stay on the phone: the server only gets role and content. */
 type Turn = { role: "user" | "assistant"; content: string; thought?: { secs: number; steps: Bi[] }; fresh?: boolean };
@@ -41,18 +42,6 @@ function stepsFor(question: string, name: string): Bi[] {
 
 /** The browser's own speech-to-text (Chrome on Android has it); absent elsewhere, so the mic hides. */
 const speechApi = () => (typeof window === "undefined" ? null : (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null);
-
-/** School Sahayak's face: a purple orb with two eyes that floats and blinks. */
-function Orb({ size, still }: { size: number; still?: boolean }) {
-  const eyeW = Math.round(size * 0.107);
-  const eyeH = Math.round(size * 0.227);
-  return (
-    <span className={clsx("sahayak-orb flex shrink-0 items-center justify-center rounded-full", !still && "sahayak-float")} style={{ width: size, height: size, gap: Math.round(size * 0.147) }} aria-hidden>
-      <span className="sahayak-eye rounded-full bg-white" style={{ width: eyeW, height: eyeH }} />
-      <span className="sahayak-eye rounded-full bg-white" style={{ width: eyeW, height: eyeH }} />
-    </span>
-  );
-}
 
 /**
  * School Sahayak: the parent asks about their child in their own words; the backend answers from
@@ -173,7 +162,7 @@ export default function AssistantPage() {
             <p className="flex-1 pr-11 text-center text-[15px] font-semibold text-[#5A5380]">{L({ hi: "स्कूल सहायक", en: "School Sahayak" })}</p>
           ) : (
             <>
-              <Orb size={36} still />
+              <SahayakOwl size={36} crop mood={busy ? "think" : undefined} />
               <div className="min-w-0">
                 <p className="text-[16px] font-semibold leading-tight">{L({ hi: "स्कूल सहायक", en: "School Sahayak" })}</p>
                 <p className="truncate text-[12.5px] text-[#6B6492]">{first && L({ hi: `${first} के बारे में`, en: `About ${first}` })}</p>
@@ -190,8 +179,7 @@ export default function AssistantPage() {
             <p className="mt-1 text-[21px] font-medium leading-snug text-[#3E3670]">{L({ hi: "आज क्या जानना है?", en: "What would you like to know?" })}</p>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-5 py-6">
-            <Orb size={150} />
-            <span aria-hidden className="sahayak-shadow h-3.5 w-28 rounded-full bg-[#6A45E0]/20" />
+            <SahayakOwl size={170} intro mood={listening ? "listen" : undefined} />
             <p className="max-w-[270px] text-center text-[14px] leading-snug text-[#5A5380]">
               {L({ hi: `${first || "बच्चे"} की फ़ीस, हाज़िरी, होमवर्क या एग्ज़ाम के बारे में पूछें – हिंदी या English में।`, en: `Ask about ${first || "your child"}'s fees, attendance, homework or exams – in Hindi or English.` })}
             </p>
