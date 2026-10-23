@@ -139,7 +139,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <MenuContext.Provider value={{ openMenu: () => setMenu(true) }}>
     <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-[#e3ecec]" : own || big ? "bg-ink-50" : page?.warm ? "bg-[#FFF4E5]" : "bg-white")}>
       {/* The teal band on Home, as in the staff app: under the header, down to the middle of the banner. */}
-      {isHome && <div aria-hidden className="teal-band" style={{ height: "calc(env(safe-area-inset-top, 0px) + 220px)", transform: "translate3d(0,var(--band-y,0px),0)", willChange: "transform" }} />}
       {big && page && (
         <header className="pt-safe px-4">
           <div className="-ml-2.5 flex items-center gap-1 pb-1 pt-4">

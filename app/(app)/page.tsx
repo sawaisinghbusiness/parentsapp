@@ -35,7 +35,6 @@ import { Avatar, ErrorCard, OfflineNote, Skeleton } from "@/components/ui";
 import { ChildSheet } from "@/components/ChildSheet";
 import { ProfilePeek } from "@/components/ProfilePeek";
 import { EventRow } from "@/components/EventRow";
-import { BannerSlider } from "@/components/BannerSlider";
 import { useMenu } from "@/lib/menu";
 import { ripple } from "@/lib/motion";
 
@@ -91,13 +90,6 @@ const v = (i: number) => ({ "--i": i }) as React.CSSProperties;
 const todayText = (iso: string, lang: "hi" | "en") =>
   new Date(iso + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-GB", lang === "hi" ? { weekday: "long", day: "numeric", month: "long" } : { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 
-/** Home banners in order: the middle one shows first (the original), one hidden on each side. */
-const BANNERS = [
-  { src: "/img/home-banner-lessons.webp", alt: "Every lesson. Every result." },
-  { src: "/img/home-banner-2.webp", alt: "Stay connected. Stay informed." },
-  { src: "/img/home-banner-fees.webp", alt: "Pay fees easily. Never miss a notice." },
-];
-
 /**
  * Home, laid out like the reference the user picked (2026-10-08): the school's mark and name, language,
  * search, notices and the child; "Hello"; a Today card (attendance, fees, homework); quick actions;
@@ -107,7 +99,6 @@ export default function HomePage() {
   const { me, child, stale } = useParent();
   const { data, error, reload } = useApi<Home>(child ? `/home?student=${child.id}` : null);
   const L = useL();
-  const { lang, setLang } = useT();
   const [switching, setSwitching] = useState(false);
   // Every action shows from the start; "Show less" folds it to the first row.
   const [more, setMore] = useState(true);
@@ -115,7 +106,6 @@ export default function HomePage() {
   const { openMenu } = useMenu();
   const many = (me?.children.length || 0) > 1;
   const tint = Math.max(0, me?.children.findIndex((c) => c.id === child?.id) ?? 0);
-  const first = child?.name.split(" ")[0] || "";
   const unread = data?.noticeCount || 0;
   const events = (data?.events || []).slice(0, 3);
   // The arrival plays once per visit to the app; coming back to Home later, it is simply there.
@@ -124,22 +114,23 @@ export default function HomePage() {
     arrived = true;
   }, []);
 
-  // Scrolling, as in the staff app: the top row stays put on a solid teal strip and everything else slides
-  // up under it. The teal band holds still too, until the Today card reaches where the banner was.
-  const headRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLDivElement>(null);
-  const todayRef = useRef<HTMLDivElement>(null);
+  // Scrolling folds the photo away (the user's ask, 2026-10-23): it stays pinned while its arched bottom edge
+  // rises with the scroll and the picture drifts up a little slower (parallax). The page below rides on that
+  // edge, so nothing slides under the photo. The round buttons stay on top; a white strip fades in behind
+  // them just before the photo is gone.
+  const heroRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const root = document.documentElement.style;
     let frame = 0;
     const paint = () => {
       frame = 0;
-      const y = Math.max(0, window.scrollY);
-      const img = imgRef.current, today = todayRef.current, head = headRef.current;
-      const stop = img && today ? today.offsetTop - img.offsetTop : 0;
-      root.setProperty("--band-y", `${Math.min(y, stop)}px`);
-      // A soft edge under the strip once something has gone under it.
-      if (head) head.style.boxShadow = y > 4 ? "0 4px 12px rgba(15,47,60,0.18)" : "none";
+      const hero = heroRef.current;
+      if (!hero) return;
+      const h = hero.offsetHeight;
+      const bar = barRef.current?.offsetHeight || 64;
+      const fold = Math.min(Math.max(window.scrollY, 0), h);
+      hero.style.setProperty("--fold", `${fold}px`);
+      hero.style.setProperty("--bar", String(Math.min(1, Math.max(0, (fold - (h - bar - 40)) / 40))));
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(paint);
@@ -151,94 +142,66 @@ export default function HomePage() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);
-      root.removeProperty("--band-y");
     };
   }, []);
 
   return (
     <div className={clsx("animate-fadeIn", calm && "calm")}>
-      {/* One row like the staff app: menu, search, then language, notices and the child.
-          It stays at the top on a solid teal strip; the page slides under it. */}
-      <div ref={headRef} className="pt-safe sticky top-0 z-20 bg-[#3099a4] px-4 pb-2 transition-shadow duration-300">
-        <div className="enter flex items-center gap-1.5 pt-4" style={v(0)}>
-          <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="-ml-2 mr-0.5 grid h-11 w-10 shrink-0 place-items-center rounded-full text-white active:bg-white/15">
-            <MenuIcon className="h-6 w-6" strokeWidth={2} aria-hidden />
-          </button>
-          {/* Search fills the room between the menu and the language switch. */}
-          <Link href="/search/" className="glass-search ml-1 mr-0.5 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full px-3 text-ink-500" aria-label={L({ hi: "खोजें", en: "Search" })}>
-            <Search className="h-[18px] w-[18px] shrink-0 text-brand-800" strokeWidth={2.2} aria-hidden />
-            <span className="truncate text-[14px]">{L({ hi: "खोजें", en: "Search" })}</span>
-          </Link>
-          <div className="relative flex shrink-0 rounded-full border border-ink-200 bg-white p-0.5" role="group" aria-label={L({ hi: "भाषा", en: "Language" })}>
-            <span aria-hidden className="slide-pill absolute left-0.5 top-0.5 h-7 w-[30px] rounded-full bg-brand-600" style={{ transform: lang === "hi" ? "translateX(30px)" : "none" }} />
-            {(["en", "hi"] as const).map((k) => (
-              <button
-                key={k}
-                onClick={() => setLang(k)}
-                aria-pressed={lang === k}
-                className={clsx("relative h-7 w-[30px] rounded-full text-[12px] font-semibold transition-colors duration-300", lang === k ? "text-white" : "text-ink-500")}
-              >
-                {k === "en" ? "EN" : "हि"}
-              </button>
-            ))}
+      {/* The top, like the reference the user sent (2026-10-23): the school's banner photo is the hero, whole and
+          clear (no zoom, no tint, no words added over it), with only round buttons on it: menu; notices and the
+          child. Search sits just under it. Language is switched from the side menu and Profile. */}
+      {/* Pinned to the top; it only lets taps through to its buttons, so the page under it stays usable. */}
+      <div ref={heroRef} className="pointer-events-none sticky top-0 z-30 aspect-[1280/720] w-full">
+        {/* Option B the user picked: the bottom edge cut as one wide arc, with a soft shadow under it. */}
+        <div className="absolute inset-0 drop-shadow-[0_10px_14px_rgba(10,30,36,0.28)]">
+          <div className="h-full w-full overflow-hidden [clip-path:ellipse(85%_calc(100%_-_var(--fold,0px))_at_50%_0%)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/home-banner-2.webp" alt={L({ hi: "स्कूल", en: "School" })} width={1280} height={720} className="block h-full w-full object-cover will-change-transform" style={{ transform: "translate3d(0, calc(var(--fold, 0px) * -0.4), 0)" }} />
           </div>
-          <Link href="/notice/" className="relative grid h-10 w-9 shrink-0 place-items-center rounded-full text-white active:bg-white/15" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
+        </div>
+        <div ref={barRef} className="pt-safe pointer-events-auto absolute inset-x-0 top-0 px-4 pb-2" style={{ background: "rgb(255 255 255 / var(--bar, 0))", boxShadow: "0 4px 12px rgb(15 47 60 / calc(var(--bar, 0) * 0.12))" }}>
+          <div className="enter flex items-center gap-2 pt-3" style={v(0)}>
+            <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/80 text-ink-900 shadow-sm backdrop-blur-sm active:bg-white">
+              <MenuIcon className="h-5 w-5" strokeWidth={2.2} aria-hidden />
+            </button>
+            <span className="flex-1" />
+            <Link href="/notice/" className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/80 text-ink-900 shadow-sm backdrop-blur-sm active:bg-white" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
             <Bell className={clsx("h-[21px] w-[21px]", unread > 0 && "bell-ring")} strokeWidth={2} aria-hidden />
             {unread > 0 && (
-              <span className="badge-pop absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-[#3099a4] bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
+              <span className="badge-pop absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-white bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
           </Link>
-          {child ? (
-            <button
-              onClick={() => setPeek(true)}
-              aria-haspopup="dialog"
-              className="shrink-0 rounded-full ring-2 ring-white transition-transform duration-300 active:scale-90"
-              aria-label={`${child.name}: ${L({ hi: "विवरण", en: "details" })}`}
-            >
-              <Avatar name={child.name} url={child.photoUrl} size={38} tint={tint} />
-            </button>
-          ) : (
-            <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-full" />
-          )}
-        </div>
-      </div>
-
-      <header className="px-4">
-        <div className="mt-3">
-          <div className="min-w-0">
             {child ? (
-              <>
-                {many ? (
-                  <button onClick={() => setSwitching(true)} className="flex max-w-full items-center gap-1.5 text-left" aria-label={`${L({ hi: "बच्चा बदलें", en: "Switch child" })}: ${child.name}`}>
-                    <Greeting name={first} />
-                    <ChevronDown className="enter h-5 w-5 shrink-0 text-white" style={v(3)} strokeWidth={2.4} aria-hidden />
-                  </button>
-                ) : (
-                  <Greeting name={first} />
-                )}
-              </>
+              <button
+                // With more than one child the photo opens the switcher (the greeting that did this is gone).
+                onClick={() => (many ? setSwitching(true) : setPeek(true))}
+                aria-haspopup="dialog"
+                className="shrink-0 rounded-full ring-2 ring-white shadow-sm transition-transform duration-300 active:scale-90"
+                aria-label={many ? `${L({ hi: "बच्चा बदलें", en: "Switch child" })}: ${child.name}` : `${child.name}: ${L({ hi: "विवरण", en: "details" })}`}
+              >
+                <Avatar name={child.name} url={child.photoUrl} size={38} tint={tint} />
+              </button>
             ) : (
-              <div className="space-y-2 py-1">
-                <Skeleton className="h-7 w-44 bg-white/25" />
-                <Skeleton className="h-4 w-32 bg-white/25" />
-              </div>
+              <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-full" />
             )}
           </div>
         </div>
-      </header>
+      </div>
+
+      <div className="px-4">
+        <Link href="/search/" className="enter mt-3.5 flex h-12 items-center gap-2.5 rounded-xl border border-ink-100 bg-white px-4 text-ink-500 shadow-sm" style={v(3)} aria-label={L({ hi: "खोजें", en: "Search" })}>
+          <Search className="h-[18px] w-[18px] shrink-0 text-ink-700" strokeWidth={2.2} aria-hidden />
+          <span className="truncate text-[14.5px]">{L({ hi: "होमवर्क, फ़ीस, सूचना खोजें", en: "Search homework, fees, notices" })}</span>
+        </Link>
+      </div>
 
       <div className="space-y-6 px-4 pt-4">
         <OfflineNote show={stale && !!me} />
         {error && error.status !== 401 && !data && <ErrorCard offline={error.status === 0} onRetry={reload} />}
 
-        {/* The school's banners, right under the greeting: swipe for the one on either side. */}
-        <BannerSlider ref={imgRef} slides={BANNERS} start={1} className="enter" style={v(3)} />
-
-        <div ref={todayRef}>
-          <Today data={data} />
-        </div>
+        <Today data={data} />
 
         <section className="enter" style={v(4)}>
           <div className="mb-3 flex items-center justify-between">
@@ -285,20 +248,6 @@ export default function HomePage() {
 }
 
 /** "Hello," then the name, each sliding up out of its line. */
-function Greeting({ name }: { name: string }) {
-  const L = useL();
-  return (
-    <h1 className="truncate text-[clamp(21px,6.4vw,26px)] font-bold leading-tight text-white">
-      <span className="reveal">
-        <span style={v(0)}>{L({ hi: "नमस्ते,", en: "Hello," })}</span>
-      </span>{" "}
-      <span className="reveal">
-        <span style={v(1)}>{name}</span>
-      </span>
-    </h1>
-  );
-}
-
 function QuickTile({ href, text, icon: Icon, tone, i }: Action & { i: number }) {
   const L = useL();
   return (
