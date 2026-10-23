@@ -7,8 +7,10 @@ import { BookOpen, Bus, CalendarCheck, ChevronLeft, ClipboardList, IndianRupee, 
 import { api } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
+import { Thinking, Thought, TypeOut } from "@/components/SahayakThinking";
 
-type Turn = { role: "user" | "assistant"; content: string };
+/** `thought` and `fresh` stay on the phone: the server only gets role and content. */
+type Turn = { role: "user" | "assistant"; content: string; thought?: { secs: number; steps: Bi[] }; fresh?: boolean };
 type Question = { text: Bi; icon: LucideIcon };
 
 /** The first four are the big buttons on the opening screen; "+" lists them all. */
@@ -21,6 +23,21 @@ const QUESTIONS: Question[] = [
   { text: { hi: "आज का टाइम टेबल?", en: "Today's timetable?" }, icon: Table2 },
   { text: { hi: "नई सूचनाएँ?", en: "Any new notices?" }, icon: Megaphone },
 ];
+
+/** What the "thinking" lines say, from the question's topic. They move on a timer (see SahayakThinking). */
+function stepsFor(question: string, name: string): Bi[] {
+  const q = question.toLowerCase();
+  const n = { hi: name || "बच्चे", en: name || "your child" };
+  const write = { hi: "जवाब लिख रहा हूँ", en: "Writing the answer" };
+  if (/fee|फ़ीस|फीस|बकाया|baki|paisa|पैसे/.test(q)) return [{ hi: `${n.hi} की फ़ीस देख रहा हूँ`, en: `Checking ${n.en}'s fees` }, { hi: "जमा और बाकी रकम मिला रहा हूँ", en: "Matching paid and due amounts" }, write];
+  if (/attend|ha[sz]i?ri|हाज़िरी|हाजिरी|absent|present|गैरहाज़िर/.test(q)) return [{ hi: `${n.hi} की हाज़िरी देख रहा हूँ`, en: `Checking ${n.en}'s attendance` }, { hi: "दिन गिन रहा हूँ", en: "Counting the days" }, write];
+  if (/home ?work|होमवर्क|गृहकार्य/.test(q)) return [{ hi: `${n.hi} की क्लास का होमवर्क देख रहा हूँ`, en: `Checking ${n.en}'s class homework` }, { hi: "विषय के हिसाब से छाँट रहा हूँ", en: "Sorting by subject" }, write];
+  if (/exam|test|result|marks|pariksha|paper|परीक्षा|एग्ज़ाम|एग्जाम|रिज़ल्ट|नंबर/.test(q)) return [{ hi: "एग्ज़ाम की जानकारी देख रहा हूँ", en: "Checking exams" }, { hi: `${n.hi} के नंबर देख रहा हूँ`, en: `Checking ${n.en}'s marks` }, write];
+  if (/bus|van|transport|बस|वैन/.test(q)) return [{ hi: "बस की जानकारी देख रहा हूँ", en: "Checking the bus" }, { hi: "रूट और स्टॉप देख रहा हूँ", en: "Checking route and stop" }, write];
+  if (/time ?table|period|टाइम टेबल|पीरियड/.test(q)) return [{ hi: "टाइम टेबल देख रहा हूँ", en: "Checking the timetable" }, { hi: "आज के पीरियड छाँट रहा हूँ", en: "Picking today's periods" }, write];
+  if (/notice|event|holiday|program|function|chh?utti|suchna|सूचना|छुट्टी|कार्यक्रम|प्रोग्राम/.test(q)) return [{ hi: "सूचनाएँ और कार्यक्रम देख रहा हूँ", en: "Checking notices and events" }, { hi: "तारीखें मिला रहा हूँ", en: "Matching the dates" }, write];
+  return [{ hi: "सवाल समझ रहा हूँ", en: "Reading the question" }, { hi: `${n.hi} की जानकारी देख रहा हूँ`, en: `Checking ${n.en}'s details` }, write];
+}
 
 /** The browser's own speech-to-text (Chrome on Android has it); absent elsewhere, so the mic hides. */
 const speechApi = () => (typeof window === "undefined" ? null : (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null);
@@ -48,6 +65,7 @@ export default function AssistantPage() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [steps, setSteps] = useState<Bi[]>([]);
   const [fail, setFail] = useState("");
   const [list, setList] = useState(false);
   const [listening, setListening] = useState(false);
@@ -71,23 +89,42 @@ export default function AssistantPage() {
 
   useEffect(() => () => rec.current?.abort?.(), []);
 
+  // Chrome on Android: the keyboard slides over the page and the bar rides up with it (bottom = keyboard
+  // height), instead of first covering the bar and then jumping the page.
+  useEffect(() => {
+    const vk = (navigator as any).virtualKeyboard;
+    if (!vk) return;
+    vk.overlaysContent = true;
+    const keep = () => end.current?.scrollIntoView({ block: "end" });
+    vk.addEventListener?.("geometrychange", keep);
+    return () => {
+      vk.overlaysContent = false;
+      vk.removeEventListener?.("geometrychange", keep);
+    };
+  }, []);
+
   async function ask(q: string) {
     const msg = q.trim();
     if (!msg || busy || !child) return;
-    const next: Turn[] = [...turns, { role: "user", content: msg }];
+    const next: Turn[] = [...turns.map((t) => ({ ...t, fresh: false })), { role: "user", content: msg }];
+    const thinking = stepsFor(msg, first);
+    const started = Date.now();
     setTurns(next);
     setText("");
     setFail("");
     setList(false);
+    setSteps(thinking);
     setBusy(true);
     try {
-      const r = await api<{ reply: string }>("/assistant", { body: { student: child.id, messages: next } });
-      setTurns([...next, { role: "assistant", content: r.reply }]);
+      const messages = next.map(({ role, content }) => ({ role, content }));
+      const r = await api<{ reply: string }>("/assistant", { timeoutMs: 45_000, body: { student: child.id, messages } });
+      const secs = Math.max(1, Math.round((Date.now() - started) / 1000));
+      setTurns([...next, { role: "assistant", content: r.reply, thought: { secs, steps: thinking }, fresh: true }]);
     } catch (e: any) {
       // The question goes back in the box so it can be sent again.
       setTurns(turns);
       setText(msg);
-      setFail(e?.status === 0 ? L({ hi: "इंटरनेट नहीं है। फिर भेजें।", en: "No internet. Try again." }) : e?.message || L({ hi: "जवाब नहीं आया। फिर भेजें।", en: "No answer came. Try again." }));
+      setFail(e?.status === 0 && e?.message === "timeout" ? L({ hi: "जवाब आने में देर हो गई। फिर भेजें।", en: "The answer took too long. Try again." }) : e?.status === 0 ? L({ hi: "इंटरनेट नहीं है। फिर भेजें।", en: "No internet. Try again." }) : e?.message || L({ hi: "जवाब नहीं आया। फिर भेजें।", en: "No answer came. Try again." }));
     } finally {
       setBusy(false);
     }
@@ -169,32 +206,29 @@ export default function AssistantPage() {
           </div>
         </div>
       ) : (
-        <div className="relative flex flex-1 flex-col gap-3 px-4 pb-44 pt-2" aria-live="polite">
+        <div className="relative flex flex-1 flex-col gap-3 px-4 pb-[calc(11rem_+_env(keyboard-inset-height,0px))] pt-2" aria-live="polite">
           {turns.map((t, i) =>
             t.role === "user" ? (
               <p key={i} className="max-w-[78%] self-end whitespace-pre-wrap break-words rounded-[18px] rounded-br-md bg-[#6A45E0] px-3.5 py-2.5 text-[15px] leading-snug text-white">
                 {t.content}
               </p>
             ) : (
-              <p key={i} className="max-w-[86%] self-start whitespace-pre-wrap break-words rounded-[18px] rounded-bl-md border border-[#E8E2FB] bg-white/90 px-3.5 py-2.5 text-[15px] leading-relaxed">
-                {t.content}
-              </p>
+              <div key={i} className="flex max-w-[86%] flex-col gap-1 self-start">
+                {t.thought && <Thought secs={t.thought.secs} steps={t.thought.steps} />}
+                <p className="whitespace-pre-wrap break-words rounded-[18px] rounded-bl-md border border-[#E8E2FB] bg-white/90 px-3.5 py-2.5 text-[15px] leading-relaxed">
+                  {t.fresh ? <TypeOut text={t.content} onGrow={() => end.current?.scrollIntoView({ block: "end" })} /> : t.content}
+                </p>
+              </div>
             )
           )}
-          {busy && (
-            <p className="flex items-center gap-1.5 self-start rounded-[18px] rounded-bl-md border border-[#E8E2FB] bg-white/90 px-4 py-3.5" aria-label={L({ hi: "जवाब आ रहा है", en: "Answering" })}>
-              {["#B9A8F2", "#9B84EC", "#6A45E0"].map((c, k) => (
-                <span key={c} className="h-[7px] w-[7px] animate-pulse rounded-full" style={{ background: c, animationDelay: `${k * 200}ms` }} aria-hidden />
-              ))}
-            </p>
-          )}
+          {busy && <Thinking steps={steps} />}
           <div ref={end} />
         </div>
       )}
 
-      <div className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] px-4 pb-3 pt-2">
+      <div className="fixed inset-x-0 bottom-[env(keyboard-inset-height,0px)] z-20 mx-auto max-w-[560px] px-4 pb-[calc(1.25rem_+_env(safe-area-inset-bottom,0px))] pt-2">
         {list && (
-          <div className="mb-2.5 overflow-hidden rounded-2xl border border-[#E3DCFA] bg-white shadow-[0_8px_24px_rgba(42,35,80,0.12)]" role="menu">
+          <div className="sahayak-glass mb-2.5 overflow-hidden rounded-2xl" role="menu">
             <div className="flex items-center justify-between px-4 pb-1 pt-3">
               <p className="text-[13px] font-semibold text-[#6B6492]">{L({ hi: "ये पूछ सकते हैं", en: "You can ask" })}</p>
               <button type="button" onClick={() => setList(false)} className="grid h-9 w-9 place-items-center rounded-full active:bg-[#F1ECFF]" aria-label={L({ hi: "बंद करें", en: "Close" })}>
@@ -210,9 +244,9 @@ export default function AssistantPage() {
           </div>
         )}
         {!empty && !list && (
-          <div className="no-scrollbar -mx-4 mb-2.5 flex gap-2 overflow-x-auto px-4">
+          <div className="no-scrollbar -mx-4 -mt-2 mb-0.5 flex gap-2 overflow-x-auto px-4 pb-3 pt-2">
             {QUESTIONS.map((q) => (
-              <button key={q.text.en} type="button" disabled={busy || !child} onClick={() => ask(L(q.text))} className="h-10 shrink-0 rounded-xl border border-[#E3DCFA] bg-white/85 px-3 text-[14px] font-medium active:bg-white disabled:opacity-50">
+              <button key={q.text.en} type="button" disabled={busy || !child} onClick={() => ask(L(q.text))} className="sahayak-glass h-10 shrink-0 rounded-xl px-3 text-[14px] font-medium active:bg-white disabled:opacity-50">
                 {L(q.text)}
               </button>
             ))}
@@ -224,7 +258,7 @@ export default function AssistantPage() {
           </p>
         )}
         <form
-          className="flex items-center gap-2 rounded-[28px] border border-[#E3DCFA] bg-white/95 py-1.5 pl-2 pr-1.5"
+          className="sahayak-glass flex items-center gap-2 rounded-[30px] py-2 pl-2 pr-2"
           onSubmit={(e) => {
             e.preventDefault();
             ask(text);
@@ -243,7 +277,7 @@ export default function AssistantPage() {
             autoComplete="off"
             onChange={(e) => setText(e.target.value)}
             placeholder={listening ? L({ hi: "सुन रहे हैं… बोलिए", en: "Listening… speak now" }) : L({ hi: "कुछ भी पूछें…", en: "Ask anything…" })}
-            className="h-10 min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-[#8A84A8]"
+            className="h-11 min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-[#8A84A8] focus-visible:ring-0 focus-visible:ring-offset-0"
           />
           {text.trim() || !canSpeak ? (
             <button type="submit" disabled={busy || !text.trim() || !child} aria-label={L({ hi: "भेजें", en: "Send" })} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#6A45E0] text-white transition-opacity disabled:opacity-40">
