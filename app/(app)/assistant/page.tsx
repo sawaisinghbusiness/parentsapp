@@ -180,9 +180,6 @@ export default function AssistantPage() {
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-5 py-6">
             <SahayakOwl size={170} intro mood={listening ? "listen" : undefined} />
-            <p className="max-w-[270px] text-center text-[14px] leading-snug text-[#5A5380]">
-              {L({ hi: `${first || "बच्चे"} की फ़ीस, हाज़िरी, होमवर्क या एग्ज़ाम के बारे में पूछें – हिंदी या English में।`, en: `Ask about ${first || "your child"}'s fees, attendance, homework or exams – in Hindi or English.` })}
-            </p>
           </div>
           <div className="grid grid-cols-2 gap-2.5">
             {QUESTIONS.slice(0, 4).map(({ text: q, icon: Icon }) => (

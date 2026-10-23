@@ -175,7 +175,7 @@ function PayFlow({ info }: { info: PayInfo }) {
             {error}
           </p>
         )}
-        <div className="sticky bottom-[calc(62px+env(safe-area-inset-bottom))] -mx-4 space-y-2 border-t border-ink-100 bg-white px-4 pb-3 pt-2.5">
+        <div className="sticky bottom-[calc(104px+env(safe-area-inset-bottom))] -mx-4 space-y-2 border-t border-ink-100 bg-white px-4 pb-3 pt-2.5">
           <button type="submit" disabled={busy} className="btn-primary w-full">
             {busy ? "…" : L(F.send)}
           </button>
@@ -250,7 +250,7 @@ function PayFlow({ info }: { info: PayInfo }) {
         </button>
       </div>
 
-      <div className="sticky bottom-[calc(62px+env(safe-area-inset-bottom))] -mx-4 border-t border-ink-100 bg-white px-4 pb-3 pt-2.5">
+      <div className="sticky bottom-[calc(104px+env(safe-area-inset-bottom))] -mx-4 border-t border-ink-100 bg-white px-4 pb-3 pt-2.5">
         {/* Opens the UPI app; when the parent comes back, the page is already asking for the UTR. */}
         <a href={amountOk ? link : undefined} onClick={() => amountOk && setStep("utr")} aria-disabled={!amountOk} className={clsx("btn-primary w-full", !amountOk && "pointer-events-none opacity-50")}>
           {L({ hi: "अभी भरें", en: "Pay Now" })} {amountOk ? <span className="tnum">{rupees(amount)}</span> : null}

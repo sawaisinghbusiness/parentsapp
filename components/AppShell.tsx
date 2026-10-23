@@ -95,12 +95,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
 
   // Swipe right anywhere on the screen to open the side menu (not on a chat, whose screen is all typing,
-  // and not when the swipe starts on something that scrolls sideways, like the month strip).
+  // and not when the swipe starts on something that scrolls sideways, like the month strip, or that takes
+  // its own sideways swipes and says so with data-swipe, like the Home banner slider).
   const touch = useRef<{ x: number; y: number; t: number } | null>(null);
   useEffect(() => {
     if (page?.bare) return;
     const sideways = (el: Element | null) => {
       for (let n = el; n && n !== document.body; n = n.parentElement) {
+        if (n.hasAttribute("data-swipe")) return true;
         const o = getComputedStyle(n).overflowX;
         if ((o === "auto" || o === "scroll") && n.scrollWidth > n.clientWidth + 2) return true;
       }

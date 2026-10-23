@@ -35,6 +35,7 @@ import { Avatar, ErrorCard, OfflineNote, Skeleton } from "@/components/ui";
 import { ChildSheet } from "@/components/ChildSheet";
 import { ProfilePeek } from "@/components/ProfilePeek";
 import { EventRow } from "@/components/EventRow";
+import { BannerSlider } from "@/components/BannerSlider";
 import { useMenu } from "@/lib/menu";
 import { ripple } from "@/lib/motion";
 
@@ -90,6 +91,13 @@ const v = (i: number) => ({ "--i": i }) as React.CSSProperties;
 const todayText = (iso: string, lang: "hi" | "en") =>
   new Date(iso + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-GB", lang === "hi" ? { weekday: "long", day: "numeric", month: "long" } : { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 
+/** Home banners in order: the middle one shows first (the original), one hidden on each side. */
+const BANNERS = [
+  { src: "/img/home-banner-lessons.webp", alt: "Every lesson. Every result." },
+  { src: "/img/home-banner-2.webp", alt: "Stay connected. Stay informed." },
+  { src: "/img/home-banner-fees.webp", alt: "Pay fees easily. Never miss a notice." },
+];
+
 /**
  * Home, laid out like the reference the user picked (2026-10-08): the school's mark and name, language,
  * search, notices and the child; "Hello"; a Today card (attendance, fees, homework); quick actions;
@@ -108,7 +116,6 @@ export default function HomePage() {
   const many = (me?.children.length || 0) > 1;
   const tint = Math.max(0, me?.children.findIndex((c) => c.id === child?.id) ?? 0);
   const first = child?.name.split(" ")[0] || "";
-  const school = me?.school;
   const unread = data?.noticeCount || 0;
   const events = (data?.events || []).slice(0, 3);
   // The arrival plays once per visit to the app; coming back to Home later, it is simply there.
@@ -120,7 +127,7 @@ export default function HomePage() {
   // Scrolling, as in the staff app: the top row stays put on a solid teal strip and everything else slides
   // up under it. The teal band holds still too, until the Today card reaches where the banner was.
   const headRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgRef = useRef<HTMLDivElement>(null);
   const todayRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const root = document.documentElement.style;
@@ -226,9 +233,8 @@ export default function HomePage() {
         <OfflineNote show={stale && !!me} />
         {error && error.status !== 401 && !data && <ErrorCard offline={error.status === 0} onRetry={reload} />}
 
-        {/* The school's banner, right under the greeting. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={imgRef} src="/img/home-banner-2.webp" alt={school?.name || ""} width={1280} height={720} className="enter block aspect-[1280/720] w-full rounded-2xl object-cover shadow-card" style={v(3)} />
+        {/* The school's banners, right under the greeting: swipe for the one on either side. */}
+        <BannerSlider ref={imgRef} slides={BANNERS} start={1} className="enter" style={v(3)} />
 
         <div ref={todayRef}>
           <Today data={data} />

@@ -11,7 +11,7 @@ import { Fireworks } from "@/components/Fireworks";
 /**
  * Study: the child picks a subject and studies with a timer, either one block of time or Pomodoro
  * (25 min focus, 5 min break, 4 rounds). Sessions are kept on this phone only (per child): today's
- * total, the week as bars, and today's sessions. The timer runs from a saved end time, so it stays
+ * total, the week as bars with the weekly report, and today's sessions. The timer runs from a saved end time, so it stays
  * right if the screen turns off or the app is closed. Finishing a whole block sets off fireworks.
  */
 
@@ -230,15 +230,14 @@ export default function StudyPage() {
   const weekMin = thisWeek.reduce((a, s) => a + s.minutes, 0);
   const lastMin = lastWeek.reduce((a, s) => a + s.minutes, 0);
   const daysStudied = week.filter((w) => w.min > 0).length;
-  const best = week.reduce((b, w) => (w.min > b.min ? w : b), week[0]);
   const bySubject = Object.entries(thisWeek.reduce<Record<string, number>>((m, s) => ((m[s.subject] = (m[s.subject] || 0) + s.minutes), m), {})).sort((a, b) => b[1] - a[1]);
   const topSubject = bySubject[0]?.[1] || 1;
   const change = lastMin ? Math.round(((weekMin - lastMin) / lastMin) * 100) : null;
 
   const total = run ? run.total : left;
-  const R = 108;
+  const R = 88;
   const C = 2 * Math.PI * R;
-  // The teal ring is the whole block; green fills over it as the time runs.
+  // A light track is the whole block; green fills over it as the time runs.
   const doneFrac = run ? 1 - left / total : 0;
   const busy = !!run;
   const onBreak = run?.phase === "break";
@@ -250,235 +249,205 @@ export default function StudyPage() {
         ? L({ hi: "ब्रेक: थोड़ा आराम करें", en: "Break: rest a little" })
         : L({ hi: "पढ़ाई चल रही है", en: "Studying" });
 
+  // Redesigned 2026-10-23 (the user found it too big and unprofessional): smaller ring and controls,
+  // one teal accent with green only for progress, flat cards, today and the weekly report in one card.
   return (
-    <div className="relative">
-      {/* Soft colour behind the glass, so the cards read as frosted glass. */}
-      <div aria-hidden className="pointer-events-none absolute -inset-x-4 -top-6 bottom-0 overflow-hidden">
-        <span className="absolute -left-16 top-24 h-64 w-64 rounded-full bg-[#177386] opacity-25 blur-3xl" />
-        <span className="absolute -right-20 top-[340px] h-72 w-72 rounded-full bg-[#39bc13] opacity-20 blur-3xl" />
-        <span className="absolute left-10 top-[640px] h-56 w-56 rounded-full bg-[#1E88E5] opacity-10 blur-3xl" />
+    <div className="space-y-3.5 pb-16 pt-4">
+      {/* Timer or Pomodoro: stays under the top bar while the page scrolls. */}
+      <div className="sticky top-[calc(env(safe-area-inset-top)+0.5rem)] z-10 grid grid-cols-2 rounded-xl bg-[#E9EEEF] p-[3px]" role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
+        {(["timer", "pomodoro"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={mode === m}
+            disabled={busy}
+            onClick={() => setMode(m)}
+            className={clsx("h-9 rounded-[9px] text-[14px] font-semibold transition-colors disabled:opacity-60", mode === m ? "bg-white text-ink-900 shadow-sm outline outline-1 outline-ink-900" : "text-ink-500")}
+          >
+            {m === "timer" ? L({ hi: "टाइमर", en: "Timer" }) : L({ hi: "पोमोडोरो", en: "Pomodoro" })}
+          </button>
+        ))}
       </div>
 
-      <div className="relative space-y-4">
-        {/* Timer or Pomodoro: stays under the top bar while the page scrolls. */}
-        <div className="glass sticky top-[calc(env(safe-area-inset-top)+0.5rem)] z-10 mt-4 grid grid-cols-2 rounded-2xl p-1" style={{ background: "rgb(255 255 255 / 0.9)" }} role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
-          {(["timer", "pomodoro"] as const).map((m) => (
+      {/* Subject */}
+      <section>
+        <h2 className="mb-1.5 px-0.5 text-[12.5px] font-semibold text-ink-500">{L({ hi: "विषय", en: "Subject" })}</h2>
+        <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4">
+          {subjects.map((s) => (
             <button
-              key={m}
+              key={s}
               type="button"
-              role="tab"
-              aria-selected={mode === m}
               disabled={busy}
-              onClick={() => setMode(m)}
-              className={clsx("h-10 rounded-xl border-[1.5px] text-[14.5px] font-semibold transition-all disabled:opacity-60", mode === m ? "glass-chip border-ink-900 text-ink-900" : "border-transparent text-ink-500")}
+              onClick={() => setSubject(s)}
+              aria-pressed={subject === s}
+              className={clsx("h-8 shrink-0 rounded-full border px-3 text-[13.5px] font-medium transition-colors disabled:opacity-50", subject === s ? "border-[#177386] bg-[#177386] text-white" : "border-ink-100 bg-white text-ink-800")}
             >
-              {m === "timer" ? L({ hi: "टाइमर", en: "Timer" }) : L({ hi: "पोमोडोरो", en: "Pomodoro" })}
+              {s}
             </button>
           ))}
         </div>
+      </section>
 
-        {/* Subject */}
-        <section>
-          <h2 className="mb-2 px-0.5 text-[13.5px] font-semibold text-ink-500">{L({ hi: "विषय", en: "Subject" })}</h2>
-          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-            {subjects.map((s) => (
-              <button
-                key={s}
-                type="button"
-                disabled={busy}
-                onClick={() => setSubject(s)}
-                aria-pressed={subject === s}
-                className={clsx("h-10 shrink-0 rounded-xl border px-4 text-[14px] font-semibold transition-colors disabled:opacity-50", subject === s ? "border-ink-900 bg-ink-900 text-white" : "glass-chip border-white/70 text-ink-800")}
-              >
-                {s}
+      {/* Timer */}
+      <section className="flex flex-col items-center gap-4 rounded-[18px] border border-ink-100 bg-white px-4 pb-4 pt-5 shadow-card">
+        <div className="relative h-[196px] w-[196px]">
+          <svg viewBox="0 0 196 196" className="h-full w-full -rotate-90" aria-hidden>
+            <circle cx="98" cy="98" r={R} fill="none" stroke={onBreak ? "#CDE5EA" : "#E3EEF0"} strokeWidth="8" />
+            <circle cx="98" cy="98" r={R} fill="none" stroke="#39bc13" strokeWidth="8" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - doneFrac)} opacity={doneFrac > 0 ? 1 : 0} style={{ transition: run?.endsAt ? "stroke-dashoffset .25s linear" : "stroke-dashoffset .4s ease" }} />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+            <span className="max-w-[150px] truncate text-[12.5px] font-semibold text-ink-500">
+              {run ? run.subject : subject}
+              {(run ? run.mode : mode) === "pomodoro" && ` · ${L({ hi: "राउंड", en: "Round" })} ${run ? run.round : 1}/${POMO.rounds}`}
+            </span>
+            <span className="tnum text-[40px] font-semibold leading-[1.05] tracking-tight text-ink-900" role="timer" aria-live="off">
+              {mmss(left)}
+            </span>
+            <span className={clsx("text-[12px]", run?.endsAt && !onBreak ? "font-semibold text-[#2c9010]" : onBreak ? "font-semibold text-[#177386]" : "text-ink-400")}>{status}</span>
+          </div>
+        </div>
+
+        {/* Pomodoro rounds */}
+        {(run ? run.mode : mode) === "pomodoro" && (
+          <div className="-mt-1 flex items-center justify-center gap-1.5" aria-label={L({ hi: "राउंड", en: "Rounds" })}>
+            {Array.from({ length: POMO.rounds }, (_, i) => {
+              const r = run?.round || 1;
+              const finished = !!run && (i + 1 < r || (i + 1 === r && run.phase === "break"));
+              return <span key={i} className={clsx("h-2 w-2 rounded-full", finished ? "bg-[#39bc13]" : i + 1 === r && run ? "bg-[#177386]" : "bg-ink-200")} />;
+            })}
+          </div>
+        )}
+
+        {/* Length (before starting): − 15 25 45 60 + in one row */}
+        {!run &&
+          (mode === "timer" ? (
+            <div className="flex w-full items-center gap-1.5">
+              <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-ink-100 text-ink-800 active:bg-ink-50">
+                <Minus className="h-4 w-4" aria-hidden />
               </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Timer */}
-        <section className="glass rounded-3xl px-4 pb-5 pt-5">
-          <div className="relative mx-auto h-[248px] w-[248px]">
-            <svg viewBox="0 0 248 248" className="h-full w-full -rotate-90" aria-hidden>
-              <circle cx="124" cy="124" r={R} fill="none" stroke={onBreak ? "#9CC9D2" : "#177386"} strokeWidth="12" />
-              <circle cx="124" cy="124" r={R} fill="none" stroke="#39bc13" strokeWidth="12" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - doneFrac)} opacity={doneFrac > 0 ? 1 : 0} style={{ transition: run?.endsAt ? "stroke-dashoffset .25s linear" : "stroke-dashoffset .4s ease" }} />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[13px] font-semibold text-ink-500">
-                {run ? run.subject : subject}
-                {(run ? run.mode : mode) === "pomodoro" && ` · ${L({ hi: "राउंड", en: "Round" })} ${run ? run.round : 1}/${POMO.rounds}`}
-              </span>
-              <span className="tnum mt-0.5 text-[46px] font-bold leading-none tracking-tight text-ink-900" role="timer" aria-live="off">
-                {mmss(left)}
-              </span>
-              <span className={clsx("mt-1.5 text-[12.5px]", onBreak ? "font-semibold text-[#177386]" : "text-ink-400")}>{status}</span>
+              <div className="grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F1F4F5] p-[3px]">
+                {PRESETS.map((m) => (
+                  <button key={m} type="button" onClick={() => setMinutes(m)} aria-pressed={minutes === m} aria-label={`${m} ${L({ hi: "मिनट", en: "minutes" })}`} className={clsx("tnum h-[30px] rounded-lg text-[13px] font-semibold transition-colors", minutes === m ? "bg-white text-[#0F5A69] shadow-sm" : "text-ink-500")}>
+                    {m}
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={() => setMinutes((m) => (m < 5 ? 5 : Math.min(180, m + 5)))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-ink-100 text-ink-800 active:bg-ink-50">
+                <Plus className="h-4 w-4" aria-hidden />
+              </button>
             </div>
-          </div>
-
-          {/* Pomodoro rounds */}
-          {(run ? run.mode : mode) === "pomodoro" && (
-            <div className="mt-3 flex items-center justify-center gap-2" aria-label={L({ hi: "राउंड", en: "Rounds" })}>
-              {Array.from({ length: POMO.rounds }, (_, i) => {
-                const r = run?.round || 1;
-                const finished = !!run && (i + 1 < r || (i + 1 === r && run.phase === "break"));
-                return <span key={i} className={clsx("h-2.5 w-2.5 rounded-full", finished ? "bg-[#39bc13]" : i + 1 === r && run ? "bg-[#177386]" : "bg-ink-200")} />;
+          ) : (
+            <p className="text-center text-[13px] leading-snug text-ink-500">
+              {L({
+                hi: `${POMO.focus} मिनट पढ़ाई, ${POMO.rest} मिनट ब्रेक, ऐसे ${POMO.rounds} राउंड। ब्रेक के बाद अगला राउंड अपने आप शुरू होगा।`,
+                en: `${POMO.focus} min study, ${POMO.rest} min break, ${POMO.rounds} rounds. The next round starts by itself after each break.`,
               })}
-            </div>
-          )}
+            </p>
+          ))}
 
-          {/* Length (before starting) */}
-          {!run &&
-            (mode === "timer" ? (
-              <div className="mt-4 space-y-3">
-                <div className="grid grid-cols-4 gap-2">
-                  {PRESETS.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setMinutes(m)}
-                      aria-pressed={minutes === m}
-                      className={clsx("glass-chip h-10 rounded-xl border text-[14px] font-semibold transition-colors", minutes === m ? "border-[#177386] text-[#0F5A69] ring-1 ring-[#177386]" : "border-white/70 text-ink-700")}
-                    >
-                      {m} {L({ hi: "मि", en: "min" })}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center justify-center gap-4">
-                  <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="glass-chip grid h-10 w-10 place-items-center rounded-full border border-white/70 text-ink-800">
-                    <Minus className="h-4 w-4" aria-hidden />
-                  </button>
-                  <span className="tnum w-24 text-center text-[15px] font-semibold text-ink-800">
-                    {minutes} {L({ hi: "मिनट", en: minutes === 1 ? "minute" : "minutes" })}
-                  </span>
-                  <button type="button" onClick={() => setMinutes((m) => (m < 5 ? 5 : Math.min(180, m + 5)))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="glass-chip grid h-10 w-10 place-items-center rounded-full border border-white/70 text-ink-800">
-                    <Plus className="h-4 w-4" aria-hidden />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="mt-4 text-center text-[13.5px] leading-snug text-ink-600">
-                {L({
-                  hi: `${POMO.focus} मिनट पढ़ाई, ${POMO.rest} मिनट ब्रेक, ऐसे ${POMO.rounds} राउंड। ब्रेक के बाद अगला राउंड अपने आप शुरू होगा।`,
-                  en: `${POMO.focus} min study, ${POMO.rest} min break, ${POMO.rounds} rounds. The next round starts by itself after each break.`,
-                })}
-              </p>
-            ))}
-
-          {/* Controls */}
-          <div className="mt-5 flex justify-center gap-3">
-            {!run ? (
-              <button type="button" onClick={start} disabled={!subject} className="glass-green flex h-12 min-w-[200px] items-center justify-center rounded-2xl px-6 text-[16px] font-semibold text-white disabled:opacity-50">
-                {L({ hi: "पढ़ाई शुरू करें", en: "Start studying" })}
+        {/* Controls: a plain solid button, no glass or shine (the user asked). */}
+        {!run ? (
+          <button type="button" onClick={start} disabled={!subject} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#177386] text-[15px] font-semibold text-white active:bg-[#0F5A69] disabled:opacity-50">
+            <Play className="h-[18px] w-[18px]" fill="currentColor" aria-hidden />
+            {L({ hi: "पढ़ाई शुरू करें", en: "Start studying" })}
+          </button>
+        ) : (
+          <div className="grid w-full grid-cols-2 gap-2">
+            {run.endsAt ? (
+              <button type="button" onClick={pause} className="flex h-12 items-center justify-center gap-2 rounded-xl border border-ink-100 bg-white text-[15px] font-semibold text-ink-900 active:bg-ink-50">
+                <Pause className="h-[18px] w-[18px]" fill="currentColor" aria-hidden />
+                {L({ hi: "रोकें", en: "Pause" })}
               </button>
             ) : (
-              <>
-                {run.endsAt ? (
-                  <button type="button" onClick={pause} className="glass-chip flex h-12 min-w-[132px] items-center justify-center gap-2 rounded-2xl border border-white/70 px-5 text-[15px] font-semibold text-ink-900">
-                    <Pause className="h-5 w-5" aria-hidden />
-                    {L({ hi: "रोकें", en: "Pause" })}
-                  </button>
-                ) : (
-                  <button type="button" onClick={resume} className="glass-green flex h-12 min-w-[132px] items-center justify-center gap-2 rounded-2xl px-5 text-[15px] font-semibold text-white">
-                    <Play className="h-5 w-5" fill="currentColor" aria-hidden />
-                    {L({ hi: "फिर शुरू", en: "Resume" })}
-                  </button>
-                )}
-                <button type="button" onClick={stop} className="glass-chip flex h-12 min-w-[132px] items-center justify-center gap-2 rounded-2xl border border-white/70 px-5 text-[15px] font-semibold text-rose-600">
-                  <Square className="h-4 w-4" fill="currentColor" aria-hidden />
-                  {L({ hi: "ख़त्म करें", en: "Finish" })}
-                </button>
-              </>
+              <button type="button" onClick={resume} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#177386] text-[15px] font-semibold text-white active:bg-[#0F5A69]">
+                <Play className="h-[18px] w-[18px]" fill="currentColor" aria-hidden />
+                {L({ hi: "फिर शुरू", en: "Resume" })}
+              </button>
             )}
+            <button type="button" onClick={stop} className="flex h-12 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white text-[15px] font-semibold text-rose-600 active:bg-rose-50">
+              <Square className="h-4 w-4" fill="currentColor" aria-hidden />
+              {L({ hi: "ख़त्म करें", en: "Finish" })}
+            </button>
           </div>
-          {done && (
-            <p className="mt-3 text-center text-[14px] font-semibold text-jade-700" role="status">
-              {L({ hi: `शाबाश! ${done.subject} ${hm(done.minutes, true)} पढ़ा।`, en: `Well done! ${hm(done.minutes, false)} of ${done.subject}.` })}
-            </p>
-          )}
-        </section>
-        {party && <Fireworks onDone={() => setParty(false)} />}
+        )}
+        {done && (
+          <p className="-mt-1 text-center text-[13.5px] font-semibold text-jade-700" role="status">
+            {L({ hi: `शाबाश! ${done.subject} ${hm(done.minutes, true)} पढ़ा।`, en: `Well done! ${hm(done.minutes, false)} of ${done.subject}.` })}
+          </p>
+        )}
+      </section>
+      {party && <Fireworks onDone={() => setParty(false)} />}
 
-        {/* Today and this week */}
-        <section className="glass rounded-3xl p-4">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-[15px] font-semibold text-ink-900">{L({ hi: "आज", en: "Today" })}</h2>
-            <span className="tnum text-[15px] font-bold text-[#0F5A69]">{hm(todayMin, hi)}</span>
-          </div>
-          <div className="mt-4 flex h-[92px] items-end justify-between gap-2" aria-label={L({ hi: "इस हफ़्ते", en: "This week" })}>
-            {week.map((w) => (
-              <div key={w.k} className="flex flex-1 flex-col items-center gap-1.5">
-                <div className="flex h-[68px] w-full max-w-[28px] items-end overflow-hidden rounded-md bg-white/60" title={hm(w.min, hi)}>
-                  <div className={clsx("w-full rounded-md", w.k === today ? "bg-[#177386]" : "bg-[#9CC9D2]")} style={{ height: `${Math.round((w.min / top) * 100)}%` }} />
+      {/* This week: today's total, the 7 days as bars, then the weekly report. */}
+      <section className="space-y-3 rounded-[18px] border border-ink-100 bg-white px-4 pb-4 pt-3.5 shadow-card">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-[15px] font-semibold text-ink-900">{L({ hi: "इस हफ़्ते", en: "This week" })}</h2>
+          <span className="tnum text-[13px] text-ink-500">
+            {L({ hi: "आज", en: "Today" })} <strong className="font-semibold text-ink-900">{hm(todayMin, hi)}</strong>
+          </span>
+        </div>
+        <div className="grid h-[74px] grid-cols-7 items-end gap-1.5">
+          {week.map((w) => (
+            <div key={w.k} className="flex h-full flex-col items-center justify-end gap-1.5" title={hm(w.min, hi)}>
+              <span className={clsx("block w-2.5 rounded-full", w.min === 0 ? "bg-ink-100" : w.k === today ? "bg-[#177386]" : "bg-[#BFDDE2]")} style={{ height: w.min === 0 ? 3 : `${Math.max(8, Math.round((w.min / top) * 100))}%` }} />
+              <span className={clsx("text-[11px]", w.k === today ? "font-bold text-ink-900" : "text-ink-400")}>{w.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {weekMin === 0 ? (
+          <p className="text-[13px] text-ink-500">{L({ hi: "टाइमर चलाइए, हर दिन की पढ़ाई यहाँ दिखेगी।", en: "Start the timer, and each day's study shows here." })}</p>
+        ) : (
+          <>
+            <dl className="grid grid-cols-3 border-t border-ink-100 pt-3">
+              {[
+                [L({ hi: "कुल", en: "Total" }), hm(weekMin, hi)],
+                [L({ hi: "रोज़ औसत", en: "Daily avg" }), hm(weekMin / 7, hi)],
+                [L({ hi: "दिन", en: "Days" }), `${daysStudied} / 7`],
+              ].map(([k, v], i) => (
+                <div key={k} className={clsx("min-w-0", i > 0 && "border-l border-ink-100 pl-3")}>
+                  <dt className="text-[11.5px] text-ink-500">{k}</dt>
+                  <dd className="tnum truncate text-[15px] font-semibold text-ink-900">{v}</dd>
                 </div>
-                <span className={clsx("text-[11px]", w.k === today ? "font-bold text-ink-900" : "text-ink-400")}>{w.label}</span>
-              </div>
-            ))}
-          </div>
-          {todays.length > 0 && (
-            <ul className="mt-4 divide-y divide-white/70 border-t border-white/70">
-              {todays.map((s) => (
-                <li key={s.at} className="flex items-center justify-between py-2.5 text-[14px]">
-                  <span className="font-medium text-ink-800">{s.subject}</span>
-                  <span className="tnum text-ink-500">
-                    {hm(s.minutes, hi)} · {new Date(s.at).toLocaleTimeString(hi ? "hi-IN" : "en-IN", { hour: "numeric", minute: "2-digit" })}
-                  </span>
+              ))}
+            </dl>
+            {change !== null && (
+              <p className={clsx("text-[13px] font-semibold", change >= 0 ? "text-jade-700" : "text-rose-600")}>
+                {change >= 0
+                  ? L({ hi: `पिछले हफ़्ते से ${change}% ज़्यादा`, en: `${change}% more than last week` })
+                  : L({ hi: `पिछले हफ़्ते से ${-change}% कम`, en: `${-change}% less than last week` })}
+              </p>
+            )}
+            <ul className="space-y-2 border-t border-ink-100 pt-3">
+              {bySubject.map(([subj, min]) => (
+                <li key={subj}>
+                  <div className="flex items-baseline justify-between text-[13px]">
+                    <span className="font-medium text-ink-800">{subj}</span>
+                    <span className="tnum text-ink-500">{hm(min, hi)}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink-100">
+                    <div className="h-full rounded-full bg-[#177386]" style={{ width: `${Math.max(4, Math.round((min / topSubject) * 100))}%` }} />
+                  </div>
                 </li>
               ))}
             </ul>
-          )}
-        </section>
+          </>
+        )}
 
-        {/* Weekly report */}
-        <section className="glass rounded-3xl p-4">
-          <h2 className="text-[15px] font-semibold text-ink-900">{L({ hi: "हफ़्ते की रिपोर्ट", en: "Weekly report" })}</h2>
-          <p className="text-[12.5px] text-ink-500">{L({ hi: "पिछले 7 दिन", en: "Last 7 days" })}</p>
-          {weekMin === 0 ? (
-            <p className="mt-3 text-[14px] text-ink-500">{L({ hi: "इस हफ़्ते अभी कोई पढ़ाई दर्ज नहीं। टाइमर से पढ़ाई शुरू करें।", en: "No study recorded this week yet. Start the timer to begin." })}</p>
-          ) : (
-            <>
-              <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
-                <div>
-                  <dt className="text-[12.5px] text-ink-500">{L({ hi: "कुल पढ़ाई", en: "Total" })}</dt>
-                  <dd className="tnum text-[17px] font-bold text-ink-900">{hm(weekMin, hi)}</dd>
-                </div>
-                <div>
-                  <dt className="text-[12.5px] text-ink-500">{L({ hi: "रोज़ औसत", en: "Daily average" })}</dt>
-                  <dd className="tnum text-[17px] font-bold text-ink-900">{hm(weekMin / 7, hi)}</dd>
-                </div>
-                <div>
-                  <dt className="text-[12.5px] text-ink-500">{L({ hi: "पढ़ाई वाले दिन", en: "Days studied" })}</dt>
-                  <dd className="tnum text-[17px] font-bold text-ink-900">{daysStudied} / 7</dd>
-                </div>
-                <div>
-                  <dt className="text-[12.5px] text-ink-500">{L({ hi: "सबसे अच्छा दिन", en: "Best day" })}</dt>
-                  <dd className="text-[17px] font-bold text-ink-900">{new Date(best.k + "T00:00:00").toLocaleDateString(hi ? "hi-IN" : "en-IN", { weekday: "short", day: "numeric" })}</dd>
-                </div>
-              </dl>
-              {change !== null && (
-                <p className={clsx("mt-3 text-[13.5px] font-semibold", change >= 0 ? "text-jade-700" : "text-rose-600")}>
-                  {change >= 0
-                    ? L({ hi: `पिछले हफ़्ते से ${change}% ज़्यादा`, en: `${change}% more than last week` })
-                    : L({ hi: `पिछले हफ़्ते से ${-change}% कम`, en: `${-change}% less than last week` })}
-                </p>
-              )}
-              <h3 className="mt-4 text-[13px] font-semibold text-ink-500">{L({ hi: "विषय के हिसाब से", en: "By subject" })}</h3>
-              <ul className="mt-2 space-y-2.5">
-                {bySubject.map(([subj, min]) => (
-                  <li key={subj}>
-                    <div className="flex items-baseline justify-between text-[13.5px]">
-                      <span className="font-medium text-ink-800">{subj}</span>
-                      <span className="tnum text-ink-500">{hm(min, hi)}</span>
-                    </div>
-                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/70">
-                      <div className="h-full rounded-full bg-[#39bc13]" style={{ width: `${Math.max(4, Math.round((min / topSubject) * 100))}%` }} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-      </div>
+        {todays.length > 0 && (
+          <ul className="divide-y divide-ink-100 border-t border-ink-100">
+            {todays.map((s) => (
+              <li key={s.at} className="flex items-center justify-between py-2 text-[13.5px]">
+                <span className="font-medium text-ink-800">{s.subject}</span>
+                <span className="tnum text-ink-500">
+                  {hm(s.minutes, hi)} · {new Date(s.at).toLocaleTimeString(hi ? "hi-IN" : "en-IN", { hour: "numeric", minute: "2-digit" })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

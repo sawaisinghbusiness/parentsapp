@@ -132,7 +132,7 @@ export default function FeeDetailPage() {
 
       {st !== "paid" &&
         (data.pay.upiId ? (
-          <div className="sticky bottom-[calc(62px+env(safe-area-inset-bottom))] -mx-4 border-t border-ink-100 bg-white px-4 pb-3 pt-2.5">
+          <div className="sticky bottom-[calc(104px+env(safe-area-inset-bottom))] -mx-4 border-t border-ink-100 bg-white px-4 pb-3 pt-2.5">
             <Link href={`/fees/pay/?i=${index}`} className="btn-primary w-full">
               {L({ hi: "अभी भरें", en: "Pay Now" })} <span className="tnum">{rupees(toPay)}</span>
             </Link>
