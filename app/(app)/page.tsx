@@ -12,19 +12,15 @@ import {
   Bus,
   CalendarCheck,
   CalendarX2,
-  Check,
   ChevronDown,
   ChevronRight,
   ClipboardList,
-  Clock3,
   IdCard,
   Images,
   IndianRupee,
   Megaphone,
   Menu as MenuIcon,
-  PartyPopper,
   Search,
-  X,
   type LucideIcon,
 } from "lucide-react";
 import { useApi } from "@/lib/api";
@@ -35,6 +31,7 @@ import { Avatar, ErrorCard, OfflineNote, Skeleton } from "@/components/ui";
 import { ChildSheet } from "@/components/ChildSheet";
 import { ProfilePeek } from "@/components/ProfilePeek";
 import { EventRow } from "@/components/EventRow";
+import { AttendanceIcon, FeesIcon, HomeworkIcon } from "@/components/TodayIcons";
 import { useMenu } from "@/lib/menu";
 import { ripple } from "@/lib/motion";
 
@@ -115,10 +112,11 @@ export default function HomePage() {
   }, []);
 
   // Scrolling folds the photo away (the user's ask, 2026-10-23): it stays pinned while its arched bottom edge
-  // rises with the scroll and the picture drifts up a little slower (parallax). The page below rides on that
-  // edge, so nothing slides under the photo. The round buttons stay on top; a white strip fades in behind
-  // them just before the photo is gone.
+  // rises with the scroll and the picture drifts up a little slower (parallax). The page below does not move
+  // at all until the photo has gone; then it scrolls as usual. The menu, notices and child buttons are hidden at first and
+  // fade in on a white strip just before the photo is gone (the user's ask: nothing on the photo).
   const heroRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let frame = 0;
@@ -130,7 +128,17 @@ export default function HomePage() {
       const bar = barRef.current?.offsetHeight || 64;
       const fold = Math.min(Math.max(window.scrollY, 0), h);
       hero.style.setProperty("--fold", `${fold}px`);
-      hero.style.setProperty("--bar", String(Math.min(1, Math.max(0, (fold - (h - bar - 40)) / 40))));
+      // Everything below holds still until the photo has gone: it is pushed down by exactly the scroll so far,
+      // and padded by the photo's height so the end of the page can still be reached.
+      const body = bodyRef.current;
+      if (body) {
+        body.style.transform = `translate3d(0, ${fold}px, 0)`;
+        body.style.paddingBottom = `${h}px`;
+      }
+      const shown = Math.min(1, Math.max(0, (fold - (h - bar - 40)) / 40));
+      hero.style.setProperty("--bar", String(shown));
+      // The buttons can only be tapped once their strip is showing.
+      if (barRef.current) barRef.current.style.pointerEvents = shown > 0.5 ? "auto" : "none";
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(paint);
@@ -148,8 +156,8 @@ export default function HomePage() {
   return (
     <div className={clsx("animate-fadeIn", calm && "calm")}>
       {/* The top, like the reference the user sent (2026-10-23): the school's banner photo is the hero, whole and
-          clear (no zoom, no tint, no words added over it), with only round buttons on it: menu; notices and the
-          child. Search sits just under it. Language is switched from the side menu and Profile. */}
+          clear (no zoom, no tint, nothing on it). Menu, notices and the child appear on a white strip only once the
+          photo has folded away. Search sits just under it. Language is switched from the side menu and Profile. */}
       {/* Pinned to the top; it only lets taps through to its buttons, so the page under it stays usable. */}
       <div ref={heroRef} className="pointer-events-none sticky top-0 z-30 aspect-[1280/720] w-full">
         {/* Option B the user picked: the bottom edge cut as one wide arc, with a soft shadow under it. */}
@@ -159,13 +167,13 @@ export default function HomePage() {
             <img src="/img/home-banner-2.webp" alt={L({ hi: "स्कूल", en: "School" })} width={1280} height={720} className="block h-full w-full object-cover will-change-transform" style={{ transform: "translate3d(0, calc(var(--fold, 0px) * -0.4), 0)" }} />
           </div>
         </div>
-        <div ref={barRef} className="pt-safe pointer-events-auto absolute inset-x-0 top-0 px-4 pb-2" style={{ background: "rgb(255 255 255 / var(--bar, 0))", boxShadow: "0 4px 12px rgb(15 47 60 / calc(var(--bar, 0) * 0.12))" }}>
+        <div ref={barRef} className="pt-safe absolute inset-x-0 top-0 bg-white px-4 pb-2 shadow-[0_4px_12px_rgba(15,47,60,0.12)]" style={{ opacity: "var(--bar, 0)", pointerEvents: "none" }}>
           <div className="enter flex items-center gap-2 pt-3" style={v(0)}>
-            <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/80 text-ink-900 shadow-sm backdrop-blur-sm active:bg-white">
+            <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100">
               <MenuIcon className="h-5 w-5" strokeWidth={2.2} aria-hidden />
             </button>
             <span className="flex-1" />
-            <Link href="/notice/" className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/80 text-ink-900 shadow-sm backdrop-blur-sm active:bg-white" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
+            <Link href="/notice/" className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
             <Bell className={clsx("h-[21px] w-[21px]", unread > 0 && "bell-ring")} strokeWidth={2} aria-hidden />
             {unread > 0 && (
               <span className="badge-pop absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-white bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
@@ -190,6 +198,7 @@ export default function HomePage() {
         </div>
       </div>
 
+      <div ref={bodyRef} className="will-change-transform">
       <div className="px-4">
         <Link href="/search/" className="enter mt-3.5 flex h-12 items-center gap-2.5 rounded-xl border border-ink-100 bg-white px-4 text-ink-500 shadow-sm" style={v(3)} aria-label={L({ hi: "खोजें", en: "Search" })}>
           <Search className="h-[18px] w-[18px] shrink-0 text-ink-700" strokeWidth={2.2} aria-hidden />
@@ -240,6 +249,7 @@ export default function HomePage() {
           </section>
         )}
       </div>
+      </div>
 
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
       {peek && <ProfilePeek onClose={() => setPeek(false)} />}
@@ -280,16 +290,21 @@ function Today({ data }: { data: Home | undefined }) {
     );
 
   const a = data.attendance;
-  const att: { icon: React.ReactNode; tile: string; note: string } =
+  // The day's attendance is told in words; the icon is the same one every day (the user's icon set).
+  const attNote =
     a.status === "Present"
-      ? { icon: <Mark className="bg-jade-600" icon={Check} draw />, tile: GREEN, note: L({ hi: "आज उपस्थित", en: "Present today" }) }
+      ? L({ hi: "आज उपस्थित", en: "Present today" })
       : a.status === "Absent"
-        ? { icon: <Mark className="bg-rose-600" icon={X} />, tile: PINK, note: L({ hi: "आज अनुपस्थित", en: "Absent today" }) }
-        : a.status === "Leave" || a.status === "HalfDay"
-          ? { icon: <Mark className="bg-marigold-500" icon={Check} />, tile: ORANGE, note: a.status === "Leave" ? L({ hi: "आज छुट्टी पर", en: "On leave today" }) : L({ hi: "आज आधा दिन", en: "Half day today" }) }
-          : a.holiday
-            ? { icon: <PartyPopper className="h-6 w-6" strokeWidth={1.8} aria-hidden />, tile: PURPLE, note: a.holiday === "Sunday" ? L({ hi: "आज रविवार है", en: "Sunday" }) : a.holiday }
-            : { icon: <Clock3 className="h-6 w-6" strokeWidth={1.8} aria-hidden />, tile: GREEN, note: L({ hi: "अभी हाज़िरी नहीं लगी", en: "Not marked yet" }) };
+        ? L({ hi: "आज अनुपस्थित", en: "Absent today" })
+        : a.status === "Leave"
+          ? L({ hi: "आज छुट्टी पर", en: "On leave today" })
+          : a.status === "HalfDay"
+            ? L({ hi: "आज आधा दिन", en: "Half day today" })
+            : a.holiday
+              ? a.holiday === "Sunday"
+                ? L({ hi: "आज रविवार है", en: "Sunday" })
+                : a.holiday
+              : L({ hi: "अभी हाज़िरी नहीं लगी", en: "Not marked yet" });
 
   const f = data.fees;
   const due = f ? f.dueNow + f.fine : 0;
@@ -311,12 +326,11 @@ function Today({ data }: { data: Home | undefined }) {
         <span className="truncate text-[13.5px] text-ink-500">{todayText(data.date, lang)}</span>
       </div>
       <ul>
-        <TodayRow i={4} href="/calendar/" tile={att.tile} icon={att.icon} title={L({ hi: "हाज़िरी", en: "Attendance" })} note={att.note} />
+        <TodayRow i={4} href="/calendar/" icon={<AttendanceIcon />} title={L({ hi: "हाज़िरी", en: "Attendance" })} note={attNote} />
         <TodayRow
           i={5}
           href={due > 0 ? "/fees/pay/" : "/fees/"}
-          tile={ORANGE}
-          icon={<IndianRupee className="h-6 w-6" strokeWidth={1.8} aria-hidden />}
+          icon={<FeesIcon />}
           title={L({ hi: "फ़ीस", en: "Fees" })}
           note={feeNote}
           end={
@@ -328,23 +342,13 @@ function Today({ data }: { data: Home | undefined }) {
         <TodayRow
           i={6}
           href="/homework/"
-          tile={BLUE}
-          icon={<BookOpen className="h-6 w-6" strokeWidth={1.8} aria-hidden />}
+          icon={<HomeworkIcon />}
           title={L({ hi: "होमवर्क", en: "Homework" })}
           note={hwNote}
           end={<span className="text-[14.5px] font-semibold text-brand-600">{L({ hi: "देखें", en: "View" })}</span>}
         />
       </ul>
     </section>
-  );
-}
-
-/** A round status mark that pops in; with `draw` its tick draws itself. */
-function Mark({ className, icon: Icon, draw }: { className: string; icon: LucideIcon; draw?: boolean }) {
-  return (
-    <span className={clsx("tick-pop grid h-7 w-7 place-items-center rounded-full text-white", className)}>
-      <Icon className={clsx("h-4 w-4", draw && "tick-draw")} strokeWidth={3} aria-hidden />
-    </span>
   );
 }
 
@@ -369,11 +373,12 @@ function useCountUp(target: number) {
   return n;
 }
 
-function TodayRow({ i, href, tile, icon, title, note, end }: { i: number; href: string; tile: string; icon: React.ReactNode; title: string; note: string; end?: React.ReactNode }) {
+/** One line of the Today card; `icon` is a 48px tile from components/TodayIcons. */
+function TodayRow({ i, href, icon, title, note, end }: { i: number; href: string; icon: React.ReactNode; title: string; note: string; end?: React.ReactNode }) {
   return (
     <li className="enter border-b border-ink-100 last:border-0" style={v(i)}>
       <Link href={href} onPointerDown={ripple} className="relative -mx-4 flex min-h-[72px] items-center gap-3.5 overflow-hidden px-4 py-3">
-        <span className={clsx("grid h-12 w-12 shrink-0 place-items-center rounded-2xl", tile)}>{icon}</span>
+        <span className="h-12 w-12 shrink-0">{icon}</span>
         <span className="min-w-0 flex-1">
           <span className="block text-[16px] font-semibold text-ink-900">{title}</span>
           <span className="block truncate text-[13px] text-ink-500">{note}</span>

@@ -78,6 +78,21 @@ export default function AssistantPage() {
 
   useEffect(() => () => rec.current?.abort?.(), []);
 
+  // A question handed over from Search (/assistant/?q=…) is asked straight away, once. It waits a tick, so
+  // the new-child reset above has already run (React runs effects twice in development).
+  const handed = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (handed.current === undefined) handed.current = new URLSearchParams(window.location.search).get("q");
+    const asked = handed.current;
+    if (!asked || !child) return;
+    const t = setTimeout(() => {
+      handed.current = null;
+      window.history.replaceState(null, "", window.location.pathname);
+      ask(asked);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [child?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Chrome on Android: the keyboard slides over the page and the bar rides up with it (bottom = keyboard
   // height), instead of first covering the bar and then jumping the page.
   useEffect(() => {
@@ -179,7 +194,7 @@ export default function AssistantPage() {
             <p className="mt-1 text-[21px] font-medium leading-snug text-[#3E3670]">{L({ hi: "आज क्या जानना है?", en: "What would you like to know?" })}</p>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-5 py-6">
-            <SahayakOwl size={170} intro mood={listening ? "listen" : undefined} />
+            <SahayakOwl size={170} intro alive mood={listening ? "listen" : undefined} />
           </div>
           <div className="grid grid-cols-2 gap-2.5">
             {QUESTIONS.slice(0, 4).map(({ text: q, icon: Icon }) => (

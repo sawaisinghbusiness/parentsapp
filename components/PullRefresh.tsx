@@ -32,7 +32,8 @@ export function PullRefresh({ off }: { off?: boolean }) {
       return false;
     };
     const down = (e: TouchEvent) => {
-      if (busy || e.touches.length !== 1 || document.querySelector('[role="dialog"]') || scrolledDown(e.target as Element)) return (start.current = null);
+      // Not on something that takes its own drags (data-swipe), like the Sahayak button.
+      if (busy || e.touches.length !== 1 || document.querySelector('[role="dialog"]') || (e.target as Element).closest?.("[data-swipe]") || scrolledDown(e.target as Element)) return (start.current = null);
       start.current = { y: e.touches[0].clientY, x: e.touches[0].clientX };
     };
     const move = (e: TouchEvent) => {
