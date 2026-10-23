@@ -4,24 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import {
-  Handshake,
-  MessageCircle,
-  FileText,
   Bell,
-  BookOpen,
   Bus,
-  CalendarCheck,
-  CalendarX2,
-  ChevronDown,
   ChevronRight,
-  ClipboardList,
-  IdCard,
-  Images,
-  IndianRupee,
-  Megaphone,
   Menu as MenuIcon,
   Search,
-  type LucideIcon,
 } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
@@ -32,6 +19,7 @@ import { ChildSheet } from "@/components/ChildSheet";
 import { ProfilePeek } from "@/components/ProfilePeek";
 import { EventRow } from "@/components/EventRow";
 import { AttendanceIcon, FeesIcon, HomeworkIcon } from "@/components/TodayIcons";
+import { QuickIcon, type QuickIconName } from "@/components/QuickIcons";
 import { useMenu } from "@/lib/menu";
 import { ripple } from "@/lib/motion";
 
@@ -51,30 +39,24 @@ interface Home {
   noticeCount?: number;
 }
 
-type Action = { href: string; text: Bi; icon: LucideIcon; tone: string };
-// Soft tinted icon backgrounds, phone-app style; full class strings so Tailwind keeps them.
-const BLUE = "bg-[#E8F0FE] text-[#1A56C4]";
-const GREEN = "bg-[#E6F6EC] text-[#138A43]";
-const ORANGE = "bg-[#FFF0E0] text-[#C2610C]";
-const PURPLE = "bg-[#F1EBFD] text-[#6D3FC9]";
-const TEAL = "bg-[#E2F5F4] text-[#0F7C77]";
-const PINK = "bg-[#FDEBEE] text-[#C4314B]";
+// Each action's icon is one of the user's 12 Quick Action tiles (components/QuickIcons, 2026-10-23).
+type Action = { href: string; text: Bi; icon: QuickIconName };
 const QUICK: Action[] = [
-  { href: "/calendar/", text: { hi: "हाज़िरी", en: "Attendance" }, icon: CalendarCheck, tone: GREEN },
-  { href: "/homework/", text: { hi: "होमवर्क", en: "Homework" }, icon: BookOpen, tone: BLUE },
-  { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: IndianRupee, tone: ORANGE },
-  { href: "/bus/", text: { hi: "बस", en: "Bus" }, icon: Bus, tone: TEAL },
+  { href: "/calendar/", text: { hi: "हाज़िरी", en: "Attendance" }, icon: "attendance" },
+  { href: "/homework/", text: { hi: "होमवर्क", en: "Homework" }, icon: "homework" },
+  { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: "fees" },
+  { href: "/bus/", text: { hi: "बस", en: "Bus" }, icon: "bus" },
 ];
 // Behind "More" (and "View all"): the rest, opened in place.
 const MORE: Action[] = [
-  { href: "/teachers/", text: { hi: "टीचर से पूछें", en: "Ask Teacher" }, icon: MessageCircle, tone: PURPLE },
-  { href: "/meetings/", text: { hi: "मीटिंग", en: "Meetings" }, icon: Handshake, tone: PINK },
-  { href: "/exam/", text: { hi: "परीक्षा", en: "Exam" }, icon: ClipboardList, tone: BLUE },
-  { href: "/report-card/", text: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, icon: FileText, tone: GREEN },
-  { href: "/leave/", text: { hi: "छुट्टी", en: "Leave" }, icon: CalendarX2, tone: ORANGE },
-  { href: "/events/", text: { hi: "कार्यक्रम", en: "Events" }, icon: Images, tone: PINK },
-  { href: "/notice/", text: { hi: "सूचना", en: "Notice" }, icon: Megaphone, tone: TEAL },
-  { href: "/id-card/", text: { hi: "आईडी कार्ड", en: "ID Card" }, icon: IdCard, tone: PURPLE },
+  { href: "/teachers/", text: { hi: "टीचर से पूछें", en: "Ask Teacher" }, icon: "askTeacher" },
+  { href: "/meetings/", text: { hi: "मीटिंग", en: "Meetings" }, icon: "meetings" },
+  { href: "/exam/", text: { hi: "परीक्षा", en: "Exam" }, icon: "exam" },
+  { href: "/report-card/", text: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, icon: "reportCard" },
+  { href: "/leave/", text: { hi: "छुट्टी", en: "Leave" }, icon: "leave" },
+  { href: "/events/", text: { hi: "कार्यक्रम", en: "Events" }, icon: "events" },
+  { href: "/notice/", text: { hi: "सूचना", en: "Notice" }, icon: "notice" },
+  { href: "/id-card/", text: { hi: "आईडी कार्ड", en: "ID Card" }, icon: "idCard" },
 ];
 
 let arrived = false;
@@ -258,12 +240,12 @@ export default function HomePage() {
 }
 
 /** "Hello," then the name, each sliding up out of its line. */
-function QuickTile({ href, text, icon: Icon, tone, i }: Action & { i: number }) {
+function QuickTile({ href, text, icon, i }: Action & { i: number }) {
   const L = useL();
   return (
     <Link href={href} onPointerDown={ripple} className="quick-tile pop-in" style={v(i)}>
-      <span className={tone}>
-        <Icon className="h-6 w-6" strokeWidth={1.8} aria-hidden />
+      <span>
+        <QuickIcon name={icon} size={48} />
       </span>
       {L(text)}
     </Link>
