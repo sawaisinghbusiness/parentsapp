@@ -684,7 +684,6 @@
   transform: scale(0.97);
 }
 
-
 /* School Sahayak's orb: floats gently and blinks now and then. Still when the phone asks for less motion. */
 .sahayak-orb {
   background: radial-gradient(circle at 34% 28%, #c9b8ff 0%, #8f6bf5 38%, #6a45e0 70%, #5233c4 100%);

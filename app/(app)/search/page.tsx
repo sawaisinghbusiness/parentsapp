@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { BookOpen, CalendarCheck, CalendarDays, IndianRupee, Megaphone, Mic, Search, Sparkles, Table2 } from "lucide-react";
+import { BookOpen, CalendarDays, Megaphone, Mic, Search, Sparkles } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
 import { weekdayDate } from "@/lib/format";
 import { EventPicture } from "@/components/art";
+import { QuickIcon, type QuickIconName } from "@/components/QuickIcons";
 
 interface Hw {
   id: string;
@@ -31,11 +32,12 @@ const ASK: Bi[] = [
   { hi: "अगला एग्ज़ाम कब है?", en: "When is the next exam?" },
   { hi: "बस कहाँ है?", en: "Where is the bus?" },
 ];
-const POPULAR = [
-  { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: IndianRupee, tone: "bg-[#FFF3E6] text-[#C2410C]" },
-  { href: "/attendance/", text: { hi: "हाज़िरी", en: "Attendance" }, icon: CalendarCheck, tone: "bg-[#E8F6EE] text-[#15803D]" },
-  { href: "/homework/", text: { hi: "होमवर्क", en: "Homework" }, icon: BookOpen, tone: "bg-[#EAF0FF] text-[#1D4ED8]" },
-  { href: "/calendar/?tab=timetable", text: { hi: "टाइम टेबल", en: "Timetable" }, icon: Table2, tone: "bg-[#F3EEFF] text-[#6D28D9]" },
+// The same orange tiles as Home's Quick Actions (components/QuickIcons).
+const POPULAR: { href: string; text: Bi; icon: QuickIconName }[] = [
+  { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: "fees" },
+  { href: "/attendance/", text: { hi: "हाज़िरी", en: "Attendance" }, icon: "attendance" },
+  { href: "/homework/", text: { hi: "होमवर्क", en: "Homework" }, icon: "homework" },
+  { href: "/calendar/?tab=timetable", text: { hi: "टाइम टेबल", en: "Timetable" }, icon: "timetable" },
 ];
 const askHref = (q: string) => `/assistant/?q=${encodeURIComponent(q)}`;
 
@@ -214,11 +216,9 @@ export default function SearchPage() {
           <section className="search-in space-y-2.5" style={stagger(1)}>
             <h2 className="px-0.5 text-[15px] font-semibold text-ink-500">{L({ hi: "ज़्यादा खोले जाने वाले", en: "Popular" })}</h2>
             <div className="grid grid-cols-4 gap-2">
-              {POPULAR.map(({ href, text, icon: Icon, tone }) => (
+              {POPULAR.map(({ href, text, icon }) => (
                 <Link key={href} href={href} className="flex min-h-[44px] flex-col items-center gap-1.5 text-center text-[12px] leading-tight text-ink-700">
-                  <span className={clsx("grid h-11 w-11 place-items-center rounded-xl", tone)}>
-                    <Icon className="h-5 w-5" strokeWidth={1.9} aria-hidden />
-                  </span>
+                  <QuickIcon name={icon} size={44} />
                   {L(text)}
                 </Link>
               ))}
@@ -235,8 +235,8 @@ export default function SearchPage() {
                     {n.kind === "event" ? (
                       <EventPicture url={n.cover} scene={n.scene} alt="" className="!aspect-auto h-24" />
                     ) : (
-                      <span className="grid h-24 place-items-center bg-[#FFF3E6] text-[#C2410C]">
-                        <Megaphone className="h-8 w-8" strokeWidth={1.7} aria-hidden />
+                      <span className="grid h-24 place-items-center bg-[#FFF3E6]">
+                        <QuickIcon name="notice" size={52} />
                       </span>
                     )}
                     <span className="block px-3 pb-3 pt-2.5">

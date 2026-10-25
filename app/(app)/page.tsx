@@ -6,6 +6,7 @@ import clsx from "clsx";
 import {
   Bell,
   Bus,
+  ChevronDown,
   ChevronRight,
   Menu as MenuIcon,
   Search,
@@ -18,6 +19,7 @@ import { Avatar, ErrorCard, OfflineNote, Skeleton } from "@/components/ui";
 import { ChildSheet } from "@/components/ChildSheet";
 import { ProfilePeek } from "@/components/ProfilePeek";
 import { EventRow } from "@/components/EventRow";
+import { BannerSlider } from "@/components/BannerSlider";
 import { AttendanceIcon, FeesIcon, HomeworkIcon } from "@/components/TodayIcons";
 import { QuickIcon, type QuickIconName } from "@/components/QuickIcons";
 import { useMenu } from "@/lib/menu";
@@ -61,6 +63,12 @@ const MORE: Action[] = [
 
 let arrived = false;
 
+const BANNERS = [
+  { src: "/img/home-banner-lessons.webp", alt: "Every lesson. Every result." },
+  { src: "/img/home-banner-2.webp", alt: "Stay connected. Stay informed." },
+  { src: "/img/home-banner-fees.webp", alt: "Pay fees easily. Never miss a notice." },
+];
+
 /** Place in the arrival order (see .enter / .pop-in in globals.css). */
 const v = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
@@ -93,69 +101,52 @@ export default function HomePage() {
     arrived = true;
   }, []);
 
-  // Scrolling folds the photo away (the user's ask, 2026-10-23): it stays pinned while its arched bottom edge
-  // rises with the scroll and the picture drifts up a little slower (parallax). The page below does not move
-  // at all until the photo has gone; then it scrolls as usual. The menu, notices and child buttons are hidden at first and
-  // fade in on a white strip just before the photo is gone (the user's ask: nothing on the photo).
-  const heroRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
+  const first = child?.name.split(" ")[0] || "";
+
+  // The top row stays put on a white strip (the user's ask, 2026-10-24: no teal band); a soft edge shows
+  // under it once something has gone under it.
+  const headRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let frame = 0;
     const paint = () => {
       frame = 0;
-      const hero = heroRef.current;
-      if (!hero) return;
-      const h = hero.offsetHeight;
-      const bar = barRef.current?.offsetHeight || 64;
-      const fold = Math.min(Math.max(window.scrollY, 0), h);
-      hero.style.setProperty("--fold", `${fold}px`);
-      // Everything below holds still until the photo has gone: it is pushed down by exactly the scroll so far,
-      // and padded by the photo's height so the end of the page can still be reached.
-      const body = bodyRef.current;
-      if (body) {
-        body.style.transform = `translate3d(0, ${fold}px, 0)`;
-        body.style.paddingBottom = `${h}px`;
-      }
-      const shown = Math.min(1, Math.max(0, (fold - (h - bar - 40)) / 40));
-      hero.style.setProperty("--bar", String(shown));
-      // The buttons can only be tapped once their strip is showing.
-      if (barRef.current) barRef.current.style.pointerEvents = shown > 0.5 ? "auto" : "none";
+      if (headRef.current) headRef.current.style.boxShadow = window.scrollY > 4 ? "0 4px 12px rgba(15,47,60,0.12)" : "none";
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(paint);
     };
     paint();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
 
   return (
     <div className={clsx("animate-fadeIn", calm && "calm")}>
-      {/* The top, like the reference the user sent (2026-10-23): the school's banner photo is the hero, whole and
-          clear (no zoom, no tint, nothing on it). Menu, notices and the child appear on a white strip only once the
-          photo has folded away. Search sits just under it. Language is switched from the side menu and Profile. */}
-      {/* Pinned to the top; it only lets taps through to its buttons, so the page under it stays usable. */}
-      <div ref={heroRef} className="pointer-events-none sticky top-0 z-30 aspect-[1280/720] w-full">
-        {/* Option B the user picked: the bottom edge cut as one wide arc, with a soft shadow under it. */}
-        <div className="absolute inset-0 drop-shadow-[0_10px_14px_rgba(10,30,36,0.28)]">
-          <div className="h-full w-full overflow-hidden [clip-path:ellipse(85%_calc(100%_-_var(--fold,0px))_at_50%_0%)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/img/home-banner-2.webp" alt={L({ hi: "स्कूल", en: "School" })} width={1280} height={720} className="block h-full w-full object-cover will-change-transform" style={{ transform: "translate3d(0, calc(var(--fold, 0px) * -0.4), 0)" }} />
+      {/* The top row on a white strip: menu, "Hello, <child>", then notices and the child's photo.
+          With more than one child the greeting opens the switcher. Language is in the side menu and Profile. */}
+      <div ref={headRef} className="pt-safe sticky top-0 z-20 bg-white px-4 pb-2 transition-shadow duration-300">
+        <div className="enter flex items-center gap-1.5 pt-3" style={v(0)}>
+          <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="-ml-2 grid h-11 w-10 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100">
+            <MenuIcon className="h-6 w-6" strokeWidth={2} aria-hidden />
+          </button>
+          <div className="min-w-0 flex-1">
+            {child ? (
+              many ? (
+                <button onClick={() => setSwitching(true)} className="flex max-w-full items-center gap-1 text-left" aria-label={`${L({ hi: "बच्चा बदलें", en: "Switch child" })}: ${child.name}`}>
+                  <Greeting name={first} />
+                  <ChevronDown className="h-5 w-5 shrink-0 text-ink-700" strokeWidth={2.4} aria-hidden />
+                </button>
+              ) : (
+                <Greeting name={first} />
+              )
+            ) : (
+              <Skeleton className="h-6 w-36" />
+            )}
           </div>
-        </div>
-        <div ref={barRef} className="pt-safe absolute inset-x-0 top-0 bg-white px-4 pb-2 shadow-[0_4px_12px_rgba(15,47,60,0.12)]" style={{ opacity: "var(--bar, 0)", pointerEvents: "none" }}>
-          <div className="enter flex items-center gap-2 pt-3" style={v(0)}>
-            <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100">
-              <MenuIcon className="h-5 w-5" strokeWidth={2.2} aria-hidden />
-            </button>
-            <span className="flex-1" />
-            <Link href="/notice/" className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
+          <Link href="/notice/" className="relative grid h-10 w-9 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
             <Bell className={clsx("h-[21px] w-[21px]", unread > 0 && "bell-ring")} strokeWidth={2} aria-hidden />
             {unread > 0 && (
               <span className="badge-pop absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-white bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
@@ -163,25 +154,25 @@ export default function HomePage() {
               </span>
             )}
           </Link>
-            {child ? (
-              <button
-                // With more than one child the photo opens the switcher (the greeting that did this is gone).
-                onClick={() => (many ? setSwitching(true) : setPeek(true))}
-                aria-haspopup="dialog"
-                className="shrink-0 rounded-full ring-2 ring-white shadow-sm transition-transform duration-300 active:scale-90"
-                aria-label={many ? `${L({ hi: "बच्चा बदलें", en: "Switch child" })}: ${child.name}` : `${child.name}: ${L({ hi: "विवरण", en: "details" })}`}
-              >
-                <Avatar name={child.name} url={child.photoUrl} size={38} tint={tint} />
-              </button>
-            ) : (
-              <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-full" />
-            )}
-          </div>
+          {child ? (
+            <button
+              onClick={() => setPeek(true)}
+              aria-haspopup="dialog"
+              className="shrink-0 rounded-full ring-2 ring-white shadow-sm transition-transform duration-300 active:scale-90"
+              aria-label={`${child.name}: ${L({ hi: "विवरण", en: "details" })}`}
+            >
+              <Avatar name={child.name} url={child.photoUrl} size={38} tint={tint} />
+            </button>
+          ) : (
+            <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-full" />
+          )}
         </div>
       </div>
 
-      <div ref={bodyRef} className="will-change-transform">
+      <div>
       <div className="px-4">
+        {/* The school's banners, right under the greeting: swipe for the one on either side. */}
+        <BannerSlider slides={BANNERS} start={1} className="enter mt-4" style={v(3)} />
         <Link href="/search/" className="enter mt-3.5 flex h-12 items-center gap-2.5 rounded-xl border border-ink-100 bg-white px-4 text-ink-500 shadow-sm" style={v(3)} aria-label={L({ hi: "खोजें", en: "Search" })}>
           <Search className="h-[18px] w-[18px] shrink-0 text-ink-700" strokeWidth={2.2} aria-hidden />
           <span className="truncate text-[14.5px]">{L({ hi: "होमवर्क, फ़ीस, सूचना खोजें", en: "Search homework, fees, notices" })}</span>
@@ -240,6 +231,20 @@ export default function HomePage() {
 }
 
 /** "Hello," then the name, each sliding up out of its line. */
+function Greeting({ name }: { name: string }) {
+  const L = useL();
+  return (
+    <h1 className="truncate text-[19px] font-bold leading-tight text-ink-900">
+      <span className="reveal">
+        <span style={v(0)}>{L({ hi: "नमस्ते,", en: "Hello," })}</span>
+      </span>{" "}
+      <span className="reveal">
+        <span style={v(1)}>{name}</span>
+      </span>
+    </h1>
+  );
+}
+
 function QuickTile({ href, text, icon, i }: Action & { i: number }) {
   const L = useL();
   return (
