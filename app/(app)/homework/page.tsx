@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
-import { BookOpen, CalendarDays } from "lucide-react";
+import { BookOpen, CalendarDays, FileText } from "lucide-react";
 import { api, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
@@ -20,6 +20,8 @@ interface Homework {
   dueDate: string | null;
   /** What the teacher marked; servers without homework checking send none. */
   status?: HwStatus | null;
+  /** Photos or PDFs the teacher attached (2026-10-26); older servers send none. */
+  files?: { url: string; name: string; kind: "image" | "pdf" }[];
 }
 interface Page {
   setupNeeded: boolean;
@@ -163,6 +165,22 @@ function Item({ h, today }: { h: Homework; today: string }) {
             </button>
           )}
         </>
+      )}
+      {h.files && h.files.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {h.files.map((f) =>
+            f.kind === "image" ? (
+              <a key={f.url} href={f.url} target="_blank" rel="noreferrer" aria-label={`${L({ hi: "फ़ोटो खोलें", en: "Open photo" })}: ${f.name}`} className="block h-20 w-20 overflow-hidden rounded-xl border border-ink-100 bg-ink-50">
+                <img src={f.url} alt="" loading="lazy" className="h-full w-full object-contain" />
+              </a>
+            ) : (
+              <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="flex min-h-[44px] max-w-full items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 text-[13.5px] font-medium">
+                <FileText className="h-4 w-4 shrink-0 text-rose-700" aria-hidden />
+                <span className="truncate">{f.name}</span>
+              </a>
+            )
+          )}
+        </div>
       )}
       {due && <p className={clsx("mt-1 text-[13px]", due.soon ? "font-medium text-marigold-600" : "text-ink-500")}>{due.text}</p>}
     </li>
