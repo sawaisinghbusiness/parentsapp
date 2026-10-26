@@ -231,15 +231,22 @@ export default function HomePage() {
 }
 
 /** "Hello," then the name, each sliding up out of its line. */
+/** Two lines (user, 2026-10-26): the greeting for the time of day small on top, the name under it. */
 function Greeting({ name }: { name: string }) {
   const L = useL();
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? L({ hi: "सुप्रभात", en: "Good morning" }) : hour < 17 ? L({ hi: "नमस्ते", en: "Good afternoon" }) : L({ hi: "नमस्ते", en: "Good evening" });
   return (
-    <h1 className="truncate text-[19px] font-bold leading-tight text-ink-900">
-      <span className="reveal">
-        <span style={v(0)}>{L({ hi: "नमस्ते,", en: "Hello," })}</span>
-      </span>{" "}
-      <span className="reveal">
-        <span style={v(1)}>{name}</span>
+    <h1 className="min-w-0 leading-tight">
+      <span className="reveal block">
+        <span style={v(0)} className="block truncate text-[12.5px] font-medium text-ink-500">
+          {greet}
+        </span>
+      </span>
+      <span className="reveal block">
+        <span style={v(1)} className="block truncate text-[17px] font-bold text-ink-900">
+          {name}
+        </span>
       </span>
     </h1>
   );

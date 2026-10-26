@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { ChevronRight, IdCard, Languages, LogOut, PenLine, Phone, Users, type LucideIcon } from "lucide-react";
+import { ChevronRight, CircleHelp, IdCard, Languages, PenLine, Phone, Users, type LucideIcon } from "lucide-react";
 import { api, ApiError, markSignedIn, clearCache, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
@@ -13,16 +13,16 @@ import type { IdCardData } from "@/components/more/IdCard";
 import { Avatar, Sheet, Skeleton } from "@/components/ui";
 import { ChildSheet } from "@/components/ChildSheet";
 
-function Row({ icon: Icon, text, value, href, onClick }: { icon: LucideIcon; text: string; value?: string; href?: string; onClick?: () => void }) {
+function Row({ icon: Icon, text, value, href, onClick, last }: { icon: LucideIcon; text: string; value?: string; href?: string; onClick?: () => void; last?: boolean }) {
   const inner = (
     <>
-      <Icon className="h-[21px] w-[21px] shrink-0 text-ink-700" strokeWidth={1.8} aria-hidden />
-      <span className="min-w-0 flex-1 text-[15.5px]">{text}</span>
-      {value && <span className="shrink-0 text-[14px] text-ink-400">{value}</span>}
-      <ChevronRight className="h-[18px] w-[18px] shrink-0 text-ink-300" aria-hidden />
+      <Icon className="h-5 w-5 shrink-0 text-ink-900" strokeWidth={1.8} aria-hidden />
+      <span className="min-w-0 flex-1 text-[15px]">{text}</span>
+      {value && <span className="shrink-0 text-[14px] text-ink-600">{value}</span>}
+      <ChevronRight className="h-[18px] w-[18px] shrink-0 text-ink-400" aria-hidden />
     </>
   );
-  const cls = "flex min-h-[54px] w-full items-center gap-3 border-b border-ink-100 px-0.5 text-left active:bg-ink-50";
+  const cls = clsx("flex min-h-[52px] w-full items-center gap-3.5 pr-3.5 text-left active:bg-ink-50", !last && "border-b border-ink-100");
   if (href?.startsWith("tel:"))
     return (
       <a href={href} className={cls}>
@@ -36,9 +36,19 @@ function Row({ icon: Icon, text, value, href, onClick }: { icon: LucideIcon; tex
       </Link>
     );
   return (
-    <button onClick={onClick} className={cls}>
+    <button type="button" onClick={onClick} className={cls}>
       {inner}
     </button>
+  );
+}
+
+/** A titled white box of rows, as on the staff app's profile (user, 2026-10-26). */
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="mx-1 mb-1.5 text-[12.5px] font-semibold uppercase tracking-wide text-ink-500">{title}</h2>
+      <div className="rounded-2xl border border-ink-100 bg-white pl-4">{children}</div>
+    </section>
   );
 }
 
@@ -81,54 +91,49 @@ export default function ProfilePage() {
   ].filter(([, v]) => v) as [string, string][];
 
   return (
-    <div className="animate-rise space-y-4 pb-2">
-      <section className="flex flex-col items-center pt-1 text-center">
-        <Avatar name={child.name} url={child.photoUrl} size={76} tint={tint} />
-        <h2 className="mt-2.5 text-[19px] font-bold">{child.name}</h2>
-        <p className="text-[13.5px] text-ink-500">
-          {L({ hi: "कक्षा", en: "Class" })} {child.classSec} · {child.srNo}
-          {child.rollNo ? ` · ${L({ hi: "रोल", en: "Roll" })} ${child.rollNo}` : ""}
-        </p>
+    <div className="animate-rise space-y-3.5 pb-6 pt-1">
+      <section className="flex items-center gap-3.5 rounded-2xl border border-ink-100 bg-white p-4">
+        <Avatar name={child.name} url={child.photoUrl} size={60} tint={tint} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[17px] font-bold">{child.name}</span>
+          <span className="block truncate text-[13.5px] text-ink-600">
+            {L({ hi: "कक्षा", en: "Class" })} {child.classSec}
+            {child.rollNo ? ` · ${L({ hi: "रोल", en: "Roll" })} ${child.rollNo}` : ""}
+          </span>
+          <span className="block truncate text-[13px] text-ink-500">
+            {child.srNo} · {me.school.name}
+          </span>
+        </span>
       </section>
 
-      <dl className="kv">
-        {rows.map(([k, v]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd>{v}</dd>
+      <Group title={L({ hi: "बच्चे की जानकारी", en: "Child's details" })}>
+        {rows.map(([k, v], i) => (
+          <div key={k} className={clsx("py-2.5 pr-3.5", i < rows.length - 1 && "border-b border-ink-100")}>
+            <span className="block text-[12.5px] text-ink-500">{k}</span>
+            <span className="block text-[15px] text-ink-900">{v}</span>
           </div>
         ))}
-      </dl>
+        <button type="button" onClick={() => setAsking(true)} className="flex min-h-[48px] w-full items-center gap-2 border-t border-ink-100 pr-3.5 text-left text-[14.5px] font-semibold text-brand-600 active:bg-ink-50">
+          <PenLine className="h-[18px] w-[18px]" aria-hidden />
+          {L({ hi: "स्कूल से सुधार करवाएँ", en: "Ask school to update" })}
+        </button>
+      </Group>
 
-      <button onClick={() => setAsking(true)} className="btn-line w-full">
-        <PenLine className="h-[18px] w-[18px]" aria-hidden />
-        {L({ hi: "स्कूल से सुधार करवाएँ", en: "Ask school to update" })}
-      </button>
-
-      <div>
+      <Group title={L({ hi: "सेटिंग", en: "Settings" })}>
         {me.children.length > 1 && <Row icon={Users} text={L({ hi: "बच्चा बदलें", en: "Switch child" })} value={child.name.split(" ")[0]} onClick={() => setSwitching(true)} />}
         <Row icon={IdCard} text={L(M.idCard)} href="/id-card/" />
-        <div className="flex min-h-[54px] items-center gap-3 border-b border-ink-100 px-0.5">
-          <Languages className="h-[21px] w-[21px] shrink-0 text-ink-700" strokeWidth={1.8} aria-hidden />
-          <span className="min-w-0 flex-1 text-[15.5px]">{L({ hi: "भाषा", en: "Language" })}</span>
-          <div className="flex rounded-[10px] bg-ink-50 p-[3px]" role="radiogroup" aria-label={L({ hi: "भाषा", en: "Language" })}>
-            {(["en", "hi"] as const).map((l) => (
-              <button key={l} role="radio" aria-checked={lang === l} onClick={() => setLang(l)} className={clsx("min-h-[38px] rounded-lg px-3 text-[14px]", lang === l ? "bg-white font-semibold text-brand-600 shadow-sm" : "font-medium text-ink-500")}>
-                {l === "hi" ? "हिंदी" : "English"}
-              </button>
-            ))}
-          </div>
-        </div>
-        {me.school.officePhone && <Row icon={Phone} text={L({ hi: "स्कूल ऑफ़िस को कॉल करें", en: "Call school office" })} value={me.school.officePhone} href={`tel:${me.school.officePhone.replace(/\s/g, "")}`} />}
-        <button onClick={logout} disabled={leaving} className="flex min-h-[54px] w-full items-center gap-3 px-0.5 text-left font-semibold text-rose-600 active:bg-ink-50">
-          <LogOut className="h-[21px] w-[21px] shrink-0" strokeWidth={1.8} aria-hidden />
-          {L({ hi: "लॉग आउट", en: "Log out" })}
-        </button>
-      </div>
+        <Row icon={Languages} text={L({ hi: "भाषा", en: "Language" })} value={lang === "hi" ? "हिंदी" : "English"} onClick={() => setLang(lang === "hi" ? "en" : "hi")} last />
+      </Group>
 
-      <p className="text-center text-[12px] text-ink-400">
-        {me.school.name} · +91 {phoneText(me.phone)}
-      </p>
+      <Group title={L({ hi: "मदद", en: "Help" })}>
+        {me.school.officePhone && <Row icon={Phone} text={L({ hi: "स्कूल ऑफ़िस को कॉल करें", en: "Call school office" })} value={me.school.officePhone} href={`tel:${me.school.officePhone.replace(/\s/g, "")}`} />}
+        <Row icon={CircleHelp} text={L({ hi: "स्कूल सहायक से पूछें", en: "Ask School Sahayak" })} href="/assistant/" last />
+      </Group>
+
+      <button type="button" onClick={logout} disabled={leaving} className="min-h-[50px] w-full rounded-2xl border border-ink-100 bg-white text-[15px] font-semibold text-rose-700 active:bg-ink-50 disabled:opacity-60">
+        {leaving ? "…" : L({ hi: "लॉग आउट", en: "Log out" })}
+      </button>
+      <p className="text-center text-[12px] text-ink-500">+91 {phoneText(me.phone)}</p>
 
       {asking && <AskUpdate studentId={child.id} onClose={() => setAsking(false)} />}
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
