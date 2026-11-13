@@ -12,7 +12,7 @@
 
 import "@fontsource-variable/plus-jakarta-sans";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, BookOpen, CalendarCheck, ChevronDown, ChevronRight, Clock, FileText, RotateCw, Trophy, Wallet, WifiOff } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { useApi } from "@/lib/api";
@@ -52,7 +52,43 @@ const DEMO = {
   photo: "/img/demo-student.jpg",
 };
 
+/**
+ * The scroll effect (approved 2026-11-13): the building moves at half the page's speed, so the cards
+ * slide over it and it sinks behind them; a navy shade deepens and the greeting fades and lifts a little.
+ * Writes styles straight to the elements once per frame (no re-render). Off for "Reduce motion".
+ */
+function useHeroScroll() {
+  const img = useRef<HTMLImageElement>(null);
+  const shade = useRef<HTMLDivElement>(null);
+  const text = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    const paint = () => {
+      frame = 0;
+      const y = Math.min(Math.max(window.scrollY, 0), 320);
+      if (img.current) img.current.style.transform = `translate3d(0, ${y * 0.5}px, 0) scale(${1 + y / 2400})`;
+      if (shade.current) shade.current.style.opacity = String(Math.min(y / 260, 1) * 0.55);
+      if (text.current) {
+        text.current.style.opacity = String(Math.max(1 - y / 200, 0));
+        text.current.style.transform = `translate3d(0, ${y * 0.25}px, 0)`;
+      }
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+    paint();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+  return { img, shade, text };
+}
+
 export default function HomePage() {
+  const fx = useHeroScroll();
   const { me, child, stale } = useParent();
   const { data, error, reload } = useApi<HomeData>(child ? `/home?student=${child.id}` : null);
   const L = useL();
@@ -71,12 +107,12 @@ export default function HomePage() {
   const month = data ? (data.month.percent === null && DEMO_ON ? DEMO.month : data.month) : undefined;
   const notice = data ? data.notice || (DEMO_ON ? DEMO.notice : null) : undefined;
   const ev = data ? data.events?.[0] || (DEMO_ON ? DEMO.event : null) : undefined;
-  const unread = data ? data.noticeCount || (DEMO_ON ? DEMO.noticeCount : 0) : 0;
+  const unread = data ? data.noticeCount ?? (DEMO_ON ? DEMO.noticeCount : 0) : 0;
   const failed = error && error.status !== 401 && !data ? error : null;
 
   const childCard = (
     <>
-      <span className="grid w-[92px] shrink-0 place-items-center bg-[#F1F4F9]">{child && <ChildPhoto name={child.name} url={child.photoUrl} />}</span>
+      <span className="grid w-[92px] shrink-0 place-items-center bg-[#F1F4F9]">{child && <ChildPhoto key={child.id} name={child.name} url={child.photoUrl} />}</span>
       <span className="flex min-w-0 flex-1 flex-col justify-center pl-4 text-left">
         <span className="truncate text-[17px] font-bold">{child?.name}</span>
         <span className="mt-1 truncate text-[13.5px]" style={{ color: MUTED }}>
@@ -93,14 +129,16 @@ export default function HomePage() {
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans Variable', system-ui, sans-serif", color: INK }}>
       {/* ── Header: photo on the right, navy behind the text, fading to white at the bottom ── */}
-      <header className="relative h-[300px] overflow-hidden">
+      <header className="relative h-[300px] overflow-hidden bg-[#0B2558]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/img/school-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%]" />
+        <img ref={fx.img} src="/img/school-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(9,30,72,.94) 0%, rgba(9,30,72,.80) 45%, rgba(9,30,72,.45) 75%, rgba(9,30,72,.2) 100%)" }} />
         <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(9,30,72,.75) 0%, rgba(9,30,72,0) 100%)" }} />
+        {/* Darkens as the page scrolls, so the cards stand out over the building. */}
+        <div ref={fx.shade} className="absolute inset-0 bg-[#0B2558] opacity-0" aria-hidden />
         <div className="absolute inset-x-0 bottom-0 h-[90px]" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 100%)" }} />
 
-        <div className="pt-safe relative z-[1] px-4">
+        <div ref={fx.text} className="pt-safe relative z-[1] px-4 will-change-[opacity,transform]">
           <div className="flex items-center pt-5">
             {/* The school (logo and name) opens the side menu. */}
             <button type="button" onClick={openMenu} aria-haspopup="dialog" aria-label={L({ hi: "मेन्यू", en: "Menu" })} className="flex min-w-0 flex-1 items-center text-left active:opacity-80">
