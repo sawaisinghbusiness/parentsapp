@@ -1,385 +1,349 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import clsx from "clsx";
-import {
-  Bell,
-  Bus,
-  ChevronDown,
-  ChevronRight,
-  Menu as MenuIcon,
-  Search,
-} from "lucide-react";
-import { useApi } from "@/lib/api";
-import { useParent } from "@/lib/parent";
-import { useL, useT, type Bi } from "@/lib/i18n";
-import { dayMonth, rupees } from "@/lib/format";
-import { Avatar, ErrorCard, OfflineNote, Skeleton } from "@/components/ui";
-import { ChildSheet } from "@/components/ChildSheet";
-import { ProfilePeek } from "@/components/ProfilePeek";
-import { EventRow } from "@/components/EventRow";
-import { BannerSlider } from "@/components/BannerSlider";
-import { AttendanceIcon, FeesIcon, HomeworkIcon } from "@/components/TodayIcons";
-import { QuickIcon, type QuickIconName } from "@/components/QuickIcons";
-import { useMenu } from "@/lib/menu";
-import { ripple } from "@/lib/motion";
+/**
+ * Home, from the mockup the user approved on 2026-11-13 (built and reviewed first as a /home-new preview).
+ *
+ * One colour family: navy for brand and emphasis, white cards, grey-blue lines and quiet text.
+ * Gutter 16px, gap 12px between blocks, card radius 14px. The bottom tab bar lives in AppShell.
+ *
+ * DEMO: in development only, where the child has no data yet (no attendance this month, no notice,
+ * no event), sample values fill in so the design can be judged. Production never shows them.
+ */
 
-interface HomeEvent {
-  id: string;
-  title: string;
-  date: string;
-  scene?: string | null;
-  coverUrl?: string | null;
+import "@fontsource-variable/plus-jakarta-sans";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Bell, BookOpen, CalendarCheck, ChevronDown, ChevronRight, Clock, FileText, RotateCw, Trophy, Wallet, WifiOff } from "lucide-react";
+import { useParent } from "@/lib/parent";
+import { useApi } from "@/lib/api";
+import { useL, useT } from "@/lib/i18n";
+import { initials } from "@/lib/format";
+import { useMenu } from "@/lib/menu";
+import { ChildSheet } from "@/components/ChildSheet";
+
+const NAVY = "#0D2A5E";
+const INK = "#121C33";
+const MUTED = "#5B6478";
+const LINE = "#DFE5EF";
+const TILE = "#EAF0FA";
+
+type Lang = "hi" | "en";
+interface Month {
+  percent: number | null;
+  present: number;
+  absent?: number;
+  workingDays: number;
 }
-interface Home {
+interface HomeData {
   date: string;
-  attendance: { status: "Present" | "Absent" | "Leave" | "HalfDay" | null; holiday: string | null };
-  fees: { dueNow: number; fine: number; balance: number; next: { name: string; due: string; amount: number } | null } | null;
-  homework: { id: string; subject: string; title: string; assignedOn: string }[];
-  events?: HomeEvent[];
+  month: Month;
+  events?: { id: string; title: string; date: string; time?: string }[];
+  notice: { id: string; title: string; date: string } | null;
   noticeCount?: number;
 }
 
-// Each action's icon is one of the user's 12 Quick Action tiles (components/QuickIcons, 2026-10-23).
-type Action = { href: string; text: Bi; icon: QuickIconName };
-const QUICK: Action[] = [
-  { href: "/calendar/", text: { hi: "हाज़िरी", en: "Attendance" }, icon: "attendance" },
-  { href: "/homework/", text: { hi: "होमवर्क", en: "Homework" }, icon: "homework" },
-  { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: "fees" },
-  { href: "/bus/", text: { hi: "बस", en: "Bus" }, icon: "bus" },
-];
-// Behind "More" (and "View all"): the rest, opened in place.
-const MORE: Action[] = [
-  { href: "/teachers/", text: { hi: "टीचर से पूछें", en: "Ask Teacher" }, icon: "askTeacher" },
-  { href: "/meetings/", text: { hi: "मीटिंग", en: "Meetings" }, icon: "meetings" },
-  { href: "/exam/", text: { hi: "परीक्षा", en: "Exam" }, icon: "exam" },
-  { href: "/report-card/", text: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, icon: "reportCard" },
-  { href: "/leave/", text: { hi: "छुट्टी", en: "Leave" }, icon: "leave" },
-  { href: "/events/", text: { hi: "कार्यक्रम", en: "Events" }, icon: "events" },
-  { href: "/notice/", text: { hi: "सूचना", en: "Notice" }, icon: "notice" },
-  { href: "/id-card/", text: { hi: "आईडी कार्ड", en: "ID Card" }, icon: "idCard" },
-];
+/** Sample values for development only (see the note at the top). */
+const DEMO_ON = process.env.NODE_ENV !== "production";
+const DEMO = {
+  month: { percent: 92, present: 22, absent: 2, workingDays: 24 } as Month,
+  notice: { id: "demo", title: "Winter Vacation Notice", date: "2026-10-30" },
+  event: { id: "demo", title: "PTM Meeting", date: "2026-11-04", time: "10:00 AM - 12:00 PM" },
+  noticeCount: 3,
+  photo: "/img/demo-student.jpg",
+};
 
-let arrived = false;
-
-const BANNERS = [
-  { src: "/img/home-banner-lessons.webp", alt: "Every lesson. Every result." },
-  { src: "/img/home-banner-2.webp", alt: "Stay connected. Stay informed." },
-  { src: "/img/home-banner-fees.webp", alt: "Pay fees easily. Never miss a notice." },
-];
-
-/** Place in the arrival order (see .enter / .pop-in in globals.css). */
-const v = (i: number) => ({ "--i": i }) as React.CSSProperties;
-
-
-/** "Thu, 09 Oct 2026" / "गुरुवार, 9 अक्टूबर" */
-const todayText = (iso: string, lang: "hi" | "en") =>
-  new Date(iso + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-GB", lang === "hi" ? { weekday: "long", day: "numeric", month: "long" } : { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
-
-/**
- * Home, laid out like the reference the user picked (2026-10-08): the school's mark and name, language,
- * search, notices and the child; "Hello"; a Today card (attendance, fees, homework); quick actions;
- * then upcoming events as photo cards, two to a row.
- */
 export default function HomePage() {
   const { me, child, stale } = useParent();
-  const { data, error, reload } = useApi<Home>(child ? `/home?student=${child.id}` : null);
+  const { data, error, reload } = useApi<HomeData>(child ? `/home?student=${child.id}` : null);
   const L = useL();
-  const [switching, setSwitching] = useState(false);
-  // Every action shows from the start; "Show less" folds it to the first row.
-  const [more, setMore] = useState(true);
-  const [peek, setPeek] = useState(false);
+  const { lang } = useT();
   const { openMenu } = useMenu();
+  const [switching, setSwitching] = useState(false);
   const many = (me?.children.length || 0) > 1;
-  const tint = Math.max(0, me?.children.findIndex((c) => c.id === child?.id) ?? 0);
-  const unread = data?.noticeCount || 0;
-  const events = (data?.events || []).slice(0, 3);
-  // The arrival plays once per visit to the app; coming back to Home later, it is simply there.
-  const [calm] = useState(arrived);
-  useEffect(() => {
-    arrived = true;
-  }, []);
-
+  const school = me?.school;
+  const town = school?.address?.split(",").map((s) => s.trim()).filter(Boolean).pop() || "";
   const first = child?.name.split(" ")[0] || "";
+  const [hour, setHour] = useState(9);
+  useEffect(() => setHour(new Date().getHours()), []);
+  const greet = hour < 12 ? L({ hi: "सुप्रभात,", en: "Good Morning," }) : hour < 17 ? L({ hi: "नमस्ते,", en: "Good Afternoon," }) : L({ hi: "शुभ संध्या,", en: "Good Evening," });
 
-  // The top row stays put on a white strip (the user's ask, 2026-10-24: no teal band); a soft edge shows
-  // under it once something has gone under it.
-  const headRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    let frame = 0;
-    const paint = () => {
-      frame = 0;
-      if (headRef.current) headRef.current.style.boxShadow = window.scrollY > 4 ? "0 4px 12px rgba(15,47,60,0.12)" : "none";
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(paint);
-    };
-    paint();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, []);
+  // Real data first; in development the sample fills only what is empty.
+  const month = data ? (data.month.percent === null && DEMO_ON ? DEMO.month : data.month) : undefined;
+  const notice = data ? data.notice || (DEMO_ON ? DEMO.notice : null) : undefined;
+  const ev = data ? data.events?.[0] || (DEMO_ON ? DEMO.event : null) : undefined;
+  const unread = data ? data.noticeCount || (DEMO_ON ? DEMO.noticeCount : 0) : 0;
+  const failed = error && error.status !== 401 && !data ? error : null;
+
+  const childCard = (
+    <>
+      <span className="grid w-[92px] shrink-0 place-items-center bg-[#F1F4F9]">{child && <ChildPhoto name={child.name} url={child.photoUrl} />}</span>
+      <span className="flex min-w-0 flex-1 flex-col justify-center pl-4 text-left">
+        <span className="truncate text-[17px] font-bold">{child?.name}</span>
+        <span className="mt-1 truncate text-[13.5px]" style={{ color: MUTED }}>
+          {child ? `${L({ hi: "कक्षा", en: "Class" })} ${child.classSec}  •  ${L({ hi: "रोल नं.", en: "Roll No." })} ${child.rollNo}` : ""}
+        </span>
+      </span>
+      <span className="grid w-11 place-items-center">
+        <ChevronRight className="h-5 w-5" strokeWidth={2.4} aria-hidden />
+      </span>
+    </>
+  );
+  const cardClass = "flex h-[76px] w-full items-stretch overflow-hidden rounded-[14px] border bg-white shadow-[0_4px_14px_rgba(13,42,94,0.08)]";
 
   return (
-    <div className={clsx("animate-fadeIn", calm && "calm")}>
-      {/* The top row on a white strip: menu, "Hello, <child>", then notices and the child's photo.
-          With more than one child the greeting opens the switcher. Language is in the side menu and Profile. */}
-      <div ref={headRef} className="pt-safe sticky top-0 z-20 bg-white px-4 pb-2 transition-shadow duration-300">
-        <div className="enter flex items-center gap-1.5 pt-3" style={v(0)}>
-          <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="-ml-2 grid h-11 w-10 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100">
-            <MenuIcon className="h-6 w-6" strokeWidth={2} aria-hidden />
-          </button>
-          <div className="min-w-0 flex-1">
-            {child ? (
-              many ? (
-                <button onClick={() => setSwitching(true)} className="flex max-w-full items-center gap-1 text-left" aria-label={`${L({ hi: "बच्चा बदलें", en: "Switch child" })}: ${child.name}`}>
-                  <Greeting name={first} />
-                  <ChevronDown className="h-5 w-5 shrink-0 text-ink-700" strokeWidth={2.4} aria-hidden />
-                </button>
+    <div style={{ fontFamily: "'Plus Jakarta Sans Variable', system-ui, sans-serif", color: INK }}>
+      {/* ── Header: photo on the right, navy behind the text, fading to white at the bottom ── */}
+      <header className="relative h-[300px] overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/img/school-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%]" />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(9,30,72,.94) 0%, rgba(9,30,72,.80) 45%, rgba(9,30,72,.45) 75%, rgba(9,30,72,.2) 100%)" }} />
+        <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(9,30,72,.75) 0%, rgba(9,30,72,0) 100%)" }} />
+        <div className="absolute inset-x-0 bottom-0 h-[90px]" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 100%)" }} />
+
+        <div className="pt-safe relative z-[1] px-4">
+          <div className="flex items-center pt-5">
+            {/* The school (logo and name) opens the side menu. */}
+            <button type="button" onClick={openMenu} aria-haspopup="dialog" aria-label={L({ hi: "मेन्यू", en: "Menu" })} className="flex min-w-0 flex-1 items-center text-left active:opacity-80">
+              {school?.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={school.logoUrl} alt="" className="h-[54px] w-[54px] shrink-0 rounded-full bg-white object-cover ring-2 ring-[#D4AF37]" />
               ) : (
-                <Greeting name={first} />
-              )
-            ) : (
-              <Skeleton className="h-6 w-36" />
-            )}
-          </div>
-          <Link href="/notice/" className="relative grid h-10 w-9 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={unread ? `${unread} ${L({ hi: "नई सूचनाएँ", en: "new notices" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}>
-            <Bell className={clsx("h-[21px] w-[21px]", unread > 0 && "bell-ring")} strokeWidth={2} aria-hidden />
-            {unread > 0 && (
-              <span className="badge-pop absolute right-0 top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full border-2 border-white bg-rose-600 px-0.5 text-[10px] font-bold leading-none text-white">
-                {unread > 9 ? "9+" : unread}
+                <span className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full border-2 border-[#D4AF37] text-[15px] font-extrabold text-white">{school ? initials(school.name) : ""}</span>
+              )}
+              <span className="mx-3 h-10 w-px shrink-0 bg-white/35" aria-hidden />
+              <span className="min-w-0 flex-1 text-white">
+                <span className="block truncate text-[18px] font-bold leading-[1.2]">{school?.name || " "}</span>
+                <span className="mt-0.5 flex items-center gap-1 text-[14px] font-medium text-white/85">
+                  <span className="truncate">{town}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0" strokeWidth={2.4} aria-hidden />
+                </span>
               </span>
-            )}
-          </Link>
-          {child ? (
-            <button
-              onClick={() => setPeek(true)}
-              aria-haspopup="dialog"
-              className="shrink-0 rounded-full ring-2 ring-white shadow-sm transition-transform duration-300 active:scale-90"
-              aria-label={`${child.name}: ${L({ hi: "विवरण", en: "details" })}`}
+            </button>
+            <Link
+              href="/notice/"
+              className="relative grid h-11 w-11 shrink-0 place-items-center text-white"
+              aria-label={unread ? `${L({ hi: "सूचनाएँ", en: "Notices" })}, ${unread} ${L({ hi: "नई", en: "new" })}` : L({ hi: "सूचनाएँ", en: "Notices" })}
             >
-              <Avatar name={child.name} url={child.photoUrl} size={38} tint={tint} />
-            </button>
-          ) : (
-            <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-full" />
-          )}
+              <Bell className="h-[26px] w-[26px]" strokeWidth={1.9} aria-hidden />
+              {unread > 0 && (
+                <span className="absolute right-[3px] top-[4px] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#E53935] px-1 text-[10.5px] font-bold leading-none text-white ring-2 ring-[#0B2558]" aria-hidden>
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
+            </Link>
+          </div>
+
+          {/* The greeting stays in the left 70%, where the navy is strongest. */}
+          <div className="mt-9 max-w-[70%] text-white">
+            <div className="text-[19px] font-normal leading-none text-white/90">{greet}</div>
+            <div className="mt-2 truncate text-[34px] font-extrabold leading-[1.1] tracking-[-0.01em]">{first}</div>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div>
-      <div className="px-4">
-        {/* The school's banners, right under the greeting: swipe for the one on either side. */}
-        <BannerSlider slides={BANNERS} start={1} className="enter mt-4" style={v(3)} />
-        <Link href="/search/" className="enter mt-3.5 flex h-12 items-center gap-2.5 rounded-xl border border-ink-100 bg-white px-4 text-ink-500 shadow-sm" style={v(3)} aria-label={L({ hi: "खोजें", en: "Search" })}>
-          <Search className="h-[18px] w-[18px] shrink-0 text-ink-700" strokeWidth={2.2} aria-hidden />
-          <span className="truncate text-[14.5px]">{L({ hi: "होमवर्क, फ़ीस, सूचना खोजें", en: "Search homework, fees, notices" })}</span>
-        </Link>
-      </div>
+      <div className="relative z-[2] -mt-[58px] space-y-3 px-4">
+        {/* ── Child card: opens the switcher when there are siblings, else the profile ── */}
+        {many ? (
+          <button type="button" onClick={() => setSwitching(true)} aria-haspopup="dialog" className={cardClass} style={{ borderColor: LINE }} aria-label={child ? `${child.name}: ${L({ hi: "बच्चा बदलें", en: "switch child" })}` : undefined}>
+            {childCard}
+          </button>
+        ) : (
+          <Link href="/profile/" className={cardClass} style={{ borderColor: LINE }}>
+            {childCard}
+          </Link>
+        )}
 
-      <div className="space-y-6 px-4 pt-4">
-        <OfflineNote show={stale && !!me} />
-        {error && error.status !== 401 && !data && <ErrorCard offline={error.status === 0} onRetry={reload} />}
-
-        <Today data={data} />
-
-        <section className="enter" style={v(4)}>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[19px] font-bold text-brand-800">{L({ hi: "जल्दी पहुँचें", en: "Quick Actions" })}</h2>
-            <button onClick={() => setMore((m) => !m)} className="flex min-h-[44px] items-center gap-0.5 text-[14px] font-medium text-brand-600" aria-expanded={more}>
-              {more ? L({ hi: "कम दिखाएँ", en: "Show less" }) : L({ hi: "सब देखें", en: "View all" })}
-              <ChevronRight className={clsx("h-4 w-4 transition-transform", more && "rotate-90")} aria-hidden />
+        {stale && me && (
+          <p className="flex items-center gap-2 rounded-[10px] px-3.5 py-2.5 text-[13px]" style={{ background: TILE, color: MUTED }}>
+            <WifiOff className="h-4 w-4 shrink-0" aria-hidden />
+            {L({ hi: "इंटरनेट नहीं है, पिछली बार की जानकारी दिख रही है।", en: "You're offline. Showing what was saved last time." })}
+          </p>
+        )}
+        {failed && (
+          <div className="flex items-center gap-3 rounded-[14px] border bg-white px-4 py-3.5" style={{ borderColor: LINE }}>
+            <p className="min-w-0 flex-1 text-[13.5px]" style={{ color: MUTED }}>
+              {failed.status === 0 ? L({ hi: "इंटरनेट नहीं है।", en: "No internet connection." }) : L({ hi: "जानकारी नहीं आ पाई।", en: "Couldn't load your details." })}
+            </p>
+            <button type="button" onClick={reload} className="flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] font-semibold text-white" style={{ background: NAVY }}>
+              <RotateCw className="h-4 w-4" aria-hidden />
+              {L({ hi: "फिर से", en: "Retry" })}
             </button>
           </div>
-          {/* Twelve actions, four to a row; folded, only the first row shows. */}
-          <div className="grid grid-cols-4 gap-x-1 gap-y-3">
-            {QUICK.map((a, k) => (
-              <QuickTile key={a.href} {...a} i={k} />
-            ))}
-            {more && MORE.map((a, k) => <QuickTile key={a.href} {...a} i={k + QUICK.length} />)}
+        )}
+
+        {/* ── Four tiles ── */}
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { href: "/calendar/", icon: CalendarCheck, t: L({ hi: "हाज़िरी", en: "Attendance" }) },
+            { href: "/homework/", icon: BookOpen, t: L({ hi: "होमवर्क", en: "Homework" }) },
+            { href: "/fees/", icon: Wallet, t: L({ hi: "फ़ीस", en: "Fees" }) },
+            { href: "/exam/?tab=result", icon: Trophy, t: L({ hi: "रिज़ल्ट", en: "Results" }) },
+          ].map(({ href, icon: Icon, t }) => (
+            <Link key={href} href={href} className="flex h-[68px] flex-col items-center justify-center gap-1.5 rounded-[10px] border active:scale-95" style={{ background: TILE, borderColor: "#D3DDEE" }}>
+              <Icon className="h-[28px] w-[28px]" style={{ color: NAVY }} strokeWidth={1.6} aria-hidden />
+              <span className="text-[12px] font-medium">{t}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* ── Attendance Overview ── */}
+        <section className="rounded-[14px] border bg-white px-4 py-3.5" style={{ borderColor: LINE }}>
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="att-title" className="truncate text-[16.5px] font-bold">
+              {L({ hi: "हाज़िरी का हाल", en: "Attendance Overview" })}
+            </h2>
+            <span className="shrink-0 rounded-full px-2.5 py-[3px] text-[11.5px] font-medium" style={{ background: TILE, color: NAVY }}>
+              {L({ hi: "इस महीने", en: "This Month" })}
+            </span>
           </div>
+          <Overview m={month} />
         </section>
 
-        {events.length > 0 && data && (
-          <section className="enter" style={v(5)}>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-[19px] font-bold text-brand-800">{L({ hi: "आने वाले कार्यक्रम", en: "Upcoming Events" })}</h2>
-              <Link href="/events/" className="flex min-h-[44px] items-center gap-0.5 text-[14px] font-medium text-brand-600">
-                {L({ hi: "सब देखें", en: "View all" })}
-                <ChevronRight className="h-4 w-4" aria-hidden />
-              </Link>
-            </div>
-            {/* Plain rows in one card: date box, name, when. No photos. */}
-            <ul className="divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-[0_1px_2px_rgba(15,23,42,.04)]">
-              {events.map((e) => (
-                <li key={e.id}>
-                  <EventRow id={e.id} title={e.title} date={e.date} today={data.date} coverUrl={e.coverUrl} scene={e.scene} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </div>
+        {/* ── Latest Notices ── */}
+        <section className="overflow-hidden rounded-[14px] border bg-white" style={{ borderColor: LINE }}>
+          <CardHead title={L({ hi: "ताज़ा सूचनाएँ", en: "Latest Notices" })} link={L({ hi: "सब देखें", en: "View All" })} href="/notice/" />
+          {notice === undefined ? (
+            <RowSkeleton />
+          ) : notice ? (
+            <Link href="/notice/" className="flex items-center gap-3.5 px-3.5 py-3">
+              <span className="grid h-[38px] w-[50px] shrink-0 place-items-center rounded-[10px]" style={{ background: TILE }}>
+                <FileText className="h-5 w-5" style={{ color: NAVY }} strokeWidth={1.8} aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-semibold">{notice.title}</span>
+                <span className="block truncate text-[12.5px]" style={{ color: MUTED }}>
+                  {L({ hi: "स्कूल की सूचना", en: "School Announcement" })} • {fmtDate(notice.date, lang)}
+                </span>
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0" strokeWidth={2.4} aria-hidden />
+            </Link>
+          ) : (
+            <p className="px-3.5 py-3.5 text-[13.5px]" style={{ color: MUTED }}>{L({ hi: "अभी कोई सूचना नहीं", en: "No notices yet" })}</p>
+          )}
+        </section>
+
+        {/* ── Upcoming Events ── */}
+        <section className="overflow-hidden rounded-[14px] border bg-white" style={{ borderColor: LINE }}>
+          <CardHead title={L({ hi: "आने वाले कार्यक्रम", en: "Upcoming Events" })} link={L({ hi: "कैलेंडर देखें", en: "View Calendar" })} href="/calendar/" />
+          {ev === undefined ? (
+            <RowSkeleton />
+          ) : ev ? (
+            <Link href="/events/" className="flex items-center gap-3.5 px-3.5 py-3">
+              <span className="flex h-[40px] w-[54px] shrink-0 flex-col items-center justify-center rounded-[10px] leading-none" style={{ background: TILE, color: NAVY }}>
+                <span className="text-[19px] font-bold">{ev.date.slice(8, 10)}</span>
+                <span className="mt-0.5 text-[10.5px] font-semibold uppercase">{monthShort(ev.date, lang)}</span>
+              </span>
+              <span className="h-9 w-px shrink-0" style={{ background: LINE }} aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-semibold">{ev.title}</span>
+                <span className="mt-0.5 flex items-center gap-1.5 text-[12.5px]" style={{ color: MUTED }}>
+                  <Clock className="h-[14px] w-[14px] shrink-0" strokeWidth={2} aria-hidden />
+                  <span className="truncate">{ev.time || new Date(ev.date + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-GB", { weekday: "long" })}</span>
+                </span>
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0" strokeWidth={2.4} aria-hidden />
+            </Link>
+          ) : (
+            <p className="px-3.5 py-3.5 text-[13.5px]" style={{ color: MUTED }}>{L({ hi: "अभी कोई कार्यक्रम नहीं", en: "No upcoming events" })}</p>
+          )}
+        </section>
       </div>
 
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
-      {peek && <ProfilePeek onClose={() => setPeek(false)} />}
     </div>
   );
 }
 
-/** "Hello," then the name, each sliding up out of its line. */
-/** Two lines (user, 2026-10-26): the greeting for the time of day small on top, the name under it. */
-function Greeting({ name }: { name: string }) {
-  const L = useL();
-  const hour = new Date().getHours();
-  const greet = hour < 12 ? L({ hi: "सुप्रभात", en: "Good morning" }) : hour < 17 ? L({ hi: "नमस्ते", en: "Good afternoon" }) : L({ hi: "नमस्ते", en: "Good evening" });
-  return (
-    <h1 className="min-w-0 leading-tight">
-      <span className="reveal block">
-        <span style={v(0)} className="block truncate text-[12.5px] font-medium text-ink-500">
-          {greet}
-        </span>
-      </span>
-      <span className="reveal block">
-        <span style={v(1)} className="block truncate text-[17px] font-bold text-ink-900">
-          {name}
-        </span>
-      </span>
-    </h1>
+/** The child's photo from the ERP; in development the demo photo next; else initials on navy. */
+function ChildPhoto({ name, url }: { name: string; url: string | null }) {
+  const choices = [url, DEMO_ON ? DEMO.photo : null].filter(Boolean) as string[];
+  const [k, setK] = useState(0);
+  const src = choices[k];
+  return src ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" onError={() => setK((n) => n + 1)} className="h-[56px] w-[56px] rounded-full object-cover object-[50%_22%] ring-2 ring-white" />
+  ) : (
+    <span className="grid h-[56px] w-[56px] place-items-center rounded-full text-[19px] font-bold text-white" style={{ background: NAVY }}>
+      {initials(name)}
+    </span>
   );
 }
 
-function QuickTile({ href, text, icon, i }: Action & { i: number }) {
-  const L = useL();
+function CardHead({ title, link, href }: { title: string; link: string; href: string }) {
   return (
-    <Link href={href} onPointerDown={ripple} className="quick-tile pop-in" style={v(i)}>
-      <span>
-        <QuickIcon name={icon} size={48} />
-      </span>
-      {L(text)}
-    </Link>
-  );
-}
-
-/** The three things a parent checks every morning, each a row that opens its screen. */
-function Today({ data }: { data: Home | undefined }) {
-  const L = useL();
-  const { lang } = useT();
-  const shownDue = useCountUp(data?.fees ? data.fees.dueNow + data.fees.fine : 0);
-
-  if (!data)
-    return (
-      <section className="today-card space-y-3 pb-4">
-        <Skeleton className="h-6 w-24" />
-        {[0, 1, 2].map((k) => (
-          <div key={k} className="flex items-center gap-3.5">
-            <Skeleton className="h-12 w-12 rounded-xl" />
-            <Skeleton className="h-4 w-28" />
-          </div>
-        ))}
-      </section>
-    );
-
-  const a = data.attendance;
-  // The day's attendance is told in words; the icon is the same one every day (the user's icon set).
-  const attNote =
-    a.status === "Present"
-      ? L({ hi: "आज उपस्थित", en: "Present today" })
-      : a.status === "Absent"
-        ? L({ hi: "आज अनुपस्थित", en: "Absent today" })
-        : a.status === "Leave"
-          ? L({ hi: "आज छुट्टी पर", en: "On leave today" })
-          : a.status === "HalfDay"
-            ? L({ hi: "आज आधा दिन", en: "Half day today" })
-            : a.holiday
-              ? a.holiday === "Sunday"
-                ? L({ hi: "आज रविवार है", en: "Sunday" })
-                : a.holiday
-              : L({ hi: "अभी हाज़िरी नहीं लगी", en: "Not marked yet" });
-
-  const f = data.fees;
-  const due = f ? f.dueNow + f.fine : 0;
-  const feeNote = !f
-    ? L({ hi: "विवरण देखें", en: "See details" })
-    : due > 0
-      ? `${rupees(shownDue)} ${L({ hi: "बाकी", en: "due" })}`
-      : f.next
-        ? `${L({ hi: "अगली", en: "Next" })} ${rupees(f.next.amount)} · ${dayMonth(f.next.due, lang)}`
-        : L({ hi: "कोई फ़ीस बाकी नहीं", en: "No fees due" });
-
-  const newHw = data.homework.filter((h) => h.assignedOn === data.date).length;
-  const hwNote = newHw ? L({ hi: `आज ${newHw} होमवर्क मिला`, en: `${newHw} new today` }) : data.homework.length ? L({ hi: `${data.homework.length} बाकी`, en: `${data.homework.length} to do` }) : L({ hi: "आज कोई होमवर्क नहीं", en: "None today" });
-
-  return (
-    <section className="today-card enter" style={v(3)}>
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-[20px] font-bold text-brand-800">{L({ hi: "आज", en: "Today" })}</h2>
-        <span className="truncate text-[13.5px] text-ink-500">{todayText(data.date, lang)}</span>
-      </div>
-      <ul>
-        <TodayRow i={4} href="/calendar/" icon={<AttendanceIcon />} title={L({ hi: "हाज़िरी", en: "Attendance" })} note={attNote} />
-        <TodayRow
-          i={5}
-          href={due > 0 ? "/fees/pay/" : "/fees/"}
-          icon={<FeesIcon />}
-          title={L({ hi: "फ़ीस", en: "Fees" })}
-          note={feeNote}
-          end={
-            due > 0 ? (
-              <span className="pay-pulse rounded-full bg-brand-600 px-3.5 py-2 text-[13.5px] font-semibold text-white">{L({ hi: "अभी भरें", en: "Pay now" })}</span>
-            ) : null
-          }
-        />
-        <TodayRow
-          i={6}
-          href="/homework/"
-          icon={<HomeworkIcon />}
-          title={L({ hi: "होमवर्क", en: "Homework" })}
-          note={hwNote}
-          end={<span className="text-[14.5px] font-semibold text-brand-600">{L({ hi: "देखें", en: "View" })}</span>}
-        />
-      </ul>
-    </section>
-  );
-}
-
-/** Counts up to `target` once (about 0.9 s, easing out); jumps straight there for "Reduce motion". */
-function useCountUp(target: number) {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (!target || arrived || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setN(target);
-      return;
-    }
-    let raf = 0;
-    const start = performance.now() + 450;
-    const step = (now: number) => {
-      const t = Math.min(1, Math.max(0, (now - start) / 900));
-      setN(Math.round(target * (1 - Math.pow(1 - t, 3))));
-      if (t < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [target]);
-  return n;
-}
-
-/** One line of the Today card; `icon` is a 48px tile from components/TodayIcons. */
-function TodayRow({ i, href, icon, title, note, end }: { i: number; href: string; icon: React.ReactNode; title: string; note: string; end?: React.ReactNode }) {
-  return (
-    <li className="enter border-b border-ink-100 last:border-0" style={v(i)}>
-      <Link href={href} onPointerDown={ripple} className="relative -mx-4 flex min-h-[72px] items-center gap-3.5 overflow-hidden px-4 py-3">
-        <span className="h-12 w-12 shrink-0">{icon}</span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[16px] font-semibold text-ink-900">{title}</span>
-          <span className="block truncate text-[13px] text-ink-500">{note}</span>
-        </span>
-        {end}
-        <ChevronRight className="h-[18px] w-[18px] shrink-0 text-ink-400" aria-hidden />
+    <div className="flex h-[42px] items-center justify-between gap-2 border-b px-3.5" style={{ borderColor: LINE }}>
+      <h2 className="truncate text-[15.5px] font-bold">{title}</h2>
+      <Link href={href} className="shrink-0 text-[12.5px] font-medium" style={{ color: INK }}>
+        {link}
       </Link>
-    </li>
+    </div>
   );
+}
+
+function RowSkeleton() {
+  return (
+    <div className="flex items-center gap-3.5 px-3.5 py-3" aria-busy="true">
+      <span className="h-[38px] w-[50px] shrink-0 animate-pulse rounded-[10px]" style={{ background: TILE }} />
+      <span className="flex-1 space-y-2">
+        <span className="block h-3.5 w-40 animate-pulse rounded" style={{ background: TILE }} />
+        <span className="block h-3 w-28 animate-pulse rounded" style={{ background: TILE }} />
+      </span>
+    </div>
+  );
+}
+
+function Overview({ m }: { m: Month | undefined }) {
+  const L = useL();
+  if (!m)
+    return (
+      <div className="mt-3 flex items-center gap-4" aria-busy="true">
+        <span className="h-11 w-24 animate-pulse rounded-lg" style={{ background: TILE }} />
+        <span className="h-3 flex-1 animate-pulse rounded" style={{ background: TILE }} />
+      </div>
+    );
+  // Nothing marked this month yet (production; development shows the sample instead).
+  if (m.percent === null)
+    return (
+      <div className="mt-3 flex items-center gap-3 rounded-[10px] px-3.5 py-3" style={{ background: TILE }}>
+        <CalendarCheck className="h-6 w-6 shrink-0" style={{ color: NAVY }} strokeWidth={1.7} aria-hidden />
+        <p className="text-[13.5px] leading-snug" style={{ color: MUTED }}>
+          {L({ hi: "इस महीने अभी हाज़िरी नहीं लगी है।", en: "No attendance marked yet this month." })}
+        </p>
+      </div>
+    );
+  const pct = m.percent;
+  return (
+    <div className="mt-1.5 flex items-center gap-3.5">
+      <div className="w-[104px] shrink-0 text-center text-[42px] font-extrabold leading-none tracking-[-0.02em]" style={{ color: NAVY }}>
+        {Math.round(pct)}%
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13.5px]">
+          <span className="whitespace-nowrap">
+            <b className="font-bold">{m.present}</b> {L({ hi: "उपस्थित", en: "Present" })}
+          </span>
+          {/* `absent` comes from the backend (Absent only); an older backend doesn't send it. */}
+          {m.absent !== undefined && (
+            <>
+              <span className="h-4 w-px" style={{ background: LINE }} aria-hidden />
+              <span className="whitespace-nowrap">
+                <b className="font-bold">{m.absent}</b> {L({ hi: "अनुपस्थित", en: "Absent" })}
+              </span>
+            </>
+          )}
+        </div>
+        <div className="mt-2.5 h-[7px] overflow-hidden rounded-full bg-[#E3E8F0]" role="progressbar" aria-labelledby="att-title" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: NAVY }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function fmtDate(iso: string, lang: Lang) {
+  return new Date(iso + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function monthShort(iso: string, lang: Lang) {
+  return new Date(iso + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-US", { month: "short" }).replace(".", "");
 }

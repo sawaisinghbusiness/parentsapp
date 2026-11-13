@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { CalendarDays, ChevronLeft, Home, IndianRupee, Menu as MenuIcon, Plus, Timer, UserRound, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarDays, ChevronLeft, Home, IndianRupee, Menu as MenuIcon, Plus, UserRound, type LucideIcon } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { SahayakButton } from "./SahayakButton";
 import { useL, type Bi } from "@/lib/i18n";
@@ -15,11 +15,11 @@ import { SideMenu } from "./SideMenu";
 import { PullRefresh } from "./PullRefresh";
 import { MenuContext } from "@/lib/menu";
 
-/** Five tabs; Study sits in the middle as a raised round button. */
-const TABS: { href: string; text: Bi; icon: LucideIcon; center?: boolean }[] = [
+/** Five equal tabs. */
+const TABS: { href: string; text: Bi; icon: LucideIcon }[] = [
   { href: "/", text: { hi: "होम", en: "Home" }, icon: Home },
   { href: "/calendar/", text: { hi: "कैलेंडर", en: "Calendar" }, icon: CalendarDays },
-  { href: "/study/", text: { hi: "पढ़ाई", en: "Study" }, icon: Timer, center: true },
+  { href: "/study/", text: { hi: "पढ़ाई", en: "Study" }, icon: BookOpen },
   { href: "/fees/", text: { hi: "फ़ीस", en: "Fees" }, icon: IndianRupee },
   { href: "/profile/", text: { hi: "प्रोफ़ाइल", en: "Profile" }, icon: UserRound },
 ];
@@ -137,7 +137,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <MenuContext.Provider value={{ openMenu: () => setMenu(true) }}>
-    <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-[#e3ecec]" : own || big ? "bg-ink-50" : page?.warm ? "bg-[#FFF4E5]" : "bg-white")}>
+    <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-white" : own || big ? "bg-ink-50" : page?.warm ? "bg-[#FFF4E5]" : "bg-white")}>
       {big && page && (
         <header className="pt-safe px-4">
           <div className="-ml-2.5 flex items-center gap-1 pb-1 pt-4">
@@ -193,36 +193,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {!page?.bare && <SahayakButton />}
 
       {!page?.bare && (
-      // Docked to the bottom edge (the user's ask, 2026-10-23; it used to float as a glass capsule): no pill
-      // behind the lit tab (its icon is filled inside instead), and Study rising above it as the green disc.
-      <nav className="nav-dock fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] pb-[env(safe-area-inset-bottom,0px)]" aria-label="Main">
+      // Flat, five equal tabs (the user's design, 2026-11-13; it used to raise Study as a green disc):
+      // white, a hairline on top, and a navy line over the lit tab, whose icon is filled navy.
+      <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-[#DFE5EF] bg-white pb-[env(safe-area-inset-bottom,0px)]" aria-label="Main">
         <ul className="relative grid h-16 grid-cols-5">
-          {TABS.map(({ href, text, icon: Icon, center }) => {
+          {TABS.map(({ href, text, icon: Icon }) => {
             const on = lit === href;
-            if (center)
-              return (
-                <li key={href} className="relative">
-                  {/* The disc rises above the capsule; its ring is the page colour. */}
-                  <Link href={href} aria-current={on ? "page" : undefined} className="flex h-16 flex-col items-center justify-end pb-[9px] text-[11px]">
-                    <span
-                      className={clsx(
-                        "absolute -top-[22px] left-1/2 grid h-[54px] w-[54px] -translate-x-1/2 place-items-center rounded-full border-4 text-white transition-transform duration-200 active:scale-95",
-                        isHome ? "border-[#e3ecec]" : big || own ? "border-ink-50" : "border-white",
-                        on ? "bg-[#33a811] shadow-[0_6px_16px_rgba(57,188,19,.45)]" : "bg-[#39bc13] shadow-[0_4px_12px_rgba(57,188,19,.35)]"
-                      )}
-                    >
-                      <Icon className="h-[25px] w-[25px]" strokeWidth={2} aria-hidden />
-                    </span>
-                    <span className={clsx("font-semibold", on ? "text-[#2c9010]" : "text-[#2f9c10]")}>{L(text)}</span>
-                  </Link>
-                </li>
-              );
             return (
               <li key={href} className="relative">
-                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-16 flex-col items-center justify-center gap-0.5 text-[11px] transition-colors duration-300", on ? "font-semibold text-brand-600" : "font-medium text-ink-400")}>
-                  <span className="grid h-7 w-[52px] place-items-center">
-                    <Icon key={on ? "on" : "off"} className={clsx("h-[27px] w-[27px]", on && "tab-icon-on")} strokeWidth={on ? 2 : 1.7} fill={on ? "currentColor" : "none"} fillOpacity={on ? 0.22 : undefined} aria-hidden />
-                  </span>
+                {on && <span className="absolute inset-x-1 top-[-1px] h-[3px] rounded-b bg-[#0D2A5E]" aria-hidden />}
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-16 flex-col items-center justify-center gap-1 text-[12px] transition-colors duration-300", on ? "font-bold text-[#0D2A5E]" : "font-medium text-[#5B6478]")}>
+                  <Icon className="h-6 w-6" strokeWidth={on ? 2.2 : 1.7} fill={on ? "currentColor" : "none"} aria-hidden />
                   {L(text)}
                 </Link>
               </li>
