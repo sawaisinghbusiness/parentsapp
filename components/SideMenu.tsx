@@ -55,38 +55,49 @@ const ACCOUNT: Item[] = [
 ];
 
 /** The side menu: every screen of the app in one list, the child on top, sign out at the foot. */
-export function SideMenu({ onClose, onSwitchChild }: { onClose: () => void; onSwitchChild: () => void }) {
+export function SideMenu({ active, layerRef, onClose, onSwitchChild }: { active: boolean; layerRef: React.RefObject<HTMLDivElement>; onClose: () => void; onSwitchChild: () => void }) {
   const { me, child } = useParent();
   const L = useL();
   const { lang, setLang } = useT();
   const path = usePathname();
   const panel = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [leaving, setLeaving] = useState(false);
-  const swipe = useRef<number | null>(null);
+  const close = onClose;
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   const many = (me?.children.length || 0) > 1;
   const tint = Math.max(0, me?.children.findIndex((c) => c.id === child?.id) ?? 0);
 
-  // Slide in on the next frame; Esc closes; the page behind doesn't scroll.
+  // Keep focus inside the active dialog, lock the page, and restore focus after it closes.
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setShown(true));
-    panel.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
-    window.addEventListener("keydown", onKey);
+    if (!active || !mounted) return;
+    const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const focusFrame = requestAnimationFrame(() => panel.current?.focus({ preventScroll: true }));
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.preventDefault(); closeRef.current(); }
+      if (e.key !== "Tab") return;
+      const controls = panel.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex="0"]');
+      if (!controls?.length) return;
+      const first = controls[0], last = controls[controls.length - 1];
+      if (!panel.current?.contains(document.activeElement)) { e.preventDefault(); first.focus(); return; }
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || document.activeElement === panel.current)) {
+        e.preventDefault(); first.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = overflow;
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function close() {
-    setShown(false);
-    setTimeout(onClose, 220);
-  }
+  }, [active, mounted]);
 
   async function logout() {
     setLeaving(true);
@@ -121,24 +132,18 @@ export function SideMenu({ onClose, onSwitchChild }: { onClose: () => void; onSw
   );
 
   // Drawn on <body>, so the page's own layers (and the tab bar) can't sit on top of it.
+  if (!mounted) return null;
   return createPortal(
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={L({ hi: "मेन्यू", en: "Menu" })}>
-      <button type="button" aria-label={L({ hi: "बंद करें", en: "Close" })} onClick={close} className={clsx("absolute inset-0 bg-ink-950/40 transition-opacity duration-200", shown ? "opacity-100" : "opacity-0")} />
+    <div ref={layerRef} className="fixed inset-0 z-50" style={{ visibility: active ? "visible" : "hidden", pointerEvents: active ? "auto" : "none" }} role={active ? "dialog" : undefined} aria-modal={active || undefined} aria-hidden={!active} aria-label={L({ hi: "मेन्यू", en: "Menu" })}>
+      <button type="button" aria-label={L({ hi: "बंद करें", en: "Close" })} onClick={close} className="absolute inset-0 bg-ink-950" style={{ opacity: "var(--drawer-opacity, 0)", transition: "opacity var(--drawer-duration, 0ms) cubic-bezier(0.22, 1, 0.36, 1)" }} />
       {/* Opens from the left edge of the app itself (it is centred, max 560px, on a wide screen). */}
       <div className="pointer-events-none absolute inset-y-0 left-1/2 w-full max-w-[560px] -translate-x-1/2 overflow-hidden">
       <div
         ref={panel}
         tabIndex={-1}
-        // Swipe left on the menu to close it.
-        onTouchStart={(e) => (swipe.current = e.touches[0].clientX)}
-        onTouchEnd={(e) => {
-          if (swipe.current !== null && swipe.current - e.changedTouches[0].clientX > 60) close();
-          swipe.current = null;
-        }}
-        className={clsx(
-          "pt-safe pb-safe pointer-events-auto absolute inset-y-0 left-0 flex w-[84%] max-w-[320px] flex-col bg-white shadow-[8px_0_32px_rgba(15,23,42,.18)] outline-none focus:outline-none focus-visible:outline-none transition-transform duration-200 ease-out motion-reduce:transition-none",
-          shown ? "translate-x-0" : "-translate-x-full"
-        )}
+        data-drawer-panel
+        className="pt-safe pb-safe pointer-events-auto absolute inset-y-0 left-0 flex w-[84%] max-w-[320px] flex-col bg-white shadow-[8px_0_32px_rgba(15,23,42,.18)] outline-none focus:outline-none focus-visible:outline-none will-change-transform"
+        style={{ transform: "translate3d(var(--drawer-x, -100%), 0, 0)", transition: "transform var(--drawer-duration, 0ms) cubic-bezier(0.22, 1, 0.36, 1)" }}
       >
         {/* School */}
         <div className="flex items-center gap-3 border-b border-ink-100 px-4 pb-4 pt-4">
@@ -165,7 +170,7 @@ export function SideMenu({ onClose, onSwitchChild }: { onClose: () => void; onSw
                   type="button"
                   onClick={() => {
                     close();
-                    setTimeout(onSwitchChild, 230);
+                    setTimeout(onSwitchChild, 310);
                   }}
                   className="shrink-0 rounded-lg border border-ink-200 px-3 py-1.5 text-[13px] font-semibold text-ink-800 active:bg-ink-50"
                 >
