@@ -14,7 +14,7 @@ import "@fontsource-variable/noto-sans-devanagari";
 import "./home.css";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bell, BookOpen, CalendarCheck, ChevronDown, ChevronRight, Clock, RotateCw, Trophy, Wallet, WifiOff } from "lucide-react";
+import { Bell, BookOpen, CalendarCheck, ChevronRight, Clock, RotateCw, Trophy, Wallet, WifiOff } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { useApi } from "@/lib/api";
 import { useL, useT } from "@/lib/i18n";
@@ -138,16 +138,16 @@ export default function HomePage() {
             <button type="button" onClick={openMenu} aria-haspopup="dialog" aria-label={L({ hi: "मेन्यू", en: "Menu" })} className="flex min-w-0 flex-1 items-center text-left active:opacity-80">
               {school?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={school.logoUrl} alt="" className="h-[54px] w-[54px] shrink-0 rounded-full bg-white object-cover ring-1 ring-white/50" />
+                <img src={school.logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-full bg-white object-cover ring-1 ring-white/50" />
               ) : (
-                <span className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full border border-white/50 text-[15px] font-semibold text-white">{school ? initials(school.name) : ""}</span>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/50 text-[15px] font-semibold text-white">{school ? initials(school.name) : ""}</span>
               )}
-              <span className="mx-3 h-10 w-px shrink-0 bg-white/35" aria-hidden />
+              <span className="mx-2.5 h-8 w-px shrink-0 bg-white/35" aria-hidden />
               <span className="min-w-0 flex-1 text-white">
-                <span className="block truncate text-[18px] font-semibold leading-[1.2]">{school?.name || " "}</span>
+                <span className="block truncate text-[16px] font-semibold leading-[1.2]">{school?.name || " "}</span>
                 <span className="mt-0.5 flex items-center gap-1 text-[14px] font-medium text-white/85">
                   <span className="truncate">{town}</span>
-                  <ChevronDown className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
+
                 </span>
               </span>
             </button>
