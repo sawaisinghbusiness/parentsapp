@@ -3,7 +3,7 @@
 /**
  * Home, from the mockup the user approved on 2026-11-13 (built and reviewed first as a /home-new preview).
  *
- * One colour family: navy for brand and emphasis, white cards, grey-blue lines and quiet text.
+ * Neutral surfaces and charcoal text; school blue is reserved for actions and the attendance ring.
  * Gutter 16px, gap 12px between blocks, card radius 14px. The bottom tab bar lives in AppShell.
  *
  * DEMO: in development only, where the child has no data yet (no attendance this month, no notice,
@@ -22,10 +22,10 @@ import { useMenu } from "@/lib/menu";
 import { ChildSheet } from "@/components/ChildSheet";
 
 const NAVY = "#0D2A5E";
-const INK = "#121C33";
-const MUTED = "#5B6478";
-const LINE = "#DFE5EF";
-const TILE = "#EAF0FA";
+const INK = "#242628";
+const MUTED = "#666A6E";
+const LINE = "#E6E7E8";
+const TILE = "#F3F4F4";
 
 type Lang = "hi" | "en";
 interface Month {
@@ -57,7 +57,7 @@ const DEMO = {
 
 /**
  * The scroll effect (approved 2026-11-13): the building moves at half the page's speed, so the cards
- * slide over it and it sinks behind them; a navy shade deepens and the greeting fades and lifts a little.
+ * slide over it and it sinks behind them; a neutral shade deepens and the greeting fades and lifts a little.
  * Writes styles straight to the elements once per frame (no re-render). Off for "Reduce motion".
  */
 function useHeroScroll() {
@@ -115,7 +115,7 @@ export default function HomePage() {
 
   const childCard = (
     <>
-      <span className="grid w-[92px] shrink-0 place-items-center bg-[#F1F4F9]">{child && <ChildPhoto key={child.id} name={child.name} url={child.photoUrl} />}</span>
+      <span className="grid w-[92px] shrink-0 place-items-center bg-[#F4F4F3]">{child && <ChildPhoto key={child.id} name={child.name} url={child.photoUrl} />}</span>
       <span className="flex min-w-0 flex-1 flex-col justify-center pl-4 text-left">
         <span className="truncate text-[17px] font-semibold">{child?.name}</span>
         <span className="mt-1 truncate text-[13.5px]" style={{ color: MUTED }}>
@@ -127,18 +127,18 @@ export default function HomePage() {
       </span>
     </>
   );
-  const cardClass = "flex h-[76px] w-full items-stretch overflow-hidden rounded-[14px] border bg-white shadow-[0_4px_14px_rgba(13,42,94,0.08)]";
+  const cardClass = "flex h-[76px] w-full items-stretch overflow-hidden rounded-[14px] border bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)]";
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans Variable', system-ui, sans-serif", color: INK }}>
-      {/* ── Header: photo on the right, navy behind the text, fading to white at the bottom ── */}
-      <header className="relative h-[calc(268px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#0B2558]">
+      {/* ── Header: photo on the right, a neutral shade behind the text, fading to white at the bottom ── */}
+      <header className="relative h-[calc(268px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#25282A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img ref={fx.img} src="/img/school-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(9,30,72,.94) 0%, rgba(9,30,72,.80) 45%, rgba(9,30,72,.45) 75%, rgba(9,30,72,.2) 100%)" }} />
-        <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(9,30,72,.75) 0%, rgba(9,30,72,0) 100%)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(18,22,24,.76) 0%, rgba(18,22,24,.64) 45%, rgba(18,22,24,.28) 75%, rgba(18,22,24,.12) 100%)" }} />
+        <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(18,22,24,.4) 0%, rgba(18,22,24,0) 100%)" }} />
         {/* Darkens as the page scrolls, so the cards stand out over the building. */}
-        <div ref={fx.shade} className="absolute inset-0 bg-[#0B2558] opacity-0" aria-hidden />
+        <div ref={fx.shade} className="absolute inset-0 bg-[#25282A] opacity-0" aria-hidden />
         <div className="absolute inset-x-0 bottom-0 h-[90px]" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 100%)" }} />
 
         <div ref={fx.text} className="pt-safe relative z-[1] px-4 will-change-[opacity,transform]">
@@ -147,9 +147,9 @@ export default function HomePage() {
             <button type="button" onClick={openMenu} aria-haspopup="dialog" aria-label={L({ hi: "मेन्यू", en: "Menu" })} className="flex min-w-0 flex-1 items-center text-left active:opacity-80">
               {school?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={school.logoUrl} alt="" className="h-[54px] w-[54px] shrink-0 rounded-full bg-white object-cover ring-2 ring-[#D4AF37]" />
+                <img src={school.logoUrl} alt="" className="h-[54px] w-[54px] shrink-0 rounded-full bg-white object-cover ring-1 ring-white/50" />
               ) : (
-                <span className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full border-2 border-[#D4AF37] text-[15px] font-semibold text-white">{school ? initials(school.name) : ""}</span>
+                <span className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full border border-white/50 text-[15px] font-semibold text-white">{school ? initials(school.name) : ""}</span>
               )}
               <span className="mx-3 h-10 w-px shrink-0 bg-white/35" aria-hidden />
               <span className="min-w-0 flex-1 text-white">
@@ -167,14 +167,14 @@ export default function HomePage() {
             >
               <Bell className="h-[26px] w-[26px]" strokeWidth={1.9} aria-hidden />
               {unread > 0 && (
-                <span className="absolute right-[3px] top-[4px] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#E53935] px-1 text-[10.5px] font-semibold leading-none text-white ring-2 ring-[#0B2558]" aria-hidden>
+                <span className="absolute right-[3px] top-[4px] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#E53935] px-1 text-[10.5px] font-semibold leading-none text-white ring-2 ring-[#25282A]" aria-hidden>
                   {unread > 9 ? "9+" : unread}
                 </span>
               )}
             </Link>
           </div>
 
-          {/* The greeting stays in the left 70%, where the navy is strongest. */}
+          {/* The greeting stays in the left 70%, where the photo overlay is strongest. */}
           <div className="mt-7 max-w-[70%] text-white">
             <div className="text-[19px] font-normal leading-none text-white/90">{greet}</div>
             <div className="mt-2 truncate text-[32px] font-semibold leading-[1.1] tracking-[-0.01em]">{first}</div>
@@ -205,7 +205,7 @@ export default function HomePage() {
             <p className="min-w-0 flex-1 text-[13.5px]" style={{ color: MUTED }}>
               {failed.status === 0 ? L({ hi: "इंटरनेट नहीं है।", en: "No internet connection." }) : L({ hi: "जानकारी नहीं आ पाई।", en: "Couldn't load your details." })}
             </p>
-            <button type="button" onClick={reload} className="flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] font-semibold text-white" style={{ background: NAVY }}>
+            <button type="button" onClick={reload} className="flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] font-semibold text-white" style={{ background: INK }}>
               <RotateCw className="h-4 w-4" aria-hidden />
               {L({ hi: "फिर से", en: "Retry" })}
             </button>
@@ -220,8 +220,8 @@ export default function HomePage() {
             { href: "/fees/", icon: Wallet, t: L({ hi: "फ़ीस", en: "Fees" }) },
             { href: "/exam/?tab=result", icon: Trophy, t: L({ hi: "रिज़ल्ट", en: "Results" }) },
           ].map(({ href, icon: Icon, t }) => (
-            <Link key={href} href={href} className="flex h-[68px] flex-col items-center justify-center gap-2 rounded-[10px] bg-white transition-colors hover:bg-slate-50 active:bg-slate-100">
-              <Icon className="h-[28px] w-[28px]" style={{ color: NAVY }} strokeWidth={1.6} aria-hidden />
+            <Link key={href} href={href} className="flex h-[68px] flex-col items-center justify-center gap-2 rounded-[10px] bg-white transition-colors hover:bg-neutral-50 active:bg-neutral-100">
+              <Icon className="h-[28px] w-[28px]" style={{ color: INK }} strokeWidth={1.6} aria-hidden />
               <span className="text-[12px] font-medium">{t}</span>
             </Link>
           ))}
@@ -230,10 +230,10 @@ export default function HomePage() {
         {data && <TodaySummary data={data} />}
 
         {/* ── Attendance Overview ── */}
-        {/* The "premium" attendance card (user, 2026-11-13): soft shadow, no border, a ring. */}
-        <section className="rounded-[18px] bg-white p-4" style={{ boxShadow: "0 1px 2px rgba(13,42,94,0.04), 0 8px 24px -6px rgba(13,42,94,0.12)" }}>
+        {/* Quiet neutral card; the ring is the single data accent. */}
+        <section className="rounded-[18px] border bg-white p-4" style={{ borderColor: LINE }}>
           <div className="flex items-center justify-between gap-2">
-            <h2 id="att-title" className="truncate text-[16px] font-bold">
+            <h2 id="att-title" className="truncate text-[16px] font-semibold">
               {L({ hi: "हाज़िरी", en: "Attendance" })}
             </h2>
             <span className="shrink-0 text-[12px]" style={{ color: MUTED }}>
@@ -303,7 +303,7 @@ function ChildPhoto({ name, url }: { name: string; url: string | null }) {
     // eslint-disable-next-line @next/next/no-img-element
     <img src={url} alt="" onError={() => setFailedUrl(url)} className="h-[56px] w-[56px] rounded-full object-cover object-[50%_22%] ring-2 ring-white" />
   ) : (
-    <span className="grid h-[56px] w-[56px] place-items-center rounded-full text-[19px] font-semibold text-white" style={{ background: NAVY }}>
+    <span className="grid h-[56px] w-[56px] place-items-center rounded-full text-[19px] font-semibold text-white" style={{ background: INK }}>
       {initials(name)}
     </span>
   );
@@ -395,10 +395,10 @@ function Overview({ m }: { m: Month | undefined }) {
     <div className="mt-3 flex items-center gap-5">
       <div className="relative h-[96px] w-[96px] shrink-0" role="img" aria-label={`${L({ hi: "इस महीने की हाज़िरी", en: "Attendance this month" })}: ${Math.round(pct)}%`}>
         <svg viewBox="0 0 96 96" className="h-full w-full -rotate-90" aria-hidden>
-          <circle cx="48" cy="48" r={R} fill="none" stroke="#E6EBF3" strokeWidth="9" />
+          <circle cx="48" cy="48" r={R} fill="none" stroke="#E8E9E9" strokeWidth="9" />
           <circle cx="48" cy="48" r={R} fill="none" stroke={NAVY} strokeWidth="9" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct / 100)} style={{ transition: "stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)" }} />
         </svg>
-        <span className="absolute inset-0 grid place-items-center text-[24px] font-extrabold tracking-[-0.02em]" style={{ color: NAVY }} aria-hidden>
+        <span className="absolute inset-0 grid place-items-center text-[24px] font-semibold tracking-[-0.02em]" style={{ color: INK }} aria-hidden>
           {Math.round(pct)}%
         </span>
       </div>
@@ -406,7 +406,7 @@ function Overview({ m }: { m: Month | undefined }) {
         <Stat dot="#1E9E55" label={L({ hi: "उपस्थित", en: "Present" })} value={m.present} />
         {/* `absent` comes from the backend (Absent only); an older backend doesn't send it. */}
         {m.absent !== undefined && <Stat dot="#E5484D" label={L({ hi: "अनुपस्थित", en: "Absent" })} value={m.absent} />}
-        <Stat dot="#C4CCDA" label={L({ hi: "कुल दिन", en: "Days marked" })} value={m.workingDays} />
+        <Stat dot="#B9BDBF" label={L({ hi: "कुल दिन", en: "Days marked" })} value={m.workingDays} />
       </dl>
     </div>
   );
@@ -419,7 +419,7 @@ function Stat({ dot, label, value }: { dot: string; label: string; value: number
       <dt className="min-w-0 flex-1 truncate" style={{ color: MUTED }}>
         {label}
       </dt>
-      <dd className="font-bold tabular-nums">{value}</dd>
+      <dd className="font-semibold tabular-nums">{value}</dd>
     </div>
   );
 }
