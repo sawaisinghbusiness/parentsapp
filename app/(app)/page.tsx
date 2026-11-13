@@ -13,7 +13,7 @@
 import "@fontsource-variable/plus-jakarta-sans";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bell, BookOpen, CalendarCheck, ChevronDown, ChevronRight, Clock, FileText, RotateCw, Trophy, Wallet, WifiOff } from "lucide-react";
+import { Bell, BookOpen, CalendarCheck, ChevronDown, ChevronRight, Clock, RotateCw, Trophy, Wallet, WifiOff } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { useApi } from "@/lib/api";
 import { useL, useT } from "@/lib/i18n";
@@ -40,6 +40,10 @@ interface HomeData {
   events?: { id: string; title: string; date: string; time?: string }[];
   notice: { id: string; title: string; date: string } | null;
   noticeCount?: number;
+  attendance?: { status: "Present" | "Absent" | "Leave" | "HalfDay" | null; holiday: string | null };
+  fees?: { dueNow: number; fine: number; balance: number } | null;
+  homework?: { id: string }[];
+  result?: { exam: string; percent: number; grade: string } | null;
 }
 
 /** Sample values for development only (see the note at the top). */
@@ -49,7 +53,6 @@ const DEMO = {
   notice: { id: "demo", title: "Winter Vacation Notice", date: "2026-10-30" },
   event: { id: "demo", title: "PTM Meeting", date: "2026-11-04", time: "10:00 AM - 12:00 PM" },
   noticeCount: 3,
-  photo: "/img/demo-student.jpg",
 };
 
 /**
@@ -90,7 +93,7 @@ function useHeroScroll() {
 export default function HomePage() {
   const fx = useHeroScroll();
   const { me, child, stale } = useParent();
-  const { data, error, reload } = useApi<HomeData>(child ? `/home?student=${child.id}` : null);
+  const { data, error, stale: homeStale, reload } = useApi<HomeData>(child ? `/home?student=${child.id}` : null);
   const L = useL();
   const { lang } = useT();
   const { openMenu } = useMenu();
@@ -114,7 +117,7 @@ export default function HomePage() {
     <>
       <span className="grid w-[92px] shrink-0 place-items-center bg-[#F1F4F9]">{child && <ChildPhoto key={child.id} name={child.name} url={child.photoUrl} />}</span>
       <span className="flex min-w-0 flex-1 flex-col justify-center pl-4 text-left">
-        <span className="truncate text-[17px] font-bold">{child?.name}</span>
+        <span className="truncate text-[17px] font-semibold">{child?.name}</span>
         <span className="mt-1 truncate text-[13.5px]" style={{ color: MUTED }}>
           {child ? `${L({ hi: "कक्षा", en: "Class" })} ${child.classSec}  •  ${L({ hi: "रोल नं.", en: "Roll No." })} ${child.rollNo}` : ""}
         </span>
@@ -129,7 +132,7 @@ export default function HomePage() {
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans Variable', system-ui, sans-serif", color: INK }}>
       {/* ── Header: photo on the right, navy behind the text, fading to white at the bottom ── */}
-      <header className="relative h-[300px] overflow-hidden bg-[#0B2558]">
+      <header className="relative h-[calc(268px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#0B2558]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img ref={fx.img} src="/img/school-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(9,30,72,.94) 0%, rgba(9,30,72,.80) 45%, rgba(9,30,72,.45) 75%, rgba(9,30,72,.2) 100%)" }} />
@@ -146,11 +149,11 @@ export default function HomePage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={school.logoUrl} alt="" className="h-[54px] w-[54px] shrink-0 rounded-full bg-white object-cover ring-2 ring-[#D4AF37]" />
               ) : (
-                <span className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full border-2 border-[#D4AF37] text-[15px] font-extrabold text-white">{school ? initials(school.name) : ""}</span>
+                <span className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full border-2 border-[#D4AF37] text-[15px] font-semibold text-white">{school ? initials(school.name) : ""}</span>
               )}
               <span className="mx-3 h-10 w-px shrink-0 bg-white/35" aria-hidden />
               <span className="min-w-0 flex-1 text-white">
-                <span className="block truncate text-[18px] font-bold leading-[1.2]">{school?.name || " "}</span>
+                <span className="block truncate text-[18px] font-semibold leading-[1.2]">{school?.name || " "}</span>
                 <span className="mt-0.5 flex items-center gap-1 text-[14px] font-medium text-white/85">
                   <span className="truncate">{town}</span>
                   <ChevronDown className="h-4 w-4 shrink-0" strokeWidth={2.4} aria-hidden />
@@ -164,7 +167,7 @@ export default function HomePage() {
             >
               <Bell className="h-[26px] w-[26px]" strokeWidth={1.9} aria-hidden />
               {unread > 0 && (
-                <span className="absolute right-[3px] top-[4px] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#E53935] px-1 text-[10.5px] font-bold leading-none text-white ring-2 ring-[#0B2558]" aria-hidden>
+                <span className="absolute right-[3px] top-[4px] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#E53935] px-1 text-[10.5px] font-semibold leading-none text-white ring-2 ring-[#0B2558]" aria-hidden>
                   {unread > 9 ? "9+" : unread}
                 </span>
               )}
@@ -172,9 +175,9 @@ export default function HomePage() {
           </div>
 
           {/* The greeting stays in the left 70%, where the navy is strongest. */}
-          <div className="mt-9 max-w-[70%] text-white">
+          <div className="mt-7 max-w-[70%] text-white">
             <div className="text-[19px] font-normal leading-none text-white/90">{greet}</div>
-            <div className="mt-2 truncate text-[34px] font-extrabold leading-[1.1] tracking-[-0.01em]">{first}</div>
+            <div className="mt-2 truncate text-[32px] font-semibold leading-[1.1] tracking-[-0.01em]">{first}</div>
           </div>
         </div>
       </header>
@@ -191,7 +194,7 @@ export default function HomePage() {
           </Link>
         )}
 
-        {stale && me && (
+        {(stale || homeStale) && me && (
           <p className="flex items-center gap-2 rounded-[10px] px-3.5 py-2.5 text-[13px]" style={{ background: TILE, color: MUTED }}>
             <WifiOff className="h-4 w-4 shrink-0" aria-hidden />
             {L({ hi: "इंटरनेट नहीं है, पिछली बार की जानकारी दिख रही है।", en: "You're offline. Showing what was saved last time." })}
@@ -217,20 +220,23 @@ export default function HomePage() {
             { href: "/fees/", icon: Wallet, t: L({ hi: "फ़ीस", en: "Fees" }) },
             { href: "/exam/?tab=result", icon: Trophy, t: L({ hi: "रिज़ल्ट", en: "Results" }) },
           ].map(({ href, icon: Icon, t }) => (
-            <Link key={href} href={href} className="flex h-[68px] flex-col items-center justify-center gap-1.5 rounded-[10px] border active:scale-95" style={{ background: TILE, borderColor: "#D3DDEE" }}>
+            <Link key={href} href={href} className="flex h-[68px] flex-col items-center justify-center gap-2 rounded-[10px] bg-white transition-colors hover:bg-slate-50 active:bg-slate-100">
               <Icon className="h-[28px] w-[28px]" style={{ color: NAVY }} strokeWidth={1.6} aria-hidden />
               <span className="text-[12px] font-medium">{t}</span>
             </Link>
           ))}
         </div>
 
+        {data && <TodaySummary data={data} />}
+
         {/* ── Attendance Overview ── */}
-        <section className="rounded-[14px] border bg-white px-4 py-3.5" style={{ borderColor: LINE }}>
+        {/* The "premium" attendance card (user, 2026-11-13): soft shadow, no border, a ring. */}
+        <section className="rounded-[18px] bg-white p-4" style={{ boxShadow: "0 1px 2px rgba(13,42,94,0.04), 0 8px 24px -6px rgba(13,42,94,0.12)" }}>
           <div className="flex items-center justify-between gap-2">
-            <h2 id="att-title" className="truncate text-[16.5px] font-bold">
-              {L({ hi: "हाज़िरी का हाल", en: "Attendance Overview" })}
+            <h2 id="att-title" className="truncate text-[16px] font-bold">
+              {L({ hi: "हाज़िरी", en: "Attendance" })}
             </h2>
-            <span className="shrink-0 rounded-full px-2.5 py-[3px] text-[11.5px] font-medium" style={{ background: TILE, color: NAVY }}>
+            <span className="shrink-0 text-[12px]" style={{ color: MUTED }}>
               {L({ hi: "इस महीने", en: "This Month" })}
             </span>
           </div>
@@ -238,18 +244,15 @@ export default function HomePage() {
         </section>
 
         {/* ── Latest Notices ── */}
-        <section className="overflow-hidden rounded-[14px] border bg-white" style={{ borderColor: LINE }}>
+        <section className="border-t bg-white pt-2" style={{ borderColor: LINE }}>
           <CardHead title={L({ hi: "ताज़ा सूचनाएँ", en: "Latest Notices" })} link={L({ hi: "सब देखें", en: "View All" })} href="/notice/" />
           {notice === undefined ? (
             <RowSkeleton />
           ) : notice ? (
-            <Link href="/notice/" className="flex items-center gap-3.5 px-3.5 py-3">
-              <span className="grid h-[38px] w-[50px] shrink-0 place-items-center rounded-[10px]" style={{ background: TILE }}>
-                <FileText className="h-5 w-5" style={{ color: NAVY }} strokeWidth={1.8} aria-hidden />
-              </span>
+            <Link href="/notice/" className="flex min-h-[72px] items-center gap-3 py-3">
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold">{notice.title}</span>
-                <span className="block truncate text-[12.5px]" style={{ color: MUTED }}>
+                <span className="block break-words text-[15px] font-medium leading-5">{notice.title}</span>
+                <span className="mt-1 block text-[12px] leading-5" style={{ color: MUTED }}>
                   {L({ hi: "स्कूल की सूचना", en: "School Announcement" })} • {fmtDate(notice.date, lang)}
                 </span>
               </span>
@@ -261,22 +264,22 @@ export default function HomePage() {
         </section>
 
         {/* ── Upcoming Events ── */}
-        <section className="overflow-hidden rounded-[14px] border bg-white" style={{ borderColor: LINE }}>
-          <CardHead title={L({ hi: "आने वाले कार्यक्रम", en: "Upcoming Events" })} link={L({ hi: "कैलेंडर देखें", en: "View Calendar" })} href="/calendar/" />
+        <section className="border-t bg-white pt-2" style={{ borderColor: LINE }}>
+          <CardHead title={L({ hi: "आने वाले कार्यक्रम", en: "Upcoming Events" })} link={L({ hi: "सब देखें", en: "View All" })} href="/events/" />
           {ev === undefined ? (
             <RowSkeleton />
           ) : ev ? (
-            <Link href="/events/" className="flex items-center gap-3.5 px-3.5 py-3">
-              <span className="flex h-[40px] w-[54px] shrink-0 flex-col items-center justify-center rounded-[10px] leading-none" style={{ background: TILE, color: NAVY }}>
-                <span className="text-[19px] font-bold">{ev.date.slice(8, 10)}</span>
-                <span className="mt-0.5 text-[10.5px] font-semibold uppercase">{monthShort(ev.date, lang)}</span>
+            <Link href="/events/" className="flex min-h-[72px] items-center gap-3 py-3">
+              <span className="flex w-11 shrink-0 flex-col items-center justify-center self-start pt-0.5 leading-none" style={{ color: MUTED }}>
+                <span className="text-[20px] font-medium tabular-nums" style={{ color: INK }}>{Number(ev.date.slice(8, 10))}</span>
+                <span className="mt-1 text-[12px]">{monthShort(ev.date, lang)}</span>
               </span>
-              <span className="h-9 w-px shrink-0" style={{ background: LINE }} aria-hidden />
+
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold">{ev.title}</span>
+                <span className="block break-words text-[15px] font-medium leading-5">{ev.title}</span>
                 <span className="mt-0.5 flex items-center gap-1.5 text-[12.5px]" style={{ color: MUTED }}>
                   <Clock className="h-[14px] w-[14px] shrink-0" strokeWidth={2} aria-hidden />
-                  <span className="truncate">{ev.time || new Date(ev.date + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-GB", { weekday: "long" })}</span>
+                  <span className="break-words">{ev.time || new Date(ev.date + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-GB", { weekday: "long" })}</span>
                 </span>
               </span>
               <ChevronRight className="h-5 w-5 shrink-0" strokeWidth={2.4} aria-hidden />
@@ -285,6 +288,7 @@ export default function HomePage() {
             <p className="px-3.5 py-3.5 text-[13.5px]" style={{ color: MUTED }}>{L({ hi: "अभी कोई कार्यक्रम नहीं", en: "No upcoming events" })}</p>
           )}
         </section>
+
       </div>
 
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
@@ -292,26 +296,60 @@ export default function HomePage() {
   );
 }
 
-/** The child's photo from the ERP; in development the demo photo next; else initials on navy. */
+/** A failed photo falls back to initials; a new URL gets a fresh attempt. */
 function ChildPhoto({ name, url }: { name: string; url: string | null }) {
-  const choices = [url, DEMO_ON ? DEMO.photo : null].filter(Boolean) as string[];
-  const [k, setK] = useState(0);
-  const src = choices[k];
-  return src ? (
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  return url && failedUrl !== url ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" onError={() => setK((n) => n + 1)} className="h-[56px] w-[56px] rounded-full object-cover object-[50%_22%] ring-2 ring-white" />
+    <img src={url} alt="" onError={() => setFailedUrl(url)} className="h-[56px] w-[56px] rounded-full object-cover object-[50%_22%] ring-2 ring-white" />
   ) : (
-    <span className="grid h-[56px] w-[56px] place-items-center rounded-full text-[19px] font-bold text-white" style={{ background: NAVY }}>
+    <span className="grid h-[56px] w-[56px] place-items-center rounded-full text-[19px] font-semibold text-white" style={{ background: NAVY }}>
       {initials(name)}
     </span>
   );
 }
 
+/** Only backend values appear here; missing fields never become invented statuses. */
+function TodaySummary({ data }: { data: HomeData }) {
+  const L = useL();
+  const { lang } = useT();
+  const currentDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+  if (data.date !== currentDay) return null;
+  const a = data.attendance;
+  const marks = {
+    Present: L({ hi: "उपस्थित", en: "Present" }),
+    Absent: L({ hi: "अनुपस्थित", en: "Absent" }),
+    Leave: L({ hi: "छुट्टी", en: "On leave" }),
+    HalfDay: L({ hi: "आधा दिन", en: "Half day" }),
+  };
+  const rows = [
+    a && { href: "/calendar/", label: L({ hi: "हाज़िरी", en: "Attendance" }), value: a.holiday || (a.status ? marks[a.status] : L({ hi: "अभी नहीं लगी", en: "Not marked yet" })) },
+    data.homework && { href: "/homework/", label: L({ hi: "होमवर्क", en: "Homework" }), value: data.homework.length ? L({ hi: data.homework.length + " काम देखें", en: data.homework.length + " to view" }) : L({ hi: "कोई काम नहीं दिया गया", en: "Nothing assigned" }) },
+    data.fees && { href: data.fees.dueNow > 0 ? "/fees/pay/" : "/fees/", label: L({ hi: "अभी देय फ़ीस", en: "Fees due now" }), value: new Intl.NumberFormat(lang === "hi" ? "hi-IN" : "en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(data.fees.dueNow + data.fees.fine) },
+    data.result !== undefined && { href: "/exam/?tab=result", label: L({ hi: "रिज़ल्ट", en: "Results" }), value: data.result ? L({ hi: "उपलब्ध · " + data.result.exam, en: "Available · " + data.result.exam }) : L({ hi: "अभी जारी नहीं हुआ", en: "Not published yet" }) },
+  ].filter((row): row is { href: string; label: string; value: string } => !!row);
+  if (!rows.length) return null;
+  return (
+    <section className="py-2" aria-labelledby="today-title">
+      <h2 id="today-title" className="mb-1 text-[16px] font-semibold">{L({ hi: "आज की जानकारी", en: "Today at school" })}</h2>
+      <ul className="divide-y" style={{ borderColor: LINE }}>
+        {rows.map(row => <li key={row.href}>
+          <Link href={row.href} className="flex min-h-11 items-center gap-3 py-2 text-[13px]">
+            <span className="w-[104px] shrink-0" style={{ color: MUTED }}>{row.label}</span>
+            <span className="min-w-0 flex-1 break-words text-right font-medium tabular-nums">{row.value}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: MUTED }} aria-hidden />
+          </Link>
+        </li>)}
+      </ul>
+    </section>
+  );
+}
+
 function CardHead({ title, link, href }: { title: string; link: string; href: string }) {
   return (
-    <div className="flex h-[42px] items-center justify-between gap-2 border-b px-3.5" style={{ borderColor: LINE }}>
-      <h2 className="truncate text-[15.5px] font-bold">{title}</h2>
-      <Link href={href} className="shrink-0 text-[12.5px] font-medium" style={{ color: INK }}>
+    <div className="flex min-h-[44px] items-center justify-between gap-3" style={{ borderColor: LINE }}>
+      <h2 className="min-w-0 text-[16px] font-semibold leading-6">{title}</h2>
+      <Link href={href} className="flex min-h-11 shrink-0 items-center text-[13px] font-medium" style={{ color: INK }}>
         {link}
       </Link>
     </div>
@@ -320,7 +358,7 @@ function CardHead({ title, link, href }: { title: string; link: string; href: st
 
 function RowSkeleton() {
   return (
-    <div className="flex items-center gap-3.5 px-3.5 py-3" aria-busy="true">
+    <div className="flex min-h-[72px] items-center gap-3 py-3" aria-busy="true">
       <span className="h-[38px] w-[50px] shrink-0 animate-pulse rounded-[10px]" style={{ background: TILE }} />
       <span className="flex-1 space-y-2">
         <span className="block h-3.5 w-40 animate-pulse rounded" style={{ background: TILE }} />
@@ -334,8 +372,8 @@ function Overview({ m }: { m: Month | undefined }) {
   const L = useL();
   if (!m)
     return (
-      <div className="mt-3 flex items-center gap-4" aria-busy="true">
-        <span className="h-11 w-24 animate-pulse rounded-lg" style={{ background: TILE }} />
+      <div className="mt-3 flex items-center gap-5" aria-busy="true">
+        <span className="h-[96px] w-[96px] animate-pulse rounded-full" style={{ background: TILE }} />
         <span className="h-3 flex-1 animate-pulse rounded" style={{ background: TILE }} />
       </div>
     );
@@ -349,31 +387,39 @@ function Overview({ m }: { m: Month | undefined }) {
         </p>
       </div>
     );
-  const pct = m.percent;
+  // A ring with the percent in the middle; Present, Absent and days marked beside it.
+  const pct = Math.max(0, Math.min(100, m.percent));
+  const R = 40;
+  const C = 2 * Math.PI * R;
   return (
-    <div className="mt-1.5 flex items-center gap-3.5">
-      <div className="w-[104px] shrink-0 text-center text-[42px] font-extrabold leading-none tracking-[-0.02em]" style={{ color: NAVY }}>
-        {Math.round(pct)}%
+    <div className="mt-3 flex items-center gap-5">
+      <div className="relative h-[96px] w-[96px] shrink-0" role="img" aria-label={`${L({ hi: "इस महीने की हाज़िरी", en: "Attendance this month" })}: ${Math.round(pct)}%`}>
+        <svg viewBox="0 0 96 96" className="h-full w-full -rotate-90" aria-hidden>
+          <circle cx="48" cy="48" r={R} fill="none" stroke="#E6EBF3" strokeWidth="9" />
+          <circle cx="48" cy="48" r={R} fill="none" stroke={NAVY} strokeWidth="9" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct / 100)} style={{ transition: "stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)" }} />
+        </svg>
+        <span className="absolute inset-0 grid place-items-center text-[24px] font-extrabold tracking-[-0.02em]" style={{ color: NAVY }} aria-hidden>
+          {Math.round(pct)}%
+        </span>
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13.5px]">
-          <span className="whitespace-nowrap">
-            <b className="font-bold">{m.present}</b> {L({ hi: "उपस्थित", en: "Present" })}
-          </span>
-          {/* `absent` comes from the backend (Absent only); an older backend doesn't send it. */}
-          {m.absent !== undefined && (
-            <>
-              <span className="h-4 w-px" style={{ background: LINE }} aria-hidden />
-              <span className="whitespace-nowrap">
-                <b className="font-bold">{m.absent}</b> {L({ hi: "अनुपस्थित", en: "Absent" })}
-              </span>
-            </>
-          )}
-        </div>
-        <div className="mt-2.5 h-[7px] overflow-hidden rounded-full bg-[#E3E8F0]" role="progressbar" aria-labelledby="att-title" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
-          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: NAVY }} />
-        </div>
-      </div>
+      <dl className="min-w-0 flex-1 space-y-2 text-[13.5px]">
+        <Stat dot="#1E9E55" label={L({ hi: "उपस्थित", en: "Present" })} value={m.present} />
+        {/* `absent` comes from the backend (Absent only); an older backend doesn't send it. */}
+        {m.absent !== undefined && <Stat dot="#E5484D" label={L({ hi: "अनुपस्थित", en: "Absent" })} value={m.absent} />}
+        <Stat dot="#C4CCDA" label={L({ hi: "कुल दिन", en: "Days marked" })} value={m.workingDays} />
+      </dl>
+    </div>
+  );
+}
+
+function Stat({ dot, label, value }: { dot: string; label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: dot }} aria-hidden />
+      <dt className="min-w-0 flex-1 truncate" style={{ color: MUTED }}>
+        {label}
+      </dt>
+      <dd className="font-bold tabular-nums">{value}</dd>
     </div>
   );
 }

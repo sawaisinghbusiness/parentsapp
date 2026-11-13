@@ -190,7 +190,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* School Sahayak (the AI chat): a round button on every tab screen that can be dragged to either side. */}
-      {!page?.bare && <SahayakButton />}
+      {!page?.bare && !isHome && <SahayakButton />}
 
       {!page?.bare && (
       // Flat, five equal tabs (the user's design, 2026-11-13; it used to raise Study as a green disc):
