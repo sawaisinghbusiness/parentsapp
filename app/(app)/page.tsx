@@ -125,7 +125,7 @@ export default function HomePage() {
       {/* ── Header: photo on the right, a neutral shade behind the text, fading to white at the bottom ── */}
       <header className="relative h-[calc(210px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#25282A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={fx.img} src="/img/school-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
+        <img ref={fx.img} src={school?.heroUrl || "/img/school-hero.jpg"} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(18,22,24,.76) 0%, rgba(18,22,24,.64) 45%, rgba(18,22,24,.28) 75%, rgba(18,22,24,.12) 100%)" }} />
         <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(18,22,24,.4) 0%, rgba(18,22,24,0) 100%)" }} />
         {/* Darkens as the page scrolls, so the cards stand out over the building. */}

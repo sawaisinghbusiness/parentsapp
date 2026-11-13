@@ -14,6 +14,7 @@ import { TopActions } from "./TopActions";
 import { SideMenu } from "./SideMenu";
 import { PullRefresh } from "./PullRefresh";
 import { MenuContext } from "@/lib/menu";
+import { markBack, motionClass, usePageMotion } from "@/lib/pageMotion";
 import { useSideMenuMotion } from "@/lib/useSideMenuMotion";
 
 /** Five equal tabs. */
@@ -94,6 +95,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { active: menu, openMenu, closeMenu, layerRef } = useSideMenuMotion(!page?.bare);
   const canSwitch = !!page?.perChild && (me?.children.length || 0) > 1 && !!child;
   const lit = isHome ? "/" : page?.tab || (page && !page.back ? path : "/");
+  // Open = slide in from the right, Back = from the left, between bottom tabs = fade.
+  const motion = motionClass(usePageMotion(path, (p) => TABS.some((t) => t.href === p)));
 
   const menuButton = (
     <button type="button" onClick={openMenu} aria-label={L({ hi: "मेन्यू", en: "Menu" })} aria-haspopup="dialog" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100">
@@ -118,7 +121,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className={clsx("pt-safe sticky top-0 z-20 backdrop-blur-sm", page?.warm ? "bg-[#FFF4E5]/95" : "bg-white/95")}>
           <div className="grid h-14 grid-cols-[48px_1fr_48px] items-center px-1.5">
             {page?.back ? (
-              <Link href={page.back} className="grid h-11 w-11 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={L({ hi: "वापस", en: "Back" })}>
+              <Link href={page.back} onClick={markBack} className="grid h-11 w-11 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={L({ hi: "वापस", en: "Back" })}>
                 <ChevronLeft className="h-6 w-6" aria-hidden />
               </Link>
             ) : (
@@ -147,9 +150,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ErrorCard offline={error.status === 0} onRetry={reload} />
           </div>
         ) : isHome ? (
-          children
+          <div key={path} className={motion}>
+            {children}
+          </div>
         ) : (
-          <div key={path} className={clsx("page-in", !own && "space-y-3.5")}>
+          <div key={path} className={clsx(motion, !own && "space-y-3.5")}>
             {children}
           </div>
         )}

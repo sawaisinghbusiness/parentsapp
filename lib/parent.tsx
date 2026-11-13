@@ -25,6 +25,8 @@ export interface School {
   name: string;
   shortName: string;
   logoUrl: string | null;
+  /** School photo from ERP Settings for the Home header; null until one is uploaded. */
+  heroUrl?: string | null;
   address: string;
   officePhone: string;
   upiId: string | null;
@@ -54,6 +56,10 @@ const PICK = "pa:child";
 /** The signed-in parent, their children, and which child the screens are showing. */
 export function ParentProvider({ children }: { children: React.ReactNode }) {
   const { data: me, stale, loading, error, reload } = useApi<Me>("/me");
+  // The browser tab carries the school's name from ERP Settings.
+  useEffect(() => {
+    if (me?.school.name) document.title = `${me.school.name} · Parents`;
+  }, [me?.school.name]);
   const [picked, setPicked] = useState<string | null>(null);
 
   useEffect(() => {
