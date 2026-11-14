@@ -241,13 +241,15 @@ export default function FeesPage() {
               );
             return (
               <li key={i.name} className={card}>
-                {/* One line, evenly spaced: name on the left, status in the middle, last date on the right; the same 16 all round. */}
+                {/* Name with the last date just under it on the left; the status on the right, centred on both lines. */}
                 <div className="flex items-center justify-between gap-3 p-4">
-                  <h3 className="min-w-0 truncate text-[16px] font-semibold leading-6 text-ink-900">{i.name}</h3>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-[16px] font-semibold leading-6 text-ink-900">{i.name}</h3>
+                    <p className={clsx("tnum text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
+                      {L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)}`, en: `Last date ${fullDate(i.due, lang)}` })}
+                    </p>
+                  </div>
                   <InsBadge state={st} tone={INS_TONE[st]}>{L(INS_TEXT[st])}</InsBadge>
-                  <p className={clsx("tnum shrink-0 whitespace-nowrap text-right text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
-                    {L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)}`, en: `Last date ${fullDate(i.due, lang)}` })}
-                  </p>
                 </div>
 
                 {/* What it is made of, then what is paid and what is left: names left, amounts in one column. */}

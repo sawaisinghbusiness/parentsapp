@@ -49,13 +49,15 @@ export default function FeeDetailPage() {
   return (
     <div className="animate-rise space-y-4">
       <div className="row-card">
-        {/* Same header as a card on the Fees list: name, status, last date, evenly spaced. */}
+        {/* Same header as a card on the Fees list: name with the last date under it, status on the right. */}
         <div className="flex items-center justify-between gap-3">
-          <p className="min-w-0 truncate text-[16px] font-bold">{ins.name}</p>
+          <div className="min-w-0">
+            <p className="truncate text-[16px] font-bold">{ins.name}</p>
+            <p className={clsx("tnum text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
+              {L({ hi: "आख़िरी तारीख", en: "Last date" })} {fullDate(ins.due, lang)}
+            </p>
+          </div>
           <InsBadge state={st} tone={INS_TONE[st]}>{L(INS_TEXT[st])}</InsBadge>
-          <p className={clsx("tnum shrink-0 whitespace-nowrap text-right text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
-            {L({ hi: "आख़िरी तारीख", en: "Last date" })} {fullDate(ins.due, lang)}
-          </p>
         </div>
       </div>
 
