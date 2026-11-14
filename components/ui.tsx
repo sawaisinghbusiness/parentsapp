@@ -56,6 +56,17 @@ export function Status({ tone, children }: { tone: Tone; children: React.ReactNo
   return <span className={TONE_CLASS[tone]}>{children}</span>;
 }
 
+/** An instalment's status: Paid and Overdue are outlined with a green / red dot, the rest use the usual Status chip. */
+export function InsBadge({ state, tone, children }: { state: string; tone: Tone; children: React.ReactNode }) {
+  if (state !== "paid" && state !== "overdue") return <Status tone={tone}>{children}</Status>;
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-900 bg-transparent py-px pl-2.5 pr-2 text-[12px] font-semibold leading-5 text-ink-900">
+      {children}
+      <span className={state === "paid" ? "h-2 w-2 rounded-full bg-[#21A04F]" : "h-2 w-2 rounded-full bg-[#D93636]"} aria-hidden />
+    </span>
+  );
+}
+
 /** The kit's two (or more) tabs with an underline. */
 export function LineTabs<K extends string>({ value, onChange, options, label }: { value: K; onChange: (k: K) => void; options: { key: K; text: string }[]; label: string }) {
   return (

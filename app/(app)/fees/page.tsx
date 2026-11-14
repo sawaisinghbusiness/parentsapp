@@ -10,7 +10,7 @@ import { useL, useT } from "@/lib/i18n";
 import { dayMonth, fullDate, rupees } from "@/lib/format";
 import { INS_TEXT, INS_TONE, insState, type Fees, type Instalment, type Receipt } from "@/lib/fees";
 import { F, HEAD } from "@/lib/text/fees";
-import { CallOffice, ErrorCard, ListSkeleton, Skeleton, Status } from "@/components/ui";
+import { CallOffice, ErrorCard, InsBadge, ListSkeleton, Skeleton, Status } from "@/components/ui";
 import "@/components/study.css";
 
 /** Where "Pay" goes. */
@@ -233,10 +233,7 @@ export default function FeesPage() {
                     </span>
                     {/* Pinned to the card's corners: "Paid" at the top right, how long ago at the bottom right. */}
                     <span className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch">
-                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-900 bg-transparent py-px pl-2.5 pr-2 text-[12px] font-semibold leading-5 text-ink-900">
-                        {L(F.insPaid)}
-                        <span className="h-2 w-2 rounded-full bg-[#21A04F]" aria-hidden />
-                      </span>
+                      <InsBadge state="paid" tone="ok">{L(F.insPaid)}</InsBadge>
                       {on && <span className="tnum text-[12px] leading-4 text-ink-500">{ago(on, lang)}</span>}
                     </span>
                   </Link>
@@ -247,15 +244,7 @@ export default function FeesPage() {
                 {/* One line, evenly spaced: name on the left, status in the middle, last date on the right; the same 16 all round. */}
                 <div className="flex items-center justify-between gap-3 p-4">
                   <h3 className="min-w-0 truncate text-[16px] font-semibold leading-6 text-ink-900">{i.name}</h3>
-                  {st === "overdue" ? (
-                    /* Same outlined look as "Paid", with a red dot instead of the green one. */
-                    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-900 bg-transparent py-px pl-2.5 pr-2 text-[12px] font-semibold leading-5 text-ink-900">
-                      {L(INS_TEXT[st])}
-                      <span className="h-2 w-2 rounded-full bg-[#D93636]" aria-hidden />
-                    </span>
-                  ) : (
-                    <Status tone={INS_TONE[st]}>{L(INS_TEXT[st])}</Status>
-                  )}
+                  <InsBadge state={st} tone={INS_TONE[st]}>{L(INS_TEXT[st])}</InsBadge>
                   <p className={clsx("tnum shrink-0 whitespace-nowrap text-right text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
                     {L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)}`, en: `Last date ${fullDate(i.due, lang)}` })}
                   </p>

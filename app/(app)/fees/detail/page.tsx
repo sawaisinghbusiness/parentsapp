@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { CalendarDays, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { dayMonth, fullDate, rupees } from "@/lib/format";
 import { INS_TEXT, INS_TONE, insState, type Fees, type Receipt } from "@/lib/fees";
 import { F, HEAD } from "@/lib/text/fees";
-import { Empty, ErrorCard, ListSkeleton, Status } from "@/components/ui";
+import { Empty, ErrorCard, InsBadge, ListSkeleton } from "@/components/ui";
 
 /** One instalment: every fee head, concession and late fine. Unpaid → Pay Now; paid → its receipt to share. */
 export default function FeeDetailPage() {
@@ -49,16 +49,14 @@ export default function FeeDetailPage() {
   return (
     <div className="animate-rise space-y-4">
       <div className="row-card">
-        <div className="flex items-center justify-between gap-2">
-          <span className="meta">
-            <span>
-              <CalendarDays aria-hidden />
-              {L({ hi: "आख़िरी तारीख", en: "Last date" })} {fullDate(ins.due, lang)}
-            </span>
-          </span>
-          <Status tone={INS_TONE[st]}>{L(INS_TEXT[st])}</Status>
+        {/* Same header as a card on the Fees list: name, status, last date, evenly spaced. */}
+        <div className="flex items-center justify-between gap-3">
+          <p className="min-w-0 truncate text-[16px] font-bold">{ins.name}</p>
+          <InsBadge state={st} tone={INS_TONE[st]}>{L(INS_TEXT[st])}</InsBadge>
+          <p className={clsx("tnum shrink-0 whitespace-nowrap text-right text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
+            {L({ hi: "आख़िरी तारीख", en: "Last date" })} {fullDate(ins.due, lang)}
+          </p>
         </div>
-        <p className="mt-1 text-[16px] font-bold">{ins.name}</p>
       </div>
 
       <dl className="kv tnum">
