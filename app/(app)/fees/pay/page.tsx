@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { Check, Clock, Copy } from "lucide-react";
+import { ChevronDown, Clock, Info } from "lucide-react";
 import { api, ApiError, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL } from "@/lib/i18n";
@@ -11,6 +11,7 @@ import { rupees } from "@/lib/format";
 import { type Fees } from "@/lib/fees";
 import { F } from "@/lib/text/fees";
 import { Empty, ErrorCard, ListSkeleton } from "@/components/ui";
+import "@/components/study.css";
 
 type Choice = "this" | "due" | "full" | "other";
 
@@ -88,7 +89,6 @@ function PayFlow({ info }: { info: PayInfo }) {
   const [paidOn, setPaidOn] = useState(info.asOf);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
 
   const amount = choice === "due" ? info.dueNow : choice === "full" ? info.full : choice === "this" ? info.suggest : Math.floor(Number(other.replace(/\D/g, "")) || 0);
   const amountOk = amount >= 1 && amount <= info.full;
@@ -97,15 +97,6 @@ function PayFlow({ info }: { info: PayInfo }) {
   const query = `pa=${encodeURIComponent(info.upiId)}&pn=${encodeURIComponent(info.upiName)}&am=${amount}.00&cu=INR&tn=${encodeURIComponent(note)}`;
   const link = `${APPS.find((a) => a.key === app)!.scheme}?${query}`;
 
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(info.upiId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* old browsers: the ID is on screen to type */
-    }
-  }
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -126,7 +117,7 @@ function PayFlow({ info }: { info: PayInfo }) {
 
   if (step === "sent")
     return (
-      <div className="animate-rise space-y-4 pt-2">
+      <div className="study study-in space-y-4 pt-2">
         {/* Not a receipt yet: the school still has to match the UTR with the bank, so no green "paid" tick here. */}
         <div role="status">
           <p className="flex items-center gap-2 text-[17px] font-bold text-marigold-700">
@@ -144,59 +135,6 @@ function PayFlow({ info }: { info: PayInfo }) {
       </div>
     );
 
-  if (step === "utr")
-    return (
-      <form onSubmit={send} className="animate-rise space-y-3.5" noValidate>
-        <div className="row-card">
-          <p className="mlabel !px-0">{L({ hi: "चुनी हुई रकम", en: "Amount you chose" })}</p>
-          <p className="tnum mt-0.5 text-[22px] font-extrabold">{rupees(amount)}</p>
-        </div>
-        <p className="text-[15px] leading-relaxed text-ink-700">
-          {L({
-            hi: "पेमेंट हो गया हो तो UPI ऐप में दिख रहा 12 अंक का UTR / Ref नंबर यहाँ लिखें। स्कूल जाँच कर रसीद बनाएगा।",
-            en: "If the payment went through, type the 12-digit UTR / Ref number from your UPI app here. The school will check it and make the receipt.",
-          })}
-        </p>
-        <div>
-          <label className="field-box">
-            <small>{L(F.utr)}</small>
-            <input
-              value={utr}
-              onChange={(e) => setUtr(e.target.value.replace(/[^0-9a-zA-Z\s-]/g, "").slice(0, 26))}
-              inputMode="numeric"
-              autoComplete="off"
-              autoCapitalize="characters"
-              className="tnum tracking-wider"
-              placeholder="6xxxxxxxxxxx"
-              autoFocus
-            />
-          </label>
-          <p className="mt-1 text-[12px] text-ink-500">{L(F.utrHelp)}</p>
-        </div>
-        <label className="field-box">
-          <small>{L(F.paidOn)}</small>
-          <input type="date" value={paidOn} max={info.asOf} onChange={(e) => setPaidOn(e.target.value)} />
-        </label>
-        {error && (
-          <p className="font-medium text-rose-700" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="sticky bottom-[calc(104px+env(safe-area-inset-bottom))] -mx-4 space-y-2 border-t border-ink-100 bg-white px-4 pb-3 pt-2.5">
-          <button type="submit" disabled={busy} className="btn-primary w-full">
-            {busy ? "…" : L(F.send)}
-          </button>
-          <button type="button" onClick={() => setStep("choose")} className="link w-full justify-center text-[14px]">
-            {L({ hi: "रकम बदलें", en: "Change amount" })}
-          </button>
-          {/* A quiet link, not a second button: paying twice by mistake is the costly error here. */}
-          <a href={link} className="link w-full justify-center text-[13px] !text-ink-500">
-            {L({ hi: "पेमेंट नहीं हुआ? UPI ऐप फिर खोलें", en: "Payment did not go through? Open the UPI app again" })}
-          </a>
-        </div>
-      </form>
-    );
-
   const opts: { key: Choice; label: string; value?: number }[] = [
     ...(info.suggest ? [{ key: "this" as const, label: L({ hi: "यह किस्त", en: "This instalment" }), value: info.suggest }] : []),
     ...(info.dueNow > 0 ? [{ key: "due" as const, label: L(F.optDue), value: info.dueNow }] : []),
@@ -204,66 +142,159 @@ function PayFlow({ info }: { info: PayInfo }) {
     { key: "other", label: L(F.optOther) },
   ];
 
-  return (
-    <div className="animate-rise space-y-3">
-      <fieldset>
-        <legend className="mlabel mb-2">{L({ hi: "कितनी रकम", en: "How much" })}</legend>
-        <div className="space-y-2">
-          {opts.map((o) => (
-            <label key={o.key} className={clsx("flex min-h-[54px] cursor-pointer items-center gap-3 rounded-2xl px-3.5 py-2", choice === o.key ? "bg-brand-50 ring-1 ring-brand-600" : "bg-ink-50")}>
-              <span className="radio min-h-0">
-                <input type="radio" name="amt" checked={choice === o.key} onChange={() => setChoice(o.key)} />
-              </span>
-              <span className="flex-1">
-                <span className="block text-[15px] font-medium">{o.label}</span>
-                {o.value !== undefined && o.key !== "this" && info.fineIncluded && <span className="block text-[12px] text-ink-500">{L(F.incFine)}</span>}
-              </span>
-              {o.value !== undefined && <span className="tnum font-bold">{rupees(o.value)}</span>}
+  /*
+   * Same measures as the Fees page (4/8 grid, tightened with it on 2026-11-14): type 12/16 · 14/20 · 16/24 ·
+   * 20/28; 12 from a title to its card, 24 between sections, 16 at a card's sides, 8 to 12 inside; rows 56
+   * (one line) or 64 (two); buttons 44 to 48. The Pay button is part of the page, straight after the choices:
+   * no bar floating over the content.
+   */
+  const card = "overflow-hidden rounded-2xl border border-[#DCE4ED] bg-white";
+  const h2 = "text-[20px] font-semibold leading-7 text-ink-900";
+  const button = "flex h-12 w-full items-center justify-center rounded-xl bg-[#0D2A5E] text-[16px] font-semibold leading-6 text-white active:bg-[#0A2149] disabled:opacity-50";
+  const band = { background: "linear-gradient(160deg,#F4F7FF 0%,#DCE5FF 100%)" };
+
+  // The top of the slip, on both steps, drawn like the Fees summary: the picture, what it is, the amount
+  // on the right; then whose fee and to whom underneath.
+  const slip = (label: string) => (
+    <section className={card}>
+      <div className="flex items-center gap-3 px-4 py-3" style={band}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/img/fee-receipt.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
+        <p className="min-w-0 flex-1 truncate text-[16px] font-medium leading-6 text-ink-700">{label}</p>
+        <p className="tnum shrink-0 text-[28px] font-semibold leading-9 tracking-tight text-ink-900">{amountOk ? rupees(amount) : "₹ 0"}</p>
+      </div>
+      <dl className="space-y-1 px-4 py-3 text-[14px] leading-5">
+        <div className="flex justify-between gap-4">
+          <dt className="shrink-0 text-ink-500">{L({ hi: "किसकी", en: "For" })}</dt>
+          <dd className="truncate text-right font-medium text-ink-900">{info.childName}</dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="shrink-0 text-ink-500">{L({ hi: "किसे", en: "To" })}</dt>
+          <dd className="min-w-0 text-right">
+            <span className="block truncate font-medium text-ink-900">{info.upiName}</span>
+            <span className="tnum block break-all text-[12px] leading-4 text-ink-500">{info.upiId}</span>
+          </dd>
+        </div>
+      </dl>
+    </section>
+  );
+
+  // After the UPI app: the same slip, then two fields in one card like "How much", one button, and two
+  // small ways back. Redrawn 2026-11-14 with far fewer words (the user found the first one wordy).
+  if (step === "utr")
+    return (
+      <form onSubmit={send} className="study space-y-6 pb-4 pt-1" noValidate>
+        {slip(L({ hi: "चुनी हुई रकम", en: "Amount you chose" }))}
+        <section className="study-in">
+          <h2 className={h2}>{L({ hi: "पेमेंट हो गया?", en: "Payment done?" })}</h2>
+          <p className="mt-1 text-[14px] leading-5 text-ink-500">{L({ hi: "UPI ऐप से UTR नंबर यहाँ लिखें", en: "Enter the UTR number from your UPI app" })}</p>
+          <div className={clsx(card, "mt-3 divide-y divide-[#E6ECF3] focus-within:border-[#0D2A5E]")}>
+            <label className="block px-4 py-3">
+              <span className="block text-[12px] leading-4 text-ink-500">{L({ hi: "UTR / Ref नंबर", en: "UTR / Ref no." })}</span>
+              <input
+                value={utr}
+                onChange={(e) => setUtr(e.target.value.replace(/[^0-9a-zA-Z\s-]/g, "").slice(0, 26))}
+                inputMode="numeric"
+                autoComplete="off"
+                autoCapitalize="characters"
+                placeholder={L({ hi: "12 अंक", en: "12 digits" })}
+                aria-invalid={!!error || undefined}
+                className="tnum mt-1 block w-full bg-transparent text-[16px] font-medium leading-6 tracking-wider text-ink-900 outline-none focus:outline-none focus-visible:outline-none placeholder:font-normal placeholder:tracking-normal placeholder:text-ink-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                autoFocus
+                // The card shows the focus (navy border); no second ring or outline on the field itself.
+                style={{ outline: "none", boxShadow: "none" }}
+              />
             </label>
-          ))}
+            <label className="block px-4 py-3">
+              <span className="block text-[12px] leading-4 text-ink-500">{L(F.paidOn)}</span>
+              <input type="date" value={paidOn} max={info.asOf} onChange={(e) => setPaidOn(e.target.value)} style={{ outline: "none", boxShadow: "none" }} className="tnum mt-1 block w-full bg-transparent text-[16px] font-medium leading-6 text-ink-900 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" />
+            </label>
+          </div>
+          {error && (
+            <p className="mt-2 text-[14px] font-medium leading-5 text-[#A32F35]" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={busy} className={clsx(button, "mt-4")}>
+            {busy ? "…" : L(F.send)}
+          </button>
+          {/* Two quiet ways back, not second buttons: paying twice by mistake is the costly error here. */}
+          <div className="mt-1 flex items-center justify-between">
+            <button type="button" onClick={() => setStep("choose")} className="flex h-11 items-center text-[14px] font-medium leading-5 text-[#0D2A5E]">
+              {L({ hi: "रकम बदलें", en: "Change amount" })}
+            </button>
+            <a href={link} className="flex h-11 items-center text-[14px] leading-5 text-ink-500">
+              {L({ hi: "UPI ऐप फिर खोलें", en: "Open UPI app again" })}
+            </a>
+          </div>
+        </section>
+      </form>
+    );
+
+  return (
+    <div className="study space-y-6 pb-4 pt-1">
+      {slip(L({ hi: "फ़ीस भुगतान", en: "Fee payment" }))}
+
+      <fieldset className="study-in">
+        <legend className={h2}>{L({ hi: "कितनी रकम", en: "How much" })}</legend>
+        <div className={clsx(card, "mt-3 divide-y divide-[#E6ECF3]")}>
+          {opts.map((o) => {
+            const two = o.value !== undefined && o.key !== "this" && info.fineIncluded;
+            return (
+              <label key={o.key} className={clsx("flex cursor-pointer items-center gap-3 px-4 py-2", two ? "min-h-[64px]" : "min-h-[56px]")}>
+                <span className="radio min-h-0">
+                  <input type="radio" name="amt" checked={choice === o.key} onChange={() => setChoice(o.key)} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={clsx("block text-[16px] leading-6 text-ink-900", choice === o.key && "font-medium")}>{o.label}</span>
+                  {two && <span className="block text-[12px] leading-4 text-ink-500">{L(F.incFine)}</span>}
+                </span>
+                {o.value !== undefined && <span className={clsx("tnum shrink-0 text-[16px] leading-6", choice === o.key ? "font-medium text-ink-900" : "text-ink-600")}>{rupees(o.value)}</span>}
+              </label>
+            );
+          })}
         </div>
         {choice === "other" && (
-          <div className="field-box mt-2">
-            <span className="text-lg font-semibold text-ink-500">₹</span>
-            <input inputMode="numeric" value={other} onChange={(e) => setOther(e.target.value.replace(/\D/g, "").slice(0, 7))} placeholder={L(F.enterAmount)} className="tnum text-lg font-semibold" autoFocus />
+          <div className="field-box mt-3">
+            <span className="text-[16px] font-medium leading-6 text-ink-500">₹</span>
+            <input inputMode="numeric" value={other} onChange={(e) => setOther(e.target.value.replace(/\D/g, "").slice(0, 7))} placeholder={L(F.enterAmount)} className="tnum text-[16px] font-medium" autoFocus />
           </div>
         )}
       </fieldset>
 
-      <fieldset>
-        <legend className="mlabel mb-2 mt-2">{L({ hi: "किससे भरें", en: "Pay with" })}</legend>
-        <div className="space-y-2">
+      {/* The app to open: plain names, no made-up logos. The button follows straight after the two choices. */}
+      <fieldset className="study-in" style={{ animationDelay: "70ms" }}>
+        <legend className={h2}>{L({ hi: "किससे भरें", en: "Pay with" })}</legend>
+        <div className="mt-3 grid grid-cols-2 gap-2">
           {APPS.map((a) => (
-            <label key={a.key} className="flex min-h-[54px] cursor-pointer items-center gap-3 rounded-2xl bg-ink-50 px-3">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] text-[12px] font-bold text-white" style={{ background: a.bg }} aria-hidden>
-                {a.mark}
-              </span>
-              <span className="flex-1 text-[15px] font-semibold">{L(a.name)}</span>
-              <span className="radio min-h-0">
-                <input type="radio" name="app" checked={app === a.key} onChange={() => setApp(a.key)} />
-              </span>
+            <label key={a.key} className={clsx("flex h-11 cursor-pointer items-center justify-center rounded-xl border bg-white px-2 text-center text-[14px] leading-5 transition-colors focus-within:ring-2 focus-within:ring-[#0D2A5E]/30", app === a.key ? "border-[#0D2A5E] font-semibold text-[#0D2A5E] shadow-[inset_0_0_0_1px_#0D2A5E]" : "border-[#DCE4ED] font-medium text-ink-800")}>
+              <input type="radio" name="app" className="sr-only" checked={app === a.key} onChange={() => setApp(a.key)} />
+              {L(a.name)}
             </label>
           ))}
         </div>
+
+        {/* Opens the UPI app; when the parent comes back, the page is already asking for the UTR. */}
+        <a href={amountOk ? link : undefined} onClick={() => amountOk && setStep("utr")} aria-disabled={!amountOk} className={clsx(button, "mt-4", !amountOk && "pointer-events-none opacity-50")}>
+          {amountOk ? L({ hi: `UPI ऐप में ${rupees(amount)} भरें`, en: `Pay ${rupees(amount)} in UPI app` }) : L({ hi: "रकम चुनें", en: "Choose an amount" })}
+        </a>
       </fieldset>
 
-      <p className="text-[13px] text-ink-500">
-        {L({ hi: "किसे:", en: "To:" })} <span className="font-semibold text-ink-900">{info.upiName}</span> · {info.upiId}
-      </p>
-      <div className="flex items-center gap-2">
-        <p className="min-w-0 flex-1 text-[13px] leading-snug text-ink-500">{L(F.orCopy)}</p>
-        <button type="button" onClick={copy} className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 text-[14px] font-semibold text-brand-600 ring-1 ring-ink-200">
-          {copied ? <Check className="h-4 w-4 text-jade-600" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
-          {copied ? L(F.copied) : L(F.copy)}
-        </button>
-      </div>
-
-      <div className="sticky bottom-[calc(104px+env(safe-area-inset-bottom))] -mx-4 border-t border-ink-100 bg-white px-4 pb-3 pt-2.5">
-        {/* Opens the UPI app; when the parent comes back, the page is already asking for the UTR. */}
-        <a href={amountOk ? link : undefined} onClick={() => amountOk && setStep("utr")} aria-disabled={!amountOk} className={clsx("btn-primary w-full", !amountOk && "pointer-events-none opacity-50")}>
-          {L({ hi: "अभी भरें", en: "Pay Now" })} {amountOk ? <span className="tnum">{rupees(amount)}</span> : null}
-        </a>
-      </div>
+      {/* What the button really does, folded away like Study's "How Pomodoro works": not a payment gateway,
+          and the receipt comes from the school. */}
+      <details className="group border-t border-[#DCE4ED]">
+        <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 text-[13px] font-medium text-ink-600 [&::-webkit-details-marker]:hidden">
+          <Info className="h-4 w-4" aria-hidden />
+          <span className="flex-1">{L({ hi: "आगे क्या होगा", en: "What happens next" })}</span>
+          <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden />
+        </summary>
+        <p className="pb-3 text-[13px] leading-6 text-ink-600">
+          {L({
+            hi: "आपका UPI ऐप रकम भरकर खुलेगा। पेमेंट के बाद यहाँ लौटकर UTR नंबर लिखें, स्कूल बैंक से मिलान करके रसीद बनाएगा।",
+            en: "Your UPI app opens with the amount filled in. After paying, come back here and enter the UTR number; the school checks it with the bank and makes the receipt.",
+          })}
+        </p>
+      </details>
     </div>
   );
 }

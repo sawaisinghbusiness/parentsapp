@@ -5,7 +5,12 @@
 @keyframes study-from-left{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
 @keyframes study-from-right{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
 @keyframes study-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.study .study-from-left,.study .study-from-right,.study .study-in{animation:none}}
+/* A control arriving (Start, then Pause and Finish): rises and settles. A changed number: a small pop. */
+.study .study-pop{animation:study-pop .42s cubic-bezier(.2,.8,.2,1) both}
+.study .study-tick{animation:study-tick .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes study-pop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes study-tick{from{opacity:.4;transform:translateY(4px) scale(.92)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.study .study-from-left,.study .study-from-right,.study .study-in,.study .study-pop,.study .study-tick{animation:none}}
 
 /* Study: bright paper and ink; burnt orange belongs to the action. */
 .study-page { background: #FFFCF7; }

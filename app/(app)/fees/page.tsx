@@ -1,15 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Check, Share2 } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { dayMonth, fullDate, rupees } from "@/lib/format";
-import { insState, type Fees, type Instalment, type Receipt } from "@/lib/fees";
+import { INS_TEXT, INS_TONE, insState, type Fees, type Instalment, type Receipt } from "@/lib/fees";
 import { F, HEAD } from "@/lib/text/fees";
-import { CallOffice, ErrorCard, ListSkeleton, SchoolMark, Skeleton, Status } from "@/components/ui";
+import { CallOffice, ErrorCard, ListSkeleton, Skeleton, Status } from "@/components/ui";
+import "@/components/study.css";
+
+/** Where "Pay" goes. */
+const PAY = "/fees/pay/";
 
 const CLAIM_TONE = { pending: "wait", verified: "ok", rejected: "bad" } as const;
 
@@ -24,12 +29,13 @@ function daysTo(iso: string) {
 }
 
 /**
- * Fees tab as a bill (user picked the PhonePe-bill look, 2026-10-20): what is due now is one bill with
- * its fee heads, a torn line and the total; Pay sits in a bar above the tabs. Below: later bills, then
- * paid ones with their receipt. Each row opens Fee Detail.
+ * Fees tab as a bill: what is due now is one card (the amount on the Home tiles' soft blue with the
+ * school's fees picture, then the fee heads, a dashed line, the total and Pay inside the card, not in a
+ * floating bar). Below: later bills, then paid ones with their receipt. Each row opens Fee Detail.
+ * The measures are written out above the layout.
  */
 export default function FeesPage() {
-  const { child, me } = useParent();
+  const { child } = useParent();
   const L = useL();
   const { lang } = useT();
   const { data, error, reload } = useApi<Fees>(child ? `/fees?student=${child.id}` : null);
@@ -63,20 +69,20 @@ export default function FeesPage() {
   }
 
   const receiptList = (list: Receipt[]) => (
-    <ul className="divide-y divide-[#F5E6D0] overflow-hidden rounded-[14px] bg-white">
+    <ul className="divide-y divide-[#E6ECF3] overflow-hidden rounded-2xl border border-[#DCE4ED] bg-white">
       {list.map((r) => (
         <li key={r.id}>
-          <button onClick={() => share(r)} className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left active:bg-[#EAF0F6]">
+          <button onClick={() => share(r)} className="flex min-h-[72px] w-full items-center gap-4 px-4 py-3 text-left active:bg-[#F1F5F9]">
             <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-semibold">
+              <span className="block text-[16px] font-medium leading-6 text-ink-900">
                 {fullDate(r.date, lang)} · {r.mode}
               </span>
-              <span className="tnum block truncate text-[13px] text-stone-500">
+              <span className="tnum block truncate text-[14px] leading-5 text-ink-500">
                 {L(F.receiptNo)} {shortNo(r.receiptNo)}
                 {r.instalments ? ` · ${r.instalments}` : ""}
               </span>
             </span>
-            <span className="tnum text-[15px] font-semibold">{rupees(r.amount)}</span>
+            <span className="tnum shrink-0 text-[16px] font-medium leading-6 text-ink-900">{rupees(r.amount)}</span>
             <Share2 className="h-5 w-5 shrink-0 text-[#0D2A5E]" aria-label={L(F.share)} />
           </button>
         </li>
@@ -84,13 +90,13 @@ export default function FeesPage() {
     </ul>
   );
 
-  const heading = (text: string) => <h2 className="pl-1 text-[14px] font-bold text-stone-500">{text}</h2>;
+  const heading = (text: string) => <h2 className="text-[20px] font-semibold leading-7 text-ink-900">{text}</h2>;
 
   if (!data.available) {
     return (
       <div className="animate-rise space-y-4">
-        <section className="space-y-3 rounded-2xl bg-white p-4">
-          <p className="text-stone-700">{L(F.notAvailable)}</p>
+        <section className="space-y-4 rounded-2xl border border-[#DCE4ED] bg-white p-4">
+          <p className="text-[16px] leading-6 text-ink-700">{L(F.notAvailable)}</p>
           <CallOffice phone={data.pay.officePhone} className="w-full" />
         </section>
         {loose.length > 0 && receiptList(loose)}
@@ -122,167 +128,223 @@ export default function FeesPage() {
   }
   const days = first ? daysTo(first.i.due) : 0;
 
+  /*
+   * The page's measures (2026-11-14; every number is on the 4/8 grid):
+   *   type      12/16 caption · 14/20 supporting · 16/24 body and card titles · 20/28 section titles · 32/40 the amount
+   *   weights   400 text · 500 amounts · 600 titles, the amount, buttons
+   *   space     8 between lines of one group · 12 between the parts of a card and between the cards of a
+   *             list · 16 at a card's sides · 12 title to its card · 32 between sections (tightened after the
+   *             user found the first cards too tall and airy); a paid instalment is one line
+   *   cards     16 corners, hairline border; inner space (16) never more than the space around a card
+   *
+   * The structure follows a fees screen the user showed (2026-11-14): the year in one summary card (what
+   * is left, how much of the year is paid), then every instalment with its status, its amount and its own
+   * Pay button. After two tries the user still found full cards too tall, so each instalment is two lines
+   * and what it is made of opens from the row (Fee Detail). Only the first unpaid one's Pay is filled.
+   */
+  const card = "overflow-hidden rounded-2xl border border-[#DCE4ED] bg-white";
+  const money = "tnum shrink-0 text-[16px] font-medium leading-6 text-ink-900";
+  const support = "tnum block truncate text-[14px] leading-5 text-ink-500";
+  const band = { background: "linear-gradient(160deg,#F4F7FF 0%,#DCE5FF 100%)" };
+  const left = data.options.full;
+  const pct = session.total > 0 ? Math.min(100, Math.round((session.paid / session.total) * 100)) : 0;
+  const firstUnpaid = unpaid[0]?.k;
+
   return (
-    <div className="animate-rise space-y-4">
-      {claims.length > 0 && (
-        <ul className="space-y-2">
-          {claims.map((c) => (
-            <li key={c.id} className="rounded-[14px] bg-white px-4 py-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="tnum text-[15.5px] font-bold">{rupees(c.amount)}</span>
-                <Status tone={CLAIM_TONE[c.status]}>{L(c.status === "pending" ? F.claimPending : c.status === "verified" ? F.claimVerified : F.claimRejected)}</Status>
-              </div>
-              <p className="meta tnum mt-1">
-                <span>UTR {c.utr}</span>
-                <span>{dayMonth(c.paidOn, lang)}</span>
-              </p>
-              {c.status === "rejected" && c.rejectReason && <p className="mt-1 text-[14px] text-stone-700">{c.rejectReason}</p>}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {first ? (
-        <section className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_0_#F2D9B5,0_8px_24px_rgba(146,64,14,0.08)]">
-          <div className="flex items-center gap-3 border-b border-[#DCE4ED] px-[18px] pb-3.5 pt-4">
-            {me?.school ? <SchoolMark name={me.school.name} url={me.school.logoUrl} size={40} /> : null}
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[15px] font-bold">
-                {L({ hi: "फ़ीस बिल", en: "Fee bill" })} · {owing.map(({ i }) => i.name).join(", ")}
-              </span>
-              <span className="block truncate text-[13px] text-stone-500">
-                {child?.name} · {child?.classSec}
-              </span>
-            </span>
-            <span className={clsx("tnum shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold", days < 0 ? "bg-[#FCEEEF] text-[#A32F35]" : "bg-[#EAF0F6] text-[#242628]")}>
-              {days < 0 ? L({ hi: "तारीख निकल गई", en: "Overdue" }) : days === 0 ? L({ hi: "आज आख़िरी दिन", en: "Due today" }) : L({ hi: `${days} दिन बाकी`, en: `${days} days left` })}
-            </span>
-          </div>
-
-          <dl className="tnum space-y-2.5 px-[18px] py-3.5 text-[15px]">
-            {[...heads.values()].map((h) => (
-              <div key={h.label} className="flex justify-between gap-3">
-                <dt className="text-stone-600">{h.label}</dt>
-                <dd className={clsx(h.amount < 0 && "text-jade-700")}>{h.amount < 0 ? `− ${rupees(-h.amount)}` : rupees(h.amount)}</dd>
-              </div>
-            ))}
-            {already > 0 && (
-              <div className="flex justify-between gap-3">
-                <dt className="text-stone-600">{L({ hi: "पहले जमा", en: "Already paid" })}</dt>
-                <dd className="text-jade-700">− {rupees(already)}</dd>
-              </div>
-            )}
-            <div className="flex justify-between gap-3">
-              <dt className="text-stone-600">{L(F.fine)}</dt>
-              <dd className={fine > 0 ? "text-rose-600" : "text-stone-500"}>{rupees(fine)}</dd>
-            </div>
-          </dl>
-
-          <div className="mx-[18px] border-t-2 border-dashed border-[#DCE4ED]" />
-
-          <div className="px-[18px] pb-[18px] pt-3.5">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="text-[15px] font-semibold">{L({ hi: "कुल भरना है", en: "Total to pay" })}</span>
-              <span className="tnum text-[30px] font-extrabold">{rupees(owe)}</span>
-            </div>
-            <p className="mt-1 text-[13px] text-stone-500">
-              {first.i.overdue
-                ? L({ hi: `आख़िरी तारीख ${fullDate(first.i.due, lang)} थी, फ़ाइन जुड़ गया है`, en: `Last date was ${fullDate(first.i.due, lang)}, fine added` })
-                : L({ hi: `आख़िरी तारीख ${fullDate(first.i.due, lang)} · उसके बाद लेट फ़ाइन`, en: `Last date ${fullDate(first.i.due, lang)} · late fine after that` })}
+    <div className="study space-y-6 pb-4 pt-1">
+      {/* The year: what is left to pay, how far along, total and paid. */}
+      <section className={clsx(card, "study-in")}>
+        {/* One line: the picture, what it is, and the amount on the right. */}
+        <div className="flex items-center gap-3 px-4 py-3" style={band}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/fee-receipt.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
+          {left > 0 ? (
+            <p className="min-w-0 flex-1 text-[16px] font-medium leading-6 text-ink-700">{L({ hi: "कुल बाकी", en: "Total due" })}</p>
+          ) : (
+            <p className="flex min-w-0 flex-1 items-center gap-1 text-[16px] font-medium leading-6 text-[#21613F]">
+              <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} aria-hidden />
+              {L({ hi: "पूरी जमा", en: "All paid" })}
             </p>
-          </div>
-        </section>
-      ) : (
-        <section className="flex items-center gap-3.5 rounded-2xl bg-white p-[18px] shadow-[0_1px_0_#F2D9B5,0_8px_24px_rgba(146,64,14,0.08)]">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-jade-600 text-white">
-            <Check className="h-6 w-6" strokeWidth={2.5} aria-hidden />
-          </span>
-          <span>
-            <span className="block text-[18px] font-extrabold leading-tight">{L({ hi: "इस साल की फ़ीस पूरी जमा", en: "This year's fees are paid" })}</span>
-            <span className="tnum mt-0.5 block text-[14px] text-stone-500">
-              {rupees(session.total)} · {child?.name}
-            </span>
-          </span>
-        </section>
-      )}
+          )}
+          <p className="tnum shrink-0 text-[28px] font-semibold leading-9 tracking-tight text-ink-900">{rupees(left)}</p>
+        </div>
+        <p className="tnum px-4 pb-2 pt-3 text-[14px] leading-5 text-ink-600">
+          {L({ hi: `${rupees(session.total)} में से ${rupees(session.paid)} जमा`, en: `${rupees(session.paid)} of ${rupees(session.total)} paid` })}
+        </p>
+        <PaidBar pct={pct} childId={child?.id || ""} label={L({ hi: "जमा हुआ हिस्सा", en: "Share paid" })} />
+      </section>
 
-      {later.length > 0 && (
-        <section className="space-y-2">
-          {heading(L({ hi: "आगे के बिल", en: "Coming bills" }))}
-          <ul className="divide-y divide-[#F5E6D0] overflow-hidden rounded-[14px] bg-white">
-            {later.map(({ i, k, st }) => (
-              <li key={i.name}>
-                <Link href={`/fees/detail/?i=${k}`} className="flex min-h-[60px] items-center gap-3 px-4 py-3 active:bg-[#EAF0F6]">
-                  <span className="h-5 w-5 shrink-0 rounded-full border-2 border-stone-300" aria-hidden />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] font-semibold">{i.name}</span>
-                    <span className="tnum block text-[13px] text-stone-500">
-                      {st === "part" ? L({ hi: `${rupees(i.paid)} जमा · `, en: `${rupees(i.paid)} paid · ` }) : ""}
-                      {L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)}`, en: `Last date ${fullDate(i.due, lang)}` })}
-                    </span>
-                  </span>
-                  <span className="tnum text-[15px] font-semibold">{rupees(toPay(i))}</span>
-                </Link>
+      {claims.length > 0 && (
+        <section className="study-in" style={{ animationDelay: "70ms" }}>
+          {heading(L({ hi: "भेजे हुए भुगतान", en: "Payments sent" }))}
+          <ul className={clsx(card, "mt-3 divide-y divide-[#E6ECF3]")}>
+            {claims.map((c) => (
+              <li key={c.id} className="px-4 py-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={money}>{rupees(c.amount)}</span>
+                  <Status tone={CLAIM_TONE[c.status]}>{L(c.status === "pending" ? F.claimPending : c.status === "verified" ? F.claimVerified : F.claimRejected)}</Status>
+                </div>
+                <p className={clsx(support, "mt-1")}>
+                  UTR {c.utr} · {dayMonth(c.paidOn, lang)}
+                </p>
+                {c.status === "rejected" && c.rejectReason && <p className="mt-2 text-[14px] leading-5 text-ink-700">{c.rejectReason}</p>}
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      {paid.length > 0 && (
-        <section className="space-y-2">
-          {heading(L({ hi: "पिछले बिल", en: "Paid bills" }))}
-          <ul className="divide-y divide-[#F5E6D0] overflow-hidden rounded-[14px] bg-white">
-            {paid.map(({ i, k }) => {
-              const r = paidBy(i.name);
-              const on = r?.date || i.paidOn;
-              const line = [on && `${L({ hi: "जमा", en: "Paid" })} ${dayMonth(on, lang)}`, r && `${L(F.receiptNo)} ${shortNo(r.receiptNo)}`].filter(Boolean).join(" · ") || L(F.insPaid);
+      {/* Every instalment, unpaid ones first: its own card, its own Pay. */}
+      <section className="study-in" style={{ animationDelay: "140ms" }}>
+        {heading(L({ hi: "किस्तें", en: "Instalments" }))}
+        <ul className="mt-3 space-y-3">
+          {[...unpaid, ...paid].map(({ i, k, st }) => {
+            const list = i.heads?.length ? i.heads.map((h) => ({ label: headName(h), amount: h.amount })) : [{ label: `${i.name} ${L({ hi: "फ़ीस", en: "fee" })}`, amount: i.amount }];
+            const lateFine = i.overdue ? i.fine : 0;
+            const r = st === "paid" ? paidBy(i.name) : undefined;
+            const on = r?.date || i.paidOn;
+            // A paid instalment is settled: one line, opening its details.
+            if (st === "paid")
               return (
-                <li key={i.name}>
-                  <Link href={`/fees/detail/?i=${k}`} className="flex min-h-[60px] items-center gap-3 px-4 py-3 active:bg-[#EAF0F6]">
-                    <Check className="h-5 w-5 shrink-0 text-jade-700" strokeWidth={2.5} aria-hidden />
+                <li key={i.name} className={card}>
+                  <Link href={`/fees/detail/?i=${k}`} className="flex items-center gap-3 px-4 py-3 active:bg-[#F1F5F9]">
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[15px] font-semibold">{i.name}</span>
-                      <span className="tnum block text-[13px] text-stone-500">{line}</span>
+                      <span className="block text-[16px] font-medium leading-6 text-ink-900">{i.name}</span>
+                      <span className={support}>{[on && `${L({ hi: "जमा", en: "Paid" })} ${dayMonth(on, lang)}`, r && `${L(F.receiptNo)} ${shortNo(r.receiptNo)}`].filter(Boolean).join(" · ") || L(F.insPaid)}</span>
                     </span>
-                    <span className="tnum text-[15px] font-semibold">{rupees(i.amount)}</span>
+                    <span className="flex shrink-0 flex-col items-end gap-1">
+                      <span className="tnum text-[16px] font-medium leading-6 text-[#21613F]">{rupees(i.amount)}</span>
+                      <Status tone="ok">{L(F.insPaid)}</Status>
+                    </span>
                   </Link>
                 </li>
               );
-            })}
-          </ul>
+            return (
+              <li key={i.name} className={card}>
+                <div className="flex items-start justify-between gap-3 px-4 pt-3">
+                  <div className="min-w-0">
+                    <h3 className="text-[16px] font-semibold leading-6 text-ink-900">{i.name}</h3>
+                    <p className={clsx("tnum text-[14px] leading-5", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
+                      {st === "overdue"
+                          ? L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)} थी`, en: `Last date was ${fullDate(i.due, lang)}` })
+                          : L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)}`, en: `Last date ${fullDate(i.due, lang)}` })}
+                    </p>
+                  </div>
+                  <Status tone={INS_TONE[st]}>{L(INS_TEXT[st])}</Status>
+                </div>
+
+                {/* What it is made of, then what is paid and what is left: names left, amounts in one column. */}
+                <dl className="tnum mt-3 space-y-2 border-t border-[#E6ECF3] px-4 pt-3 text-[14px] leading-5">
+                  {list.map((h) => (
+                    <div key={h.label} className="flex justify-between gap-4">
+                      <dt className="text-ink-600">{h.amount < 0 ? `${h.label} (${L({ hi: "छूट", en: "discount" })})` : h.label}</dt>
+                      <dd className={h.amount < 0 ? "text-[#21613F]" : "text-ink-900"}>{h.amount < 0 ? `− ${rupees(-h.amount)}` : rupees(h.amount)}</dd>
+                    </div>
+                  ))}
+                  {lateFine > 0 && (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-ink-600">{L(F.fine)}</dt>
+                      <dd className="text-[#A32F35]">{rupees(lateFine)}</dd>
+                    </div>
+                  )}
+                  {i.paid > 0 && (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-ink-600">{L({ hi: "पहले जमा", en: "Already paid" })}</dt>
+                      <dd className="text-[#21613F]">− {rupees(i.paid)}</dd>
+                    </div>
+                  )}
+                </dl>
+                <div className="tnum mx-4 mt-3 flex justify-between gap-4 border-t border-dashed border-[#C9D3E0] pt-3 text-[16px] font-semibold leading-6 text-ink-900">
+                  <span>{L({ hi: "बाकी", en: "Due" })}</span>
+                  <span>{rupees(toPay(i))}</span>
+                </div>
+
+                <div className="flex items-center gap-2 px-4 pb-4 pt-3">
+                  {data.pay.upiId && (
+                    <Link
+                      href={`${PAY}?i=${k}`}
+                      className={clsx(
+                        "flex h-11 flex-1 items-center justify-center rounded-xl text-[16px] font-semibold leading-6",
+                        k === firstUnpaid ? "bg-[#0D2A5E] text-white active:bg-[#0A2149]" : "border border-[#0D2A5E] bg-white text-[#0D2A5E] active:bg-[#EAF0F6]"
+                      )}
+                    >
+                      {L({ hi: `${rupees(toPay(i))} भरें`, en: `Pay ${rupees(toPay(i))}` })}
+                    </Link>
+                  )}
+                  <Link href={`/fees/detail/?i=${k}`} className={clsx("flex h-11 items-center justify-center rounded-xl text-[14px] font-semibold leading-5 text-[#0D2A5E] active:bg-[#EAF0F6]", data.pay.upiId ? "px-4" : "flex-1 border border-[#DCE4ED]")}>
+                    {L({ hi: "ब्योरा", en: "Details" })}
+                  </Link>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        {!data.pay.upiId && unpaid.length > 0 && (
+          <p className="mt-3 text-[14px] leading-5 text-ink-600">
+            {L(F.noOnline)}{" "}
+            {data.pay.officePhone && (
+              <a href={`tel:${data.pay.officePhone.replace(/\s/g, "")}`} className="tnum font-semibold text-[#0D2A5E]">
+                {data.pay.officePhone}
+              </a>
+            )}
+          </p>
+        )}
+      </section>
+
+      {/* Payment history: every receipt, newest first; a tap shares it. */}
+      {data.receipts.length > 0 && (
+        <section className="study-in" style={{ animationDelay: "210ms" }}>
+          {heading(L({ hi: "भुगतान का इतिहास", en: "Payment history" }))}
+          <div className="mt-3">{receiptList(data.receipts)}</div>
         </section>
       )}
+    </div>
+  );
+}
 
-      {(!first || loose.length > 0) && data.receipts.length > 0 && (
-        <section className="space-y-2">
-          {heading(L(F.receipts))}
-          {receiptList(first ? loose : data.receipts)}
-        </section>
-      )}
-
-      {first && (
-        <div className="sticky bottom-[calc(104px+env(safe-area-inset-bottom))] -mx-4 flex items-center gap-3 border-t border-[#DCE4ED] bg-white px-4 py-3">
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[12px] text-stone-500">{owing.map(({ i }) => i.name).join(", ")}</span>
-            <span className="tnum block text-[20px] font-extrabold leading-tight">{rupees(owe)}</span>
-          </span>
-          {data.pay.upiId ? (
-            <Link href={`/fees/pay/?i=${first.k}`} className="flex h-12 items-center rounded-xl bg-[#0D2A5E] px-7 text-[16px] font-semibold text-white active:bg-[#0A2149]">
-              {L({ hi: "अभी भरें", en: "Pay now" })}
-            </Link>
-          ) : (
-            <span className="max-w-[60%] text-right text-[12px] leading-snug text-stone-500">
-              {L(F.noOnline)}{" "}
-              {data.pay.officePhone && (
-                <a href={`tel:${data.pay.officePhone.replace(/\s/g, "")}`} className="tnum font-semibold text-[#0D2A5E]">
-                  {data.pay.officePhone}
-                </a>
-              )}
-            </span>
-          )}
-        </div>
-      )}
+/**
+ * The share of the year paid, as a bar along the card's bottom edge, its percent written at the bar's end. It grows from the share
+ * last seen on this phone to today's, so after a payment the parent watches it move up (the user's ask,
+ * 2026-11-14); the first time it grows from 0. One ease-out, off for "Reduce motion".
+ */
+function PaidBar({ pct, childId, label }: { pct: number; childId: string; label: string }) {
+  const key = `pa:fees:paid-pct:${childId}`;
+  const [shown, setShown] = useState<number | null>(null);
+  useEffect(() => {
+    let from = 0;
+    try {
+      from = Math.min(pct, Number(localStorage.getItem(key)) || 0);
+      localStorage.setItem(key, String(pct));
+    } catch {
+      /* storage blocked: grow from 0 */
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(pct);
+      return;
+    }
+    setShown(from);
+    // Two frames so the starting width is drawn before it moves.
+    let r2 = 0;
+    const r1 = requestAnimationFrame(() => (r2 = requestAnimationFrame(() => setShown(pct))));
+    return () => {
+      cancelAnimationFrame(r1);
+      cancelAnimationFrame(r2);
+    };
+  }, [pct, key]);
+  const w = shown ?? 0;
+  const move = "1.2s cubic-bezier(.16,1,.3,1)";
+  // The percent sits inside the green part, at its end; while that part is too short to hold it, just after it.
+  const inside = w >= 14;
+  return (
+    <div className="relative h-5 bg-[#EAF0F6]" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={label}>
+      <div className="h-full bg-[#21613F]" style={{ width: `${w}%`, transition: `width ${move}` }} />
+      <span
+        className={clsx("tnum absolute top-0 px-2 text-[12px] font-semibold leading-5", inside ? "text-white" : "text-[#21613F]")}
+        style={{ left: `${w}%`, transform: inside ? "translateX(-100%)" : "none", transition: `left ${move}` }}
+        aria-hidden
+      >
+        {pct}%
+      </span>
     </div>
   );
 }

@@ -278,24 +278,24 @@ export function StudyScreen() {
   const stagger = (i: number) => ({ animationDelay: `${i * 70}ms` });
 
   const controls = !run ? (
-    <button type="button" onClick={start} disabled={!subject} className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-[#BE4D25] text-[15px] font-semibold text-white active:bg-[#9D3A18] disabled:opacity-50">
-      <Play className="h-4 w-4" fill="currentColor" aria-hidden />
+    <button type="button" onClick={start} disabled={!subject} className="study-pop mx-auto flex h-12 items-center justify-center gap-2.5 rounded-full bg-[#BE4D25] pl-6 pr-7 text-[16px] font-semibold text-white transition-transform active:scale-[0.97] active:bg-[#9D3A18] disabled:opacity-50">
+      <Play className="h-6 w-6" fill="currentColor" aria-hidden />
       {view === "pomodoro" ? L({ hi: "पहला राउंड शुरू करें", en: "Start round 1" }) : L({ hi: "पढ़ाई शुरू करें", en: "Start studying" })}
     </button>
   ) : (
     <div className="grid w-full grid-cols-2 gap-2">
       {run.endsAt ? (
-        <button type="button" onClick={pause} className="flex h-12 items-center justify-center gap-2 rounded-[12px] border border-[#E4DDD3] bg-white text-[15px] font-medium text-ink-900 active:bg-[#F0ECE5]">
+        <button type="button" onClick={pause} className="study-pop flex h-12 items-center justify-center gap-2 rounded-[12px] border border-[#E4DDD3] bg-white text-[15px] font-medium text-ink-900 active:bg-[#F0ECE5]">
           <Pause className="h-4 w-4" fill="currentColor" aria-hidden />
           {L({ hi: "रोकें", en: "Pause" })}
         </button>
       ) : (
-        <button type="button" onClick={resume} className="flex h-12 items-center justify-center gap-2 rounded-[12px] bg-[#BE4D25] text-[15px] font-semibold text-white active:bg-[#9D3A18]">
+        <button type="button" onClick={resume} className="study-pop flex h-12 items-center justify-center gap-2 rounded-[12px] bg-[#BE4D25] text-[15px] font-semibold text-white active:bg-[#9D3A18]">
           <Play className="h-4 w-4" fill="currentColor" aria-hidden />
           {L({ hi: "फिर शुरू", en: "Resume" })}
         </button>
       )}
-      <button type="button" onClick={stop} className="flex h-12 items-center justify-center gap-2 rounded-[12px] border border-[#E4DDD3] bg-white text-[15px] font-medium text-[#A32F35] active:bg-[#FCEEEF]">
+      <button type="button" onClick={stop} style={{ animationDelay: "60ms" }} className="study-pop flex h-12 items-center justify-center gap-2 rounded-[12px] border border-[#E4DDD3] bg-white text-[15px] font-medium text-[#A32F35] active:bg-[#FCEEEF]">
         <Square className="h-3.5 w-3.5" fill="currentColor" aria-hidden />
         {L({ hi: "ख़त्म करें", en: "Finish" })}
       </button>
@@ -303,7 +303,7 @@ export function StudyScreen() {
   );
 
   const doneLine = done && (
-    <p className="text-center text-[13.5px] font-medium text-[#21613F]" role="status">
+    <p className="study-in text-center text-[13.5px] font-medium text-[#21613F]" role="status">
       {L({ hi: `${done.subject} · ${hm(done.minutes, true)} पढ़ाई पूरी`, en: `${done.subject} · ${hm(done.minutes, false)} studied` })}
     </p>
   );
@@ -324,7 +324,7 @@ export function StudyScreen() {
                   </span>
                 )}
                 <span data-swipe="duration" {...(!run && view === "timer" ? scrub.bindings : {})} onKeyDown={scrub.keyboard} tabIndex={!run && view === "timer" ? 0 : undefined} className={clsx("tnum select-none text-[52px] font-semibold leading-none tracking-tight text-ink-900", !run && view === "timer" && "cursor-ew-resize touch-none")} role={!run && view === "timer" ? "slider" : "timer"} aria-label={!run && view === "timer" ? L({"hi":"पढ़ाई के मिनट","en":"Study minutes"}) : undefined} aria-valuemin={!run && view === "timer" ? 1 : undefined} aria-valuemax={!run && view === "timer" ? 180 : undefined} aria-valuenow={!run && view === "timer" ? minutes : undefined} aria-valuetext={!run && view === "timer" ? `${minutes} min` : undefined} aria-live="off">
-                  {mmss(left)}
+                  <span key={run ? "run" : `len-${minutes}`} className={clsx("inline-block", !run && "study-tick")}>{mmss(left)}</span>
                 </span>
                 <span className={clsx("mt-1.5 text-[13px]", run?.endsAt ? "font-medium text-[#21613F]" : "text-ink-500")}>{status}</span>
               </div>
@@ -358,10 +358,18 @@ export function StudyScreen() {
                   <Minus className="h-4 w-4" aria-hidden />
                 </button>
                 <div {...scrub.bindings} data-swipe="duration" data-duration-presets="true" className="relative grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]">
+                  {/* The white highlight under the chosen length; it slides when the length changes. */}
+                  {!scrub.active && (
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute bottom-[3px] top-[3px] rounded-lg bg-white shadow-sm"
+                      style={{ left: "3px", width: "calc((100% - 6px - 12px) / 4)", transform: `translateX(calc(${Math.max(0, durationChoices.indexOf(minutes))} * (100% + 4px)))`, transition: "transform .42s cubic-bezier(.2,.8,.2,1)" }}
+                    />
+                  )}
                   {scrub.active && <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10"><DurationRuler position={scrub.position} /></div>}
                   {durationChoices.map((m, index) => (
-                    <button key={index} type="button" onKeyDown={minutes === m ? scrub.keyboard : undefined} onClick={() => { if (!scrub.consumeClick()) setMinutes(m); }} aria-pressed={minutes === m} aria-label={`${m} ${L({ hi: "मिनट", en: "minutes" })}`} className={clsx("tnum h-[34px] rounded-lg text-[13.5px] transition-colors", minutes === m && "touch-none select-none cursor-ew-resize", scrub.active && "opacity-0", minutes === m ? "bg-white font-semibold text-[#BE4D25] shadow-sm" : "font-medium text-ink-500")}>
-                      {m}
+                    <button key={index} type="button" onKeyDown={minutes === m ? scrub.keyboard : undefined} onClick={() => { if (!scrub.consumeClick()) setMinutes(m); }} aria-pressed={minutes === m} aria-label={`${m} ${L({ hi: "मिनट", en: "minutes" })}`} className={clsx("tnum relative h-[34px] rounded-lg text-[13.5px] transition-colors duration-300", minutes === m && "touch-none select-none cursor-ew-resize", scrub.active && "opacity-0", minutes === m ? "font-semibold text-[#BE4D25]" : "font-medium text-ink-500")}>
+                      <span key={minutes === m ? `on-${m}` : `off-${index}`} className={clsx("inline-block", minutes === m && "study-tick")}>{m}</span>
                     </button>
                   ))}
                 </div>

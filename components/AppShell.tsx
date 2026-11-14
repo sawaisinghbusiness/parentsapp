@@ -163,8 +163,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </main>
 
-      {/* AI Assistant (the AI chat): a round button on every tab screen that can be dragged to either side. */}
-      {!page?.bare && !page?.noOwl && !isHome && <SahayakButton />}
+      {/* AI Assistant (the AI chat): when switched on in the side menu, a round button on every tab screen, Home too, that can be dragged to either side. */}
+      {!page?.bare && !page?.noOwl && <SahayakButton />}
 
       {!page?.bare && (
       // Flat, five equal tabs (the user's design, 2026-11-13; it used to raise Study as a green disc):
