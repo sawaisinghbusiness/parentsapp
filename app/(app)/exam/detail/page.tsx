@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+import { ChevronDown } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { num, ordinal } from "@/lib/format";
-import { abbr, subjectColor, type Report } from "@/lib/exam";
+import type { Report } from "@/lib/exam";
 import { M } from "@/lib/text/more";
-import { subjectPhoto } from "@/components/art";
-import { Empty, ErrorCard, ListSkeleton } from "@/components/ui";
+import { Empty, ErrorCard, ListSkeleton, Status } from "@/components/ui";
+import { CARD, RULED, Section, SUPPORT, TITLE } from "@/components/kit";
+import { SubjectRows } from "../subjects";
+import "@/components/study.css";
 
-/** One exam: total, percent, grade and rank on top, then every subject with its bar. */
+/** One exam's result: a calm summary card, the subject rows, then remark, attendance and the grade scale. */
 export default function ResultDetailPage() {
   const { child } = useParent();
   const L = useL();
@@ -28,101 +31,87 @@ export default function ResultDetailPage() {
   if (!c) return <Empty>{L(M.resultError)}</Empty>;
   const failed = c.subjects.filter((s) => s.entered && !s.passed).map((s) => s.subject);
 
+  const figures: [string, string][] = [
+    [L(M.total), `${num(c.grand)}/${c.outOf}`],
+    [L(M.percent), `${num(c.percent)}%`],
+  ];
+  if (c.grade) figures.push([L(M.grade), c.grade]);
+  if (c.rank !== null) figures.push([c.classSize ? L({ hi: `${c.classSize} में से`, en: `of ${c.classSize}` }) : L(M.rank), ordinal(c.rank, lang)]);
+
   return (
-    <div className="animate-rise space-y-4">
-      <h2 className="text-center text-[15px] font-semibold text-ink-500">{c.exam.title}</h2>
-
-      <dl className="grid grid-cols-4 rounded-2xl bg-brand-50 px-2 py-3 text-center">
-        {[
-          [L(M.total), `${num(c.grand)}/${c.outOf}`],
-          [L(M.percent), `${num(c.percent)}%`],
-          [L(M.grade), c.grade || "—"],
-          [c.classSize ? L({ hi: `${c.classSize} में से`, en: `of ${c.classSize}` }) : L(M.rank), c.rank !== null ? ordinal(c.rank, lang) : "—"],
-        ].map(([k, v]) => (
-          <div key={k}>
-            <dd className="tnum text-[16px] font-extrabold">{v}</dd>
-            <dt className="text-[12px] text-ink-500">{k}</dt>
+    <div className="study space-y-6 pb-4 pt-1">
+      <Section>
+        <div className={CARD}>
+          <div className="px-4 pt-4">
+            <p className={TITLE}>{c.exam.title}</p>
+            <dl className="mt-3 grid gap-3" style={{ gridTemplateColumns: `repeat(${figures.length}, minmax(0, 1fr))` }}>
+              {figures.map(([k, v]) => (
+                <div key={k} className="min-w-0">
+                  <dd className="tnum text-[16px] font-medium leading-6 text-ink-900">{v}</dd>
+                  <dt className={clsx("mt-0.5 break-words", SUPPORT)}>{k}</dt>
+                </div>
+              ))}
+            </dl>
           </div>
-        ))}
-      </dl>
+          <div className="mt-4 border-t border-[#E6ECF3] px-4 py-3">
+            {!c.complete ? (
+              <Status tone="wait">{L(M.incomplete)}</Status>
+            ) : failed.length ? (
+              <p className="text-[14px] font-medium leading-5 text-[#A32F35]">
+                {L(M.needsWork)}: {failed.join(", ")}
+              </p>
+            ) : (
+              <p className="flex items-center gap-2 text-[14px] leading-5 text-ink-500">
+                {L(M.result)}: <Status tone="ok">{L(M.passed)}</Status>
+              </p>
+            )}
+          </div>
+        </div>
+      </Section>
 
-      <p className={clsx("text-[14px] font-medium", failed.length ? "text-rose-600" : "text-ink-700")}>
-        {!c.complete ? L(M.incomplete) : failed.length ? `${L(M.needsWork)}: ${failed.join(", ")}` : `${L(M.result)}: ${L(M.passed)}`}
-      </p>
+      <Section title={L(M.marks)} delay={70}>
+        <SubjectRows card={c} parts />
+      </Section>
 
-      <ul className="space-y-2">
-        {c.subjects.map((s, k) => {
-          const pct = s.total !== null && c.exam.max ? Math.min(100, (s.total / c.exam.max) * 100) : 0;
-          const multi = c.exam.parts.length > 1;
-          const photo = subjectPhoto(s.subject);
-          return (
-            <li key={s.subject} className="grid grid-cols-[52px_1fr] items-center gap-3 rounded-2xl bg-ink-50 p-2.5">
-              {photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo} alt="" className="h-[52px] w-[52px] rounded-xl object-cover" loading="lazy" />
-              ) : (
-                <span className="grid h-[52px] w-[52px] place-items-center rounded-xl bg-ink-100 text-[14px] font-bold text-ink-900" aria-hidden>
-                  {abbr(s.subject)}
-                </span>
-              )}
-              <div className="min-w-0">
-                <div className="mb-1.5 flex items-baseline justify-between gap-2">
-                  <span className="truncate text-[15px] font-semibold">{s.subject}</span>
-                  {!s.entered ? (
-                    <span className="text-[13px] text-ink-500">{L(M.notEntered)}</span>
-                  ) : s.absent ? (
-                    <span className="text-[13px] font-medium text-rose-600">{L(M.absent)}</span>
-                  ) : (
-                    <span className={clsx("tnum shrink-0 text-[14px] font-medium", s.passed ? "text-ink-500" : "text-rose-600")}>
-                      {s.total === null ? "—" : num(s.total)}/{c.exam.max}
-                      {s.grade && <span className="ml-1.5 font-semibold text-ink-900">{s.grade}</span>}
-                    </span>
-                  )}
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-ink-200/70" aria-hidden>
-                  <div className="h-full rounded-full" style={{ width: `${s.entered && !s.absent ? pct : 0}%`, background: s.passed ? subjectColor(s.subject, k) : "#DC2626" }} />
-                </div>
-                {multi && s.entered && !s.absent && <p className="tnum mt-1 text-[12px] text-ink-400">{c.exam.parts.map((p) => `${p.name} ${s.marks[p.key] ?? "—"}/${p.max}`).join(" · ")}</p>}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      <Section delay={140}>
+        <div className="space-y-3">
+        {c.remark && (
+          <div className={clsx(CARD, "px-4 py-4")}>
+            <p className={SUPPORT}>{L({ hi: "कक्षा अध्यापक की टिप्पणी", en: "Class teacher's remark" })}</p>
+            <p className="mt-1 text-[16px] leading-6 text-ink-900">{c.remark}</p>
+          </div>
+        )}
 
-      {c.remark && (
-        <p className="row-card text-[14px] leading-relaxed text-ink-700">
-          <span className="mb-0.5 block text-[12px] font-semibold text-ink-400">{L({ hi: "कक्षा अध्यापक की टिप्पणी", en: "Class teacher's remark" })}</span>
-          {c.remark}
-        </p>
-      )}
-
-      {c.attendance && c.attendance.days > 0 && (
-        <dl className="kv">
-          <div>
-            <dt>{L(M.attendance)}</dt>
-            <dd className="tnum">
+        {c.attendance && c.attendance.days > 0 && (
+          <dl className={clsx(CARD, "flex min-h-[56px] items-center justify-between gap-3 px-4")}>
+            <dt className="text-[16px] leading-6 text-ink-900">{L(M.attendance)}</dt>
+            <dd className="tnum text-[16px] font-medium leading-6 text-ink-900">
               {num(c.attendance.present)} / {c.attendance.days}
             </dd>
-          </div>
-        </dl>
-      )}
+          </dl>
+        )}
 
-      <details className="row-card">
-        <summary className="flex min-h-[28px] cursor-pointer items-center text-[14px] font-medium text-ink-700">{L(M.gradeScale)}</summary>
-        <ul className="tnum mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-[14px] text-ink-700">
-          {data.grades.scale.map((g, i) => (
-            <li key={g.grade} className="flex justify-between">
-              <span className="font-semibold text-ink-900">{g.grade}</span>
-              <span>
-                {g.min}–{i === 0 ? 100 : data.grades.scale[i - 1].min - 1}%
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-2 text-[13px] text-ink-500">
-          {L(M.passNote)} {data.grades.passPercent}%.
-        </p>
-      </details>
+        <details className={clsx(CARD, "group")}>
+          <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 px-4 text-[16px] font-medium leading-6 text-ink-900 [&::-webkit-details-marker]:hidden">
+            {L(M.gradeScale)}
+            <ChevronDown className="h-5 w-5 shrink-0 text-ink-500 group-open:rotate-180" strokeWidth={1.75} aria-hidden />
+          </summary>
+          <ul className={clsx("tnum border-t border-[#E6ECF3]", RULED)}>
+            {data.grades.scale.map((g, i) => (
+              <li key={g.grade} className="flex min-h-[44px] items-center justify-between px-4 text-[16px] leading-6">
+                <span className="font-medium text-ink-900">{g.grade}</span>
+                <span className="text-ink-500">
+                  {g.min}–{i === 0 ? 100 : data.grades.scale[i - 1].min - 1}%
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className={clsx("border-t border-[#E6ECF3] px-4 py-3", SUPPORT)}>
+            {L(M.passNote)} {data.grades.passPercent}%.
+          </p>
+        </details>
+        </div>
+      </Section>
     </div>
   );
 }

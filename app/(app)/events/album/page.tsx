@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { CalendarDays, ChevronLeft, ChevronRight, Download, Image as ImageIcon, Play, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Play, X } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useL, useT } from "@/lib/i18n";
 import { fullDate } from "@/lib/format";
 import { savePhoto, type Album } from "@/lib/events";
 import { EventPicture } from "@/components/art";
 import { Empty, ErrorCard, Skeleton } from "@/components/ui";
+import "@/components/study.css";
 
 /** One event's photos and videos in a grid; each opens full screen and can be saved. */
 export default function AlbumPage() {
@@ -23,53 +24,47 @@ export default function AlbumPage() {
     if (error?.status === 404) return <Empty>{L({ hi: "यह कार्यक्रम नहीं मिला।", en: "This event was not found." })}</Empty>;
     if (error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
     return (
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-3 gap-1">
         {Array.from({ length: 9 }, (_, i) => (
-          <Skeleton key={i} className="aspect-[16/11] w-full rounded-lg" />
+          <Skeleton key={i} className="aspect-[16/11] w-full rounded-xl" />
         ))}
       </div>
     );
   }
 
   const name = (i: number) => `${data.title.replace(/[^\w]+/g, "-")}-${i + 1}`;
+  // Date, then photo and video counts, as one quiet line without icons.
+  const meta = [fullDate(data.date, lang)];
+  if (data.photos.length > 0) {
+    meta.push(`${data.photoCount} ${L({ hi: "फ़ोटो", en: "photos" })}`);
+    if (data.videoCount > 0) meta.push(`${data.videoCount} ${L({ hi: "वीडियो", en: data.videoCount === 1 ? "video" : "videos" })}`);
+  }
 
   return (
-    <div className="animate-rise space-y-3">
+    <div className="study study-in space-y-4 pb-4 pt-1">
       <div>
-        <h2 className="text-[18px] font-bold">{data.title}</h2>
-        <p className="meta mt-1">
-          <span>
-            <CalendarDays aria-hidden />
-            {fullDate(data.date, lang)}
-          </span>
-          {data.photos.length > 0 && (
-            <span>
-              <ImageIcon aria-hidden />
-              {data.photoCount} {L({ hi: "फ़ोटो", en: "photos" })}
-              {data.videoCount > 0 && ` · ${data.videoCount} ${L({ hi: "वीडियो", en: data.videoCount === 1 ? "video" : "videos" })}`}
-            </span>
-          )}
-        </p>
+        <h2 className="text-[20px] font-semibold leading-7 text-ink-900">{data.title}</h2>
+        <p className="tnum mt-1 text-[14px] leading-5 text-ink-500">{meta.join(" · ")}</p>
       </div>
 
       {data.photos.length === 0 ? (
         <Empty>{data.upcoming ? L({ hi: "कार्यक्रम के बाद फ़ोटो यहाँ आएँगी।", en: "Photos will show here after the event." }) : L({ hi: "इस कार्यक्रम की कोई फ़ोटो नहीं डाली गई।", en: "No photos were posted for this event." })}</Empty>
       ) : (
-        <ul className="grid grid-cols-3 gap-1.5">
+        <ul className="grid grid-cols-3 gap-1">
           {data.photos.map((p, i) => (
             <li key={p.id} className="relative">
-              <button onClick={() => setOpen(i)} className="block w-full active:opacity-80" aria-label={`${data.title} ${i + 1}`}>
-                <EventPicture url={p.video ? null : p.url} scene={p.scene} alt="" className="rounded-lg" />
+              <button onClick={() => setOpen(i)} className="block w-full transition-opacity active:opacity-80" aria-label={`${data.title} ${i + 1}`}>
+                <EventPicture url={p.video ? null : p.url} scene={p.scene} alt="" className="rounded-xl" />
                 {p.video && (
-                  <span className="absolute left-1/2 top-1/2 grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-night-900/60 text-white" aria-hidden>
-                    <Play className="h-3.5 w-3.5 fill-current" />
+                  <span className="absolute left-1/2 top-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-night-900/60 text-white" aria-hidden>
+                    <Play className="h-4 w-4 fill-current" />
                   </span>
                 )}
               </button>
               {!p.video && (
                 <button onClick={() => savePhoto(p, name(i))} className="absolute bottom-0.5 right-0.5 grid h-9 w-9 place-items-center" aria-label={L({ hi: "फ़ोन में सेव करें", en: "Save to phone" })}>
-                  <span className="grid h-6 w-6 place-items-center rounded-full bg-white/90 text-ink-900">
-                    <Download className="h-3.5 w-3.5" aria-hidden />
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-white/90 text-ink-900">
+                    <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden />
                   </span>
                 </button>
               )}

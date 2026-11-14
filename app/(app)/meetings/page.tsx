@@ -8,9 +8,19 @@ import { api, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { ampm, type MeetingRow } from "@/lib/meetings";
-import { Empty, ErrorCard, Skeleton } from "@/components/ui";
+import { ErrorCard, Skeleton, Status } from "@/components/ui";
+import { Button, DateBlock, Group, Quiet, Section, SUPPORT, Tabs, TITLE } from "@/components/kit";
+import "@/components/study.css";
 
-/** Every meeting for this child's class: upcoming ones to answer, and past ones. */
+/** The kit Button's look, for the "Pick a time" link (kit Button is a <button>). */
+const LINK_PRIMARY =
+  "inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[#0D2A5E] px-5 text-[16px] font-semibold text-white transition-colors active:bg-[#0A2149]";
+
+/**
+ * Every meeting for this child's class: upcoming ones to answer, and past ones.
+ * One card of ruled rows; each row is a date block, the title, "place or Online · time", a written state, and the
+ * actions (Pick a time / I'll come / Can't come) as full 48px buttons under the text.
+ */
 export default function MeetingsPage() {
   const { child } = useParent();
   const L = useL();
@@ -35,81 +45,82 @@ export default function MeetingsPage() {
   }
 
   const list = data ? data[tab] : [];
-  const month = (iso: string) => new Date(iso + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { month: "short" }).toUpperCase();
+  const href = (m: MeetingRow) => `/meetings/detail/?id=${m.id}`;
 
   return (
-    <div className="animate-rise space-y-4">
-      <div className="relative grid grid-cols-2 rounded-full bg-brand-50 p-1 ring-1 ring-brand-100" role="tablist">
-        <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-brand-700 shadow-[0_2px_8px_rgba(20,70,160,.25)]" style={{ transform: tab === "past" ? "translateX(100%)" : "none" }} />
-        {(["upcoming", "past"] as const).map((k) => (
-          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={clsx("relative h-11 rounded-full text-[15px] transition-colors duration-300", tab === k ? "font-semibold text-white" : "font-medium text-ink-600")}>
-            {k === "upcoming" ? L({ hi: "आने वाली", en: "Upcoming" }) : L({ hi: "पिछली", en: "Past" })}
-          </button>
-        ))}
-      </div>
+    <div className="study space-y-6 pb-4 pt-1">
+      <Tabs
+        value={tab}
+        onChange={setTab}
+        label={L({ hi: "मीटिंग", en: "Meetings" })}
+        options={[
+          { key: "upcoming", text: L({ hi: "आने वाली", en: "Upcoming" }) },
+          { key: "past", text: L({ hi: "पिछली", en: "Past" }) },
+        ]}
+      />
 
-      {!data ? (
-        error && error.status !== 401 ? (
-          <ErrorCard offline={error.status === 0} onRetry={reload} />
+      <Section>
+        {!data ? (
+          error && error.status !== 401 ? (
+            <ErrorCard offline={error.status === 0} onRetry={reload} />
+          ) : (
+            <Skeleton className="h-64 w-full rounded-2xl" />
+          )
+        ) : list.length === 0 ? (
+          <Quiet>{tab === "upcoming" ? L({ hi: "अभी कोई मीटिंग नहीं है।", en: "No meetings coming up." }) : L({ hi: "कोई पिछली मीटिंग नहीं।", en: "No past meetings." })}</Quiet>
         ) : (
-          <Skeleton className="h-64 w-full rounded-[20px]" />
-        )
-      ) : list.length === 0 ? (
-        <Empty>{tab === "upcoming" ? L({ hi: "अभी कोई मीटिंग नहीं है।", en: "No meetings coming up." }) : L({ hi: "कोई पिछली मीटिंग नहीं।", en: "No past meetings." })}</Empty>
-      ) : (
-        <ul className="overflow-hidden rounded-[20px] border border-ink-100 bg-white shadow-[0_1px_2px_rgba(15,23,42,.04)]">
-          {list.map((m) => {
-            const open = tab === "upcoming";
-            return (
-              <li key={m.id} className="border-b border-ink-100 last:border-b-0">
-                <div className="flex gap-3.5 px-4 py-3.5">
-                  <div className="w-10 shrink-0 pt-0.5 text-center">
-                    <b className="tnum block text-[22px] font-extrabold leading-none text-brand-700">{+m.date.slice(8)}</b>
-                    <span className="text-[11px] font-semibold tracking-[.04em] text-ink-500">{month(m.date)}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <Link href={`/meetings/detail/?id=${m.id}`} className="flex items-start justify-between gap-2">
-                      <span className="min-w-0">
-                        <span className="block text-[15px] font-bold leading-snug">{m.title}</span>
-                        <span className="mt-0.5 block text-[12.5px] text-ink-500">
-                          {m.onlineUrl ? L({ hi: "ऑनलाइन", en: "Online" }) : m.place || m.audience} · {ampm(m.start)}
-                        </span>
+          <Group>
+            {list.map((m) => {
+              const open = tab === "upcoming";
+              // The written state of this meeting for this family (only while it is still to come, as on the real page).
+              const state =
+                !open ? null : m.kind === "ptm" ? (
+                  m.slot ? <Status tone="ok">{L({ hi: `आपका समय ${ampm(m.slot)}`, en: `Your time ${ampm(m.slot)}` })}</Status> : null
+                ) : m.answer === "yes" ? (
+                  <Status tone="ok">{L({ hi: "आ रहे हैं", en: "Coming" })}</Status>
+                ) : m.answer === "no" ? (
+                  <Status tone="mute">{L({ hi: "नहीं आ रहे", en: "Not coming" })}</Status>
+                ) : null;
+              const pickTime = open && m.kind === "ptm" && !m.slot;
+              const askAnswer = open && m.kind === "general" && !m.answer;
+              return (
+                <li key={m.id}>
+                  <Link href={href(m)} className="flex min-h-[72px] items-center gap-4 px-4 py-3 transition-colors active:bg-[#F1F5F9]">
+                    <DateBlock iso={m.date} lang={lang} />
+                    <span className="min-w-0 flex-1">
+                      <span className={clsx("block break-words", TITLE)}>{m.title}</span>
+                      <span className={clsx("tnum mt-1 block break-words", SUPPORT)}>
+                        {m.onlineUrl ? L({ hi: "ऑनलाइन", en: "Online" }) : m.place || m.audience} · {ampm(m.start)}
                       </span>
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-ink-300" aria-hidden />
-                    </Link>
-                    {open && m.kind === "ptm" && (
-                      <div className="mt-2.5 flex items-center gap-2.5">
-                        {m.slot ? (
-                          <span className="text-[12.5px] font-semibold text-jade-700">{L({ hi: `आपका समय ${ampm(m.slot)}`, en: `Your time ${ampm(m.slot)}` })}</span>
-                        ) : (
-                          <>
-                            <Link href={`/meetings/detail/?id=${m.id}`} className="inline-flex h-[38px] items-center rounded-xl bg-brand-700 px-4 text-[13.5px] font-semibold text-white">
-                              {L({ hi: "समय चुनें", en: "Pick a time" })}
-                            </Link>
-                            {m.slotsLeft !== null && <span className="text-[12.5px] text-ink-500">{L({ hi: `${m.slotsLeft} समय खाली`, en: `${m.slotsLeft} open` })}</span>}
-                          </>
-                        )}
-                      </div>
-                    )}
-                    {open && m.kind === "general" && !m.answer && (
-                      <div className="mt-2.5 flex gap-2">
-                        <button disabled={busy === m.id} onClick={() => answer(m, "yes")} className="h-[38px] rounded-xl bg-brand-50 px-4 text-[13.5px] font-semibold text-brand-700 disabled:opacity-50">
-                          {L({ hi: "आऊँगा", en: "I'll come" })}
-                        </button>
-                        <button disabled={busy === m.id} onClick={() => answer(m, "no")} className="h-[38px] rounded-xl px-4 text-[13.5px] font-semibold text-ink-700 ring-1 ring-inset ring-ink-200 disabled:opacity-50">
-                          {L({ hi: "नहीं आ पाऊँगा", en: "Can't come" })}
-                        </button>
-                      </div>
-                    )}
-                    {open && m.kind === "general" && m.answer === "no" && <p className="mt-2 text-[12.5px] text-ink-500">{L({ hi: "आपने बताया आप नहीं आ पाएँगे", en: "You said you can't come" })}</p>}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {fail && <p className="text-[13px] text-rose-600">{fail}</p>}
+                      {state && <span className="mt-2 block">{state}</span>}
+                    </span>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden />
+                  </Link>
+                  {pickTime && (
+                    <div className="flex items-center gap-3 px-4 pb-4">
+                      <Link href={href(m)} className={LINK_PRIMARY}>
+                        {L({ hi: "समय चुनें", en: "Pick a time" })}
+                      </Link>
+                      {m.slotsLeft !== null && <span className={clsx("tnum", SUPPORT)}>{L({ hi: `${m.slotsLeft} समय खाली`, en: `${m.slotsLeft} open` })}</span>}
+                    </div>
+                  )}
+                  {askAnswer && (
+                    <div className="flex gap-2 px-4 pb-4">
+                      <Button className="flex-1" disabled={busy === m.id} onClick={() => answer(m, "yes")}>
+                        {L({ hi: "आऊँगा", en: "I'll come" })}
+                      </Button>
+                      <Button kind="line" className="flex-1" disabled={busy === m.id} onClick={() => answer(m, "no")}>
+                        {L({ hi: "नहीं आ पाऊँगा", en: "Can't come" })}
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </Group>
+        )}
+        {fail && <p className="mt-3 text-[14px] leading-5 text-[#A32F35]">{fail}</p>}
+      </Section>
     </div>
   );
 }

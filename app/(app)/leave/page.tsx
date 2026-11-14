@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarX2, Clock3, Plus } from "lucide-react";
 import { api, ApiError, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Lang } from "@/lib/i18n";
@@ -10,11 +9,13 @@ import { monthYear, num, weekdayDate } from "@/lib/format";
 import { LEAVE_TYPES, type Leave, type LeaveData, type LeaveStatus } from "@/lib/leave";
 import { M } from "@/lib/text/more";
 import { Empty, ErrorCard, ListSkeleton, Status, type Tone } from "@/components/ui";
+import { Button, Group, Quiet, Row, Section } from "@/components/kit";
+import "@/components/study.css";
 
 const TONE: Record<LeaveStatus, Tone> = { pending: "wait", approved: "ok", rejected: "bad" };
 const range = (q: Leave, lang: Lang) => (q.from === q.to ? weekdayDate(q.from, lang) : `${weekdayDate(q.from, lang)} – ${weekdayDate(q.to, lang)}`);
 
-/** The child's leave applications, newest first, grouped by month. + on the top bar applies. */
+/** The child's leave applications, one card per month with ruled rows. + on the top bar applies. */
 export default function LeavePage() {
   const { child } = useParent();
   const L = useL();
@@ -61,71 +62,81 @@ export default function LeavePage() {
   }
   if (data.setupNeeded) return <Empty>{L(M.leaveSetup)}</Empty>;
 
+  const span = (q: Leave) => (q.halfDay ? L({ hi: "आधा दिन", en: "Half day" }) : q.days === 1 ? L({ hi: "पूरा दिन", en: "Full day" }) : `${num(q.days)} ${L(M.days)}`);
+
   return (
-    <div className="animate-rise space-y-3">
-      {sent && (
-        <p role="status" className="rounded-xl bg-jade-50 px-3.5 py-2.5 text-[14px] font-medium text-jade-800">
-          {L(M.sent)}
-        </p>
-      )}
-      {problem && (
-        <p role="alert" className="text-[14px] text-rose-700">
-          {problem}
-        </p>
+    <div className="study space-y-6 pb-4 pt-1">
+      {(sent || problem) && (
+        <div className="study-in space-y-3">
+          {sent && (
+            <p role="status" className="rounded-2xl bg-[#EAF4EE] px-4 py-3 text-[16px] font-medium leading-6 text-[#21613F]">
+              {L(M.sent)}
+            </p>
+          )}
+          {problem && (
+            <p role="alert" className="text-[14px] leading-5 text-[#A32F35]">
+              {problem}
+            </p>
+          )}
+        </div>
       )}
 
       {groups.length === 0 ? (
-        <div className="space-y-3">
-          <Empty>{L(M.noPast)}</Empty>
-          <Link href="/leave/apply/" className="btn-primary w-full">
-            <Plus className="h-5 w-5" aria-hidden /> {L({ hi: "छुट्टी की अर्ज़ी भेजें", en: "Apply for leave" })}
+        <Section>
+          <Quiet>{L(M.noPast)}</Quiet>
+          <Link
+            href="/leave/apply/"
+            className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#0D2A5E] px-5 text-[16px] font-semibold text-white transition-colors active:bg-[#0A2149]"
+          >
+            {L({ hi: "छुट्टी की अर्ज़ी भेजें", en: "Apply for leave" })}
           </Link>
-        </div>
+        </Section>
       ) : (
-        groups.map(([month, list]) => (
-          <section key={month} className="space-y-2">
-            <h2 className="mlabel pt-1">{monthYear(month, lang)}</h2>
-            <ul className="space-y-2">
+        groups.map(([month, list], gi) => (
+          <Section key={month} title={monthYear(month, lang)} delay={Math.min(gi, 2) * 70}>
+            <Group>
               {list.map((q) => (
-                <li key={q.id} className="row-card">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="tnum text-[15px] font-bold leading-snug">{range(q, lang)}</p>
-                    <Status tone={TONE[q.status]}>{L(M[q.status])}</Status>
-                  </div>
-                  <p className="meta mt-1.5">
-                    <span>
-                      <CalendarX2 aria-hidden />
-                      {q.type ? L(LEAVE_TYPES[q.type]) : L({ hi: "छुट्टी", en: "Leave" })}
-                    </span>
-                    <span>
-                      <Clock3 aria-hidden />
-                      {q.halfDay ? L({ hi: "आधा दिन", en: "Half day" }) : q.days === 1 ? L({ hi: "पूरा दिन", en: "Full day" }) : `${num(q.days)} ${L(M.days)}`}
-                    </span>
-                  </p>
-                  <p className="mt-1.5 whitespace-pre-line break-words text-[14px] text-ink-700">{q.reason}</p>
-                  {q.status !== "pending" && q.decidedBy && (
-                    <p className="mt-1 text-[13px] text-ink-400">{lang === "hi" ? `${q.decidedBy} ${L(M.by)}` : `${L(M.by)} ${q.decidedBy}`}</p>
-                  )}
+                <Row
+                  key={q.id}
+                  className="[&>span]:items-start"
+                  title={<span className="tnum">{range(q, lang)}</span>}
+                  sub={
+                    <>
+                      <span className="block">
+                        {q.type ? L(LEAVE_TYPES[q.type]) : L({ hi: "छुट्टी", en: "Leave" })} · {span(q)}
+                      </span>
+                      <span className="mt-1 block whitespace-pre-line break-words text-ink-700">{q.reason}</span>
+                      {q.status !== "pending" && q.decidedBy && (
+                        <span className="mt-1 block">{lang === "hi" ? `${q.decidedBy} ${L(M.by)}` : `${L(M.by)} ${q.decidedBy}`}</span>
+                      )}
+                    </>
+                  }
+                  trail={<Status tone={TONE[q.status]}>{L(M[q.status])}</Status>}
+                >
                   {q.status === "pending" &&
                     (asking === q.id ? (
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="text-[14px] text-ink-700">{L(M.cancelSure)}</span>
-                        <button onClick={() => cancel(q.id)} disabled={busy} className="btn min-h-[44px] border border-ink-200 bg-white px-4 text-[14px] text-rose-700">
-                          {L(M.yesCancel)}
-                        </button>
-                        <button onClick={() => setAsking(null)} className="btn min-h-[44px] px-3 text-[14px] text-ink-700">
-                          {L(M.no)}
-                        </button>
+                      <div className="-mt-1 space-y-3 px-4 pb-4">
+                        <p className="text-[16px] leading-6 text-ink-900">{L(M.cancelSure)}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button kind="line" onClick={() => setAsking(null)} disabled={busy}>
+                            {L(M.no)}
+                          </Button>
+                          <Button onClick={() => cancel(q.id)} disabled={busy}>
+                            {L(M.yesCancel)}
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <button onClick={() => setAsking(q.id)} className="link -mb-2 text-[14px] !text-ink-500">
-                        {L(M.cancel)}
-                      </button>
+                      <div className="-mt-3 px-4 pb-1">
+                        <button onClick={() => setAsking(q.id)} className="min-h-[44px] text-[14px] font-medium leading-5 text-[#0D2A5E]">
+                          {L(M.cancel)}
+                        </button>
+                      </div>
                     ))}
-                </li>
+                </Row>
               ))}
-            </ul>
-          </section>
+            </Group>
+          </Section>
         ))
       )}
     </div>

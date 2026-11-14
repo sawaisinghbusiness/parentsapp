@@ -7,9 +7,17 @@ import { api, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { ampm, type MeetingDetail } from "@/lib/meetings";
-import { ErrorCard, Skeleton } from "@/components/ui";
+import { ErrorCard, Skeleton, Status } from "@/components/ui";
+import { Button, CARD, Group, Section, SUPPORT, TITLE } from "@/components/kit";
+import "@/components/study.css";
 
-/** One meeting: when and where, the agenda, and either a PTM time to pick or "I'll come / Can't come". */
+const ICON = "mt-0.5 h-5 w-5 shrink-0 text-ink-500";
+
+/**
+ * One meeting: when and where, the agenda,
+ * and either a PTM time to pick or "I'll come / Can't come". The action bar stays fixed above the tab bar, as a
+ * plain white bar with a hairline top border.
+ */
 export default function MeetingDetailPage() {
   const { child } = useParent();
   const L = useL();
@@ -27,7 +35,7 @@ export default function MeetingDetailPage() {
 
   if (!m) {
     if (error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
-    return <Skeleton className="h-80 w-full rounded-[20px]" />;
+    return <Skeleton className="h-80 w-full rounded-2xl" />;
   }
 
   const day = new Date(m.date + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { weekday: "short", day: "numeric", month: "short" });
@@ -47,6 +55,7 @@ export default function MeetingDetailPage() {
       setPick(null);
     } catch (e: any) {
       setFail(e?.status === 0 ? L({ hi: "इंटरनेट नहीं है।", en: "No internet. Try again." }) : e?.message || L({ hi: "नहीं हो पाया।", en: "Could not save. Try again." }));
+      // Someone else took the time first: load the slots again.
       if (e?.status === 409) reload();
     } finally {
       setBusy(false);
@@ -54,87 +63,106 @@ export default function MeetingDetailPage() {
   }
 
   return (
-    <div className="animate-rise space-y-4 pb-24">
-      <div className="px-0.5">
-        <h2 className="text-[22px] font-extrabold leading-tight tracking-[-0.01em]">{m.title}</h2>
-        <p className="mt-0.5 text-[13.5px] text-ink-500">{[m.host, m.audience].filter(Boolean).join(" · ")}</p>
-      </div>
+    <div className={clsx("study space-y-6 pt-1", over ? "pb-4" : "pb-32")}>
+      <Section>
+        <h2 className="text-[20px] font-semibold leading-7 text-ink-900">{m.title}</h2>
+        {(m.host || m.audience) && <p className={clsx("mt-1", SUPPORT)}>{[m.host, m.audience].filter(Boolean).join(" · ")}</p>}
 
-      <ul className="overflow-hidden rounded-[20px] border border-ink-100 bg-white">
-        <li className="flex items-center gap-3 px-4 py-3">
-          <CalendarDays className="h-[18px] w-[18px] text-brand-700" aria-hidden />
-          <span>
-            <span className="block text-[14px] font-medium">{day}</span>
-            <span className="block text-[12.5px] text-ink-500">
-              {ampm(m.start)} – {ampm(m.end)}
-            </span>
-          </span>
-        </li>
-        <li className="flex items-center gap-3 border-t border-ink-100 px-4 py-3">
-          {m.onlineUrl ? <Video className="h-[18px] w-[18px] text-brand-700" aria-hidden /> : <MapPin className="h-[18px] w-[18px] text-brand-700" aria-hidden />}
-          <span className="text-[14px] font-medium">{m.onlineUrl ? L({ hi: "ऑनलाइन मीटिंग", en: "Online meeting" }) : m.place || L({ hi: "स्कूल में", en: "At school" })}</span>
-        </li>
-        {(m.agenda || m.coming > 0) && (
-          <li className="flex items-start gap-3 border-t border-ink-100 px-4 py-3">
-            <Users className="mt-0.5 h-[18px] w-[18px] text-brand-700" aria-hidden />
-            <span>
-              {m.coming > 0 && <span className="block text-[14px] font-medium">{L({ hi: `${m.coming} परिवार आ रहे हैं`, en: `${m.coming} families attending` })}</span>}
-              {m.agenda && <span className="block whitespace-pre-line text-[12.5px] leading-snug text-ink-500">{m.agenda}</span>}
+        <Group className="mt-4">
+          <li className="flex min-h-[72px] items-start gap-4 px-4 py-3">
+            <CalendarDays className={ICON} strokeWidth={1.75} aria-hidden />
+            <span className="min-w-0">
+              <span className={clsx("block", TITLE)}>{day}</span>
+              <span className={clsx("tnum mt-1 block", SUPPORT)}>
+                {ampm(m.start)} – {ampm(m.end)}
+              </span>
             </span>
           </li>
-        )}
-      </ul>
+          <li className="flex min-h-[56px] items-start gap-4 px-4 py-4">
+            {m.onlineUrl ? <Video className={ICON} strokeWidth={1.75} aria-hidden /> : <MapPin className={ICON} strokeWidth={1.75} aria-hidden />}
+            <span className={clsx("min-w-0 break-words", TITLE)}>{m.onlineUrl ? L({ hi: "ऑनलाइन मीटिंग", en: "Online meeting" }) : m.place || L({ hi: "स्कूल में", en: "At school" })}</span>
+          </li>
+          {(m.agenda || m.coming > 0) && (
+            <li className="flex items-start gap-4 px-4 py-3">
+              <Users className={ICON} strokeWidth={1.75} aria-hidden />
+              <span className="min-w-0">
+                {m.coming > 0 && <span className={clsx("block", TITLE)}>{L({ hi: `${m.coming} परिवार आ रहे हैं`, en: `${m.coming} families attending` })}</span>}
+                {m.agenda && <span className={clsx("block whitespace-pre-line break-words", SUPPORT, m.coming > 0 && "mt-1")}>{m.agenda}</span>}
+              </span>
+            </li>
+          )}
+        </Group>
+      </Section>
 
       {m.kind === "ptm" && !over && (
-        <section>
-          <p className="mb-2 px-0.5 text-[13px] font-semibold text-ink-500">{L({ hi: "अपना समय चुनें", en: "Pick your time" })}</p>
-          <div className="grid grid-cols-3 gap-2 rounded-[20px] border border-ink-100 bg-white p-3.5">
+        <Section title={L({ hi: "अपना समय चुनें", en: "Pick your time" })} delay={70}>
+          <div className={clsx(CARD, "grid grid-cols-3 gap-2 p-4")}>
             {m.slots.map((s) => {
               const on = chosen === s.time;
+              const label = ampm(s.time).replace(/ (AM|PM)$/, "");
               return (
                 <button
                   key={s.time}
                   disabled={s.taken || busy}
+                  aria-disabled={s.taken || undefined}
+                  aria-label={s.taken && !on ? `${ampm(s.time)}, ${L({ hi: "ले लिया गया", en: "taken" })}` : ampm(s.time)}
                   onClick={() => setPick(s.time)}
                   aria-pressed={on}
                   className={clsx(
-                    "tnum h-11 rounded-xl text-[14px] font-semibold transition-colors",
-                    on ? "bg-brand-700 text-white" : s.taken ? "bg-ink-50 text-ink-300" : "text-ink-900 ring-1 ring-inset ring-ink-200 active:bg-ink-50"
+                    "tnum min-h-[48px] rounded-xl text-[16px] font-medium transition-colors",
+                    on
+                      ? "bg-[#0D2A5E] text-white"
+                      : s.taken
+                        ? "bg-[#F1F5F9] text-ink-500 line-through opacity-60"
+                        : "border border-[#C9D4E1] bg-white text-ink-900 active:bg-[#F1F5F9]"
                   )}
                 >
-                  {ampm(s.time).replace(/ (AM|PM)$/, "")}
+                  {label}
                 </button>
               );
             })}
           </div>
-          <p className="mt-2 px-0.5 text-[12.5px] text-ink-500">{L({ hi: "हल्के समय दूसरे पैरेंट्स ले चुके हैं", en: "Faded times are taken by other parents" })}</p>
-        </section>
+          <p className={clsx("mt-3", SUPPORT)}>{L({ hi: "कटे हुए समय दूसरे पैरेंट्स ले चुके हैं", en: "Crossed-out times are taken by other parents" })}</p>
+        </Section>
       )}
 
-      {fail && <p className="text-[13px] text-rose-600">{fail}</p>}
+      {fail && <p className="text-[14px] leading-5 text-[#A32F35]">{fail}</p>}
 
-      {!over && (
-        <div className="pb-safe fixed inset-x-0 bottom-[66px] z-10 mx-auto max-w-[560px] bg-gradient-to-t from-white via-white to-white/0 px-4 pb-3 pt-6">
+      {/* A PTM with no time picked yet has nothing to show in the bar, so the bar is left out. */}
+      {!over && !(m.kind === "ptm" && !m.slot && !(pick && pick !== m.slot)) && (
+        <div className="fixed inset-x-0 bottom-[66px] z-10 mx-auto max-w-[560px] border-t border-[#DCE4ED] bg-white px-4 pb-3 pt-3">
           {m.kind === "ptm" ? (
             pick && pick !== m.slot ? (
-              <button disabled={busy} onClick={() => send("/meetings/slot", { time: pick })} className="h-[52px] w-full rounded-2xl bg-brand-700 text-[15px] font-bold text-white shadow-[0_6px_16px_rgba(15,58,136,.25)] disabled:opacity-60">
+              <Button className="w-full" disabled={busy} onClick={() => send("/meetings/slot", { time: pick })}>
                 {L({ hi: `${day} · ${ampm(pick)} पक्का करें`, en: `Confirm ${day} · ${ampm(pick)}` })}
-              </button>
+              </Button>
             ) : m.slot ? (
-              <p className="py-3 text-center text-[14px] font-semibold text-jade-700">{L({ hi: `आपका समय: ${day} · ${ampm(m.slot)}`, en: `Your time: ${day} · ${ampm(m.slot)}` })}</p>
+              <p className="flex min-h-[48px] items-center justify-center">
+                <Status tone="ok">{L({ hi: `आपका समय: ${day} · ${ampm(m.slot)}`, en: `Your time: ${day} · ${ampm(m.slot)}` })}</Status>
+              </p>
             ) : null
           ) : m.onlineUrl && m.answer !== "no" ? (
             <>
-              <a href={canJoin ? m.onlineUrl : undefined} target="_blank" rel="noopener" aria-disabled={!canJoin} className={clsx("flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl text-[15px] font-bold", canJoin ? "bg-brand-700 text-white shadow-[0_6px_16px_rgba(15,58,136,.25)]" : "bg-ink-100 text-ink-400")}>
-                <Video className="h-5 w-5" aria-hidden />
+              <a
+                href={canJoin ? m.onlineUrl : undefined}
+                target="_blank"
+                rel="noopener"
+                aria-disabled={!canJoin}
+                className={clsx(
+                  "flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl text-[16px] font-semibold transition-colors",
+                  canJoin ? "bg-[#0D2A5E] text-white active:bg-[#0A2149]" : "bg-[#EEF3F8] text-ink-500"
+                )}
+              >
+                <Video className="h-5 w-5" strokeWidth={1.75} aria-hidden />
                 {L({ hi: "मीटिंग जॉइन करें", en: "Join meeting" })}
               </a>
-              <p className="mt-2 text-center text-[12.5px] text-ink-500">
-                {L({ hi: "10 मिनट पहले खुलेगा", en: "Opens 10 minutes before" })}
+              <p className={clsx("mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center", SUPPORT)}>
+                {m.answer === "yes" && <Status tone="ok">{L({ hi: "आ रहे हैं", en: "Coming" })}</Status>}
+                <span>{L({ hi: "10 मिनट पहले खुलेगा", en: "Opens 10 minutes before" })}</span>
                 {!m.answer && (
                   <>
-                    {" · "}
-                    <button onClick={() => send("/meetings/answer", { answer: "no" })} className="underline">
+                    <span aria-hidden>·</span>
+                    <button disabled={busy} onClick={() => send("/meetings/answer", { answer: "no" })} className="-my-3 py-3 font-medium text-[#0D2A5E] underline">
                       {L({ hi: "नहीं आ पाऊँगा", en: "Can't come" })}
                     </button>
                   </>
@@ -143,17 +171,20 @@ export default function MeetingDetailPage() {
             </>
           ) : !m.answer ? (
             <div className="flex gap-2">
-              <button disabled={busy} onClick={() => send("/meetings/answer", { answer: "yes" })} className="h-[52px] flex-1 rounded-2xl bg-brand-700 text-[15px] font-bold text-white disabled:opacity-60">
+              <Button className="flex-1" disabled={busy} onClick={() => send("/meetings/answer", { answer: "yes" })}>
                 {L({ hi: "आऊँगा", en: "I'll come" })}
-              </button>
-              <button disabled={busy} onClick={() => send("/meetings/answer", { answer: "no" })} className="h-[52px] flex-1 rounded-2xl bg-white text-[15px] font-bold text-ink-900 ring-1 ring-inset ring-ink-200 disabled:opacity-60">
+              </Button>
+              <Button kind="line" className="flex-1" disabled={busy} onClick={() => send("/meetings/answer", { answer: "no" })}>
                 {L({ hi: "नहीं आ पाऊँगा", en: "Can't come" })}
-              </button>
+              </Button>
             </div>
           ) : (
-            <button disabled={busy} onClick={() => send("/meetings/answer", { answer: m.answer === "yes" ? "no" : "yes" })} className="w-full py-3 text-center text-[13.5px] font-semibold text-brand-700">
-              {m.answer === "yes" ? L({ hi: "नहीं आ पाऊँगा? बदलें", en: "Can't come after all? Change" }) : L({ hi: "आ सकते हैं? बदलें", en: "Can come after all? Change" })}
-            </button>
+            <div className="flex min-h-[48px] items-center justify-between gap-3">
+              {m.answer === "yes" ? <Status tone="ok">{L({ hi: "आ रहे हैं", en: "Coming" })}</Status> : <Status tone="mute">{L({ hi: "नहीं आ रहे", en: "Not coming" })}</Status>}
+              <button disabled={busy} onClick={() => send("/meetings/answer", { answer: m.answer === "yes" ? "no" : "yes" })} className="min-h-[44px] text-right text-[14px] font-medium leading-5 text-[#0D2A5E] disabled:opacity-50">
+                {m.answer === "yes" ? L({ hi: "नहीं आ पाऊँगा? बदलें", en: "Can't come after all? Change" }) : L({ hi: "आ सकते हैं? बदलें", en: "Can come after all? Change" })}
+              </button>
+            </div>
           )}
         </div>
       )}
