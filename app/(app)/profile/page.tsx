@@ -133,7 +133,6 @@ export default function ProfilePage() {
       <button type="button" onClick={logout} disabled={leaving} className="min-h-[50px] w-full rounded-2xl border border-ink-100 bg-white text-[15px] font-semibold text-rose-700 active:bg-ink-50 disabled:opacity-60">
         {leaving ? "…" : L({ hi: "लॉग आउट", en: "Log out" })}
       </button>
-      <p className="text-center text-[12px] text-ink-500">+91 {phoneText(me.phone)}</p>
 
       {asking && <AskUpdate studentId={child.id} onClose={() => setAsking(false)} />}
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
