@@ -244,27 +244,25 @@ export default function FeesPage() {
               );
             return (
               <li key={i.name} className={card}>
-                {/* Name and status share one line, centred; the last date sits small under it, on the right. */}
-                <div className="px-4 pt-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="min-w-0 truncate text-[16px] font-semibold leading-6 text-ink-900">{i.name}</h3>
-                    {st === "overdue" ? (
-                      /* Same outlined look as "Paid", with a red dot instead of the green one. */
-                      <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-900 bg-transparent py-px pl-2.5 pr-2 text-[12px] font-semibold leading-5 text-ink-900">
-                        {L(INS_TEXT[st])}
-                        <span className="h-2 w-2 rounded-full bg-[#D93636]" aria-hidden />
-                      </span>
-                    ) : (
-                      <Status tone={INS_TONE[st]}>{L(INS_TEXT[st])}</Status>
-                    )}
-                  </div>
-                  <p className={clsx("tnum text-right text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
+                {/* One line, evenly spaced: name on the left, status in the middle, last date on the right; the same 16 all round. */}
+                <div className="flex items-center justify-between gap-3 p-4">
+                  <h3 className="min-w-0 truncate text-[16px] font-semibold leading-6 text-ink-900">{i.name}</h3>
+                  {st === "overdue" ? (
+                    /* Same outlined look as "Paid", with a red dot instead of the green one. */
+                    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-900 bg-transparent py-px pl-2.5 pr-2 text-[12px] font-semibold leading-5 text-ink-900">
+                      {L(INS_TEXT[st])}
+                      <span className="h-2 w-2 rounded-full bg-[#D93636]" aria-hidden />
+                    </span>
+                  ) : (
+                    <Status tone={INS_TONE[st]}>{L(INS_TEXT[st])}</Status>
+                  )}
+                  <p className={clsx("tnum shrink-0 whitespace-nowrap text-right text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
                     {L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)}`, en: `Last date ${fullDate(i.due, lang)}` })}
                   </p>
                 </div>
 
                 {/* What it is made of, then what is paid and what is left: names left, amounts in one column. */}
-                <dl className="tnum mt-3 space-y-2 border-t border-[#E6ECF3] px-4 pt-3 text-[14px] leading-5">
+                <dl className="tnum space-y-2 border-t border-[#E6ECF3] px-4 pt-3 text-[14px] leading-5">
                   {list.map((h) => (
                     <div key={h.label} className="flex justify-between gap-4">
                       <dt className="text-ink-600">{h.amount < 0 ? `${h.label} (${L({ hi: "छूट", en: "discount" })})` : h.label}</dt>
