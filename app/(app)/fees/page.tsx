@@ -21,6 +21,25 @@ const CLAIM_TONE = { pending: "wait", verified: "ok", rejected: "bad" } as const
 /** "MTNA/2026-27/01409" → "01409": the part a parent reads out at the office. */
 const shortNo = (no: string) => no.split("/").pop() || no;
 
+/** "Today", "Yesterday", "4 days ago", "3 weeks ago", "2 months ago": how long ago a payment was made. */
+function ago(iso: string, lang: string) {
+  const d = -daysTo(iso.slice(0, 10));
+  const hi = lang === "hi";
+  if (d <= 0) return hi ? "आज" : "Today";
+  if (d === 1) return hi ? "कल" : "Yesterday";
+  if (d < 7) return hi ? `${d} दिन पहले` : `${d} days ago`;
+  if (d < 30) {
+    const w = Math.floor(d / 7);
+    return hi ? `${w} हफ़्ते पहले` : w === 1 ? "1 week ago" : `${w} weeks ago`;
+  }
+  if (d < 365) {
+    const m = Math.floor(d / 30);
+    return hi ? `${m} महीने पहले` : m === 1 ? "1 month ago" : `${m} months ago`;
+  }
+  const y = Math.floor(d / 365);
+  return hi ? `${y} साल पहले` : y === 1 ? "1 year ago" : `${y} years ago`;
+}
+
 /** Whole days from today to an ISO date (negative once it has passed). */
 function daysTo(iso: string) {
   const today = new Date();
@@ -73,17 +92,21 @@ export default function FeesPage() {
       {list.map((r) => (
         <li key={r.id}>
           <button onClick={() => share(r)} className="flex min-h-[72px] w-full items-center gap-4 px-4 py-3 text-left active:bg-[#F1F5F9]">
+            {/* The user's layout (2026-11-14): receipt and instalment as the heading, date and mode under it;
+                the amount in the top right corner, share in the bottom right. */}
             <span className="min-w-0 flex-1">
-              <span className="block text-[16px] font-medium leading-6 text-ink-900">
-                {fullDate(r.date, lang)} · {r.mode}
-              </span>
-              <span className="tnum block truncate text-[14px] leading-5 text-ink-500">
+              <span className="tnum block truncate text-[16px] font-medium leading-6 text-ink-900">
                 {L(F.receiptNo)} {shortNo(r.receiptNo)}
                 {r.instalments ? ` · ${r.instalments}` : ""}
               </span>
+              <span className="mt-1 block truncate text-[14px] leading-5 text-ink-500">
+                {fullDate(r.date, lang)} · {r.mode}
+              </span>
             </span>
-            <span className="tnum shrink-0 text-[16px] font-medium leading-6 text-ink-900">{rupees(r.amount)}</span>
-            <Share2 className="h-5 w-5 shrink-0 text-[#0D2A5E]" aria-label={L(F.share)} />
+            <span className="flex shrink-0 flex-col items-end justify-between gap-1 self-stretch">
+              <span className="tnum text-[16px] font-medium leading-6 text-ink-900">{rupees(r.amount)}</span>
+              <Share2 className="h-5 w-5 text-[#0D2A5E]" aria-label={L(F.share)} />
+            </span>
           </button>
         </li>
       ))}
@@ -158,14 +181,8 @@ export default function FeesPage() {
         <div className="flex items-center gap-3 px-4 py-3" style={band}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/img/fee-receipt.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
-          {left > 0 ? (
-            <p className="min-w-0 flex-1 text-[16px] font-medium leading-6 text-ink-700">{L({ hi: "कुल बाकी", en: "Total due" })}</p>
-          ) : (
-            <p className="flex min-w-0 flex-1 items-center gap-1 text-[16px] font-medium leading-6 text-[#21613F]">
-              <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} aria-hidden />
-              {L({ hi: "पूरी जमा", en: "All paid" })}
-            </p>
-          )}
+          {/* Always "Total due"; when nothing is left it simply reads ₹0 (the user removed the "All paid" words). */}
+          <p className="min-w-0 flex-1 text-[16px] font-medium leading-6 text-ink-700">{L({ hi: "कुल बाकी", en: "Total due" })}</p>
           <p className="tnum shrink-0 text-[28px] font-semibold leading-9 tracking-tight text-ink-900">{rupees(left)}</p>
         </div>
         <p className="tnum px-4 pb-2 pt-3 text-[14px] leading-5 text-ink-600">
@@ -208,13 +225,19 @@ export default function FeesPage() {
               return (
                 <li key={i.name} className={card}>
                   <Link href={`/fees/detail/?i=${k}`} className="flex items-center gap-3 px-4 py-3 active:bg-[#F1F5F9]">
+                    {/* Settled (the user's layout, 2026-11-14): name over the amount on the left; the "Paid"
+                        label with a green dot on its right, over how long ago, on the right. */}
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[16px] font-medium leading-6 text-ink-900">{i.name}</span>
-                      <span className={support}>{[on && `${L({ hi: "जमा", en: "Paid" })} ${dayMonth(on, lang)}`, r && `${L(F.receiptNo)} ${shortNo(r.receiptNo)}`].filter(Boolean).join(" · ") || L(F.insPaid)}</span>
+                      <span className="block truncate text-[16px] font-medium leading-6 text-ink-900">{i.name}</span>
+                      <span className="tnum mt-1 block text-[14px] font-medium leading-5 text-ink-700">{rupees(i.amount)}</span>
                     </span>
-                    <span className="flex shrink-0 flex-col items-end gap-1">
-                      <span className="tnum text-[16px] font-medium leading-6 text-[#21613F]">{rupees(i.amount)}</span>
-                      <Status tone="ok">{L(F.insPaid)}</Status>
+                    {/* Pinned to the card's corners: "Paid" at the top right, how long ago at the bottom right. */}
+                    <span className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch">
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-900 bg-transparent py-px pl-2.5 pr-2 text-[12px] font-semibold leading-5 text-ink-900">
+                        {L(F.insPaid)}
+                        <span className="h-2 w-2 rounded-full bg-[#21A04F]" aria-hidden />
+                      </span>
+                      {on && <span className="tnum text-[12px] leading-4 text-ink-500">{ago(on, lang)}</span>}
                     </span>
                   </Link>
                 </li>

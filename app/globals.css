@@ -925,3 +925,10 @@ form.sahayak-glass:focus-within {
     animation: none;
   }
 }
+
+/* Temporary lock (lib/appLock.ts, components/AppLock.tsx): text keeps its size, no selecting or
+   long-press callout, no double-tap zoom. Text boxes stay selectable so typing still works. */
+html.app-lock{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:pan-x pan-y}
+html.app-lock body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html.app-lock :is(input,textarea,select,[contenteditable="true"]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+html.app-lock img{-webkit-user-drag:none}

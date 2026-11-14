@@ -267,6 +267,17 @@ export function StudyScreen() {
   // What is on screen: the running block's own mode, else the chosen tab.
   const view: Mode = run ? run.mode : mode;
   const scrub = useDurationScrub(minutes, setMinutes, !run && view === "timer");
+  // Each time the thumb lets go of the ruler, the chooser "lands" on the new length: the row springs back,
+  // the highlight drops onto the number with a ring, the time on the dial pops, and the phone gives a tap.
+  const [landed, setLanded] = useState(0);
+  const wasScrubbing = useRef(false);
+  useEffect(() => {
+    if (wasScrubbing.current && !scrub.active) {
+      setLanded((n) => n + 1);
+      navigator.vibrate?.(12);
+    }
+    wasScrubbing.current = scrub.active;
+  }, [scrub.active]);
   const durationChoices = PRESETS.includes(minutes) ? PRESETS : [15, minutes, 45, 60];
   const round = run?.round || 1;
   const cycleSeconds = (POMO.focus + POMO.rest) * 60;
@@ -324,7 +335,7 @@ export function StudyScreen() {
                   </span>
                 )}
                 <span data-swipe="duration" {...(!run && view === "timer" ? scrub.bindings : {})} onKeyDown={scrub.keyboard} tabIndex={!run && view === "timer" ? 0 : undefined} className={clsx("tnum select-none text-[52px] font-semibold leading-none tracking-tight text-ink-900", !run && view === "timer" && "cursor-ew-resize touch-none")} role={!run && view === "timer" ? "slider" : "timer"} aria-label={!run && view === "timer" ? L({"hi":"पढ़ाई के मिनट","en":"Study minutes"}) : undefined} aria-valuemin={!run && view === "timer" ? 1 : undefined} aria-valuemax={!run && view === "timer" ? 180 : undefined} aria-valuenow={!run && view === "timer" ? minutes : undefined} aria-valuetext={!run && view === "timer" ? `${minutes} min` : undefined} aria-live="off">
-                  <span key={run ? "run" : `len-${minutes}`} className={clsx("inline-block", !run && "study-tick")}>{mmss(left)}</span>
+                  <span key={run ? "run" : `len-${minutes}-${landed}`} className={clsx("inline-block", !run && (landed > 0 ? "study-land-num" : "study-tick"))}>{mmss(left)}</span>
                 </span>
                 <span className={clsx("mt-1.5 text-[13px]", run?.endsAt ? "font-medium text-[#21613F]" : "text-ink-500")}>{status}</span>
               </div>
@@ -357,19 +368,19 @@ export function StudyScreen() {
                 <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
                   <Minus className="h-4 w-4" aria-hidden />
                 </button>
-                <div {...scrub.bindings} data-swipe="duration" data-duration-presets="true" className="relative grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]">
+                <div {...scrub.bindings} key={`row-${landed}`} data-swipe="duration" data-duration-presets="true" className={clsx("relative grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]", landed > 0 && !scrub.active && "study-land-row")}>
                   {/* The white highlight under the chosen length; it slides when the length changes. */}
                   {!scrub.active && (
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute bottom-[3px] top-[3px] rounded-lg bg-white shadow-sm"
-                      style={{ left: "3px", width: "calc((100% - 6px - 12px) / 4)", transform: `translateX(calc(${Math.max(0, durationChoices.indexOf(minutes))} * (100% + 4px)))`, transition: "transform .42s cubic-bezier(.2,.8,.2,1)" }}
+                      className={clsx("pointer-events-none absolute bottom-[3px] top-[3px] rounded-lg bg-white shadow-sm", landed > 0 && "study-land-pill")}
+                      style={{ left: "3px", width: "calc((100% - 6px - 12px) / 4)", "--x": `translateX(calc(${Math.max(0, durationChoices.indexOf(minutes))} * (100% + 4px)))`, transform: "var(--x)", transition: "transform .42s cubic-bezier(.2,.8,.2,1)" } as React.CSSProperties}
                     />
                   )}
                   {scrub.active && <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10"><DurationRuler position={scrub.position} /></div>}
                   {durationChoices.map((m, index) => (
                     <button key={index} type="button" onKeyDown={minutes === m ? scrub.keyboard : undefined} onClick={() => { if (!scrub.consumeClick()) setMinutes(m); }} aria-pressed={minutes === m} aria-label={`${m} ${L({ hi: "मिनट", en: "minutes" })}`} className={clsx("tnum relative h-[34px] rounded-lg text-[13.5px] transition-colors duration-300", minutes === m && "touch-none select-none cursor-ew-resize", scrub.active && "opacity-0", minutes === m ? "font-semibold text-[#BE4D25]" : "font-medium text-ink-500")}>
-                      <span key={minutes === m ? `on-${m}` : `off-${index}`} className={clsx("inline-block", minutes === m && "study-tick")}>{m}</span>
+                      <span key={minutes === m ? `on-${m}-${landed}` : `off-${index}`} className={clsx("inline-block", minutes === m && (landed > 0 ? "study-land-num" : "study-tick"))}>{m}</span>
                     </button>
                   ))}
                 </div>
