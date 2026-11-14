@@ -23,13 +23,13 @@ export function useDurationScrub(value: number, change: (n: number) => void, ena
     oscillator.type = "triangle";
     oscillator.frequency.setValueAtTime(1700, ctx.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(650, ctx.currentTime + .018);
-    gain.gain.setValueAtTime(.035, ctx.currentTime);
+    gain.gain.setValueAtTime(.085, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + .022);
     oscillator.connect(gain); gain.connect(ctx.destination);
     oscillator.start(); oscillator.stop(ctx.currentTime + .025);
     oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
   };
-  const finish = () => { cancelHold(); const p = press.current; press.current = null; setActive(false); if (p) setPosition(p.last); };
+  const finish = () => { cancelHold(); const p = press.current; press.current = null; setActive(false); if (p) setPosition(p.last); setTimeout(() => { consumed.current = false; }, 0); };
   const bindings = {
     onPointerDown: (e: PointerEvent<HTMLElement>) => {
       if (!enabled || e.button !== 0 || !e.isPrimary) return;
@@ -38,13 +38,13 @@ export function useDurationScrub(value: number, change: (n: number) => void, ena
       e.currentTarget.setPointerCapture(e.pointerId);
       press.current = {id:e.pointerId, x:e.clientX, start:value, last:value, held:false};
       try { const Audio = window.AudioContext || (window as any).webkitAudioContext; if (!audio.current && Audio) audio.current = new Audio(); void audio.current?.resume().catch(() => {}); } catch { /* Silent dragging remains available. */ }
-      hold.current = setTimeout(() => { if (!press.current) return; press.current.held = true; consumed.current = true; setPosition(value); setActive(true); }, 300);
+      hold.current = setTimeout(() => { if (!press.current) return; press.current.held = true; consumed.current = true; try { navigator.vibrate?.(12); } catch { /* Optional tactile activation. */ } setPosition(value); setActive(true); }, 300);
     },
     onPointerMove: (e: PointerEvent<HTMLElement>) => {
       const p = press.current; if (!p || p.id !== e.pointerId) return;
       if (!p.held) { if (Math.abs(e.clientX-p.x)>10) { cancelHold(); press.current=null; } return; }
       e.preventDefault(); const pos=clamp(p.start+(e.clientX-p.x)/STEP), next=Math.round(pos); setPosition(pos);
-      if (next!==p.last) { p.last=next; change(next); tick(); }
+      if (next!==p.last) { p.last=next; change(next); tick(); try { navigator.vibrate?.(next % 5 === 0 ? 16 : 7); } catch { /* Vibration is optional. */ } }
     },
     onPointerUp: (e: PointerEvent<HTMLElement>) => { finish(); if(e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); },
     onPointerCancel: finish,

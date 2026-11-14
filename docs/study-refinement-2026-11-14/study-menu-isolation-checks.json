@@ -1,0 +1,34 @@
+[
+  {
+    "name": "touch hold reveals ruler",
+    "pass": true
+  },
+  {
+    "name": "sidebar stays closed during duration drag",
+    "pass": true
+  },
+  {
+    "name": "touch drag updates 25 to 30",
+    "pass": true
+  },
+  {
+    "name": "touch release retains 30 minutes",
+    "pass": true
+  },
+  {
+    "name": "reverse touch scrub reaches 20 minutes",
+    "pass": true
+  },
+  {
+    "name": "activation and detent request haptic feedback",
+    "pass": true
+  },
+  {
+    "name": "release returns normal controls at 20",
+    "pass": true
+  },
+  {
+    "name": "ordinary page swipe still opens menu",
+    "pass": true
+  }
+]

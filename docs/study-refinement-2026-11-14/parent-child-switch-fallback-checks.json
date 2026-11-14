@@ -1,0 +1,34 @@
+[
+  {
+    "name": "first child and own fees shown",
+    "pass": true
+  },
+  {
+    "name": "storage failure uses fresh remount without reload",
+    "pass": true
+  },
+  {
+    "name": "new child name and own fee data",
+    "pass": true
+  },
+  {
+    "name": "previous or stale sibling data not shown",
+    "pass": true
+  },
+  {
+    "name": "blocked storage does not overwrite prior preference",
+    "pass": true
+  },
+  {
+    "name": "new child home requested",
+    "pass": true
+  },
+  {
+    "name": "no first-child home requested during restore",
+    "pass": true
+  },
+  {
+    "name": "same child selection does not reload",
+    "pass": true
+  }
+]

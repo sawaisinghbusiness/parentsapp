@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useApi, type ApiError } from "./api";
+import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { invalidateChildCache, useApi, type ApiError } from "./api";
+import { useL } from "./i18n";
 import { DEMO, demoSignedIn } from "./demo";
 
 export interface Child {
@@ -61,6 +62,9 @@ export function ParentProvider({ children }: { children: React.ReactNode }) {
     if (me?.school.name) document.title = `${me.school.name} · Parents`;
   }, [me?.school.name]);
   const [picked, setPicked] = useState<string | null>(null);
+  const [selectionReady, setSelectionReady] = useState(false);
+  const [switchingTo, setSwitchingTo] = useState<string | null>(null);
+  const L = useL();
 
   useEffect(() => {
     // Not signed in: straight to the sign-in page, without first drawing the home screen.
@@ -71,22 +75,33 @@ export function ParentProvider({ children }: { children: React.ReactNode }) {
     try {
       setPicked(localStorage.getItem(PICK));
     } catch {
-      /* ignore */
+      /* Storage may be unavailable. */
     }
+    setSelectionReady(true);
   }, []);
 
   const pick = useCallback((id: string) => {
+    const current = me?.children.find(c => c.id === picked) || me?.children[0];
+    if (id === current?.id || !me?.children.some(c => c.id === id)) return;
+    invalidateChildCache(id);
+    let remembered = false;
+    try { localStorage.setItem(PICK, id); remembered = localStorage.getItem(PICK) === id; } catch { /* Fall back to remounting in this tab. */ }
     setPicked(id);
-    try {
-      localStorage.setItem(PICK, id);
-    } catch {
-      /* ignore */
+    if (remembered) {
+      setSwitchingTo(id);
+      requestAnimationFrame(() => requestAnimationFrame(() => window.location.reload()));
     }
-  }, []);
+  }, [me, picked]);
 
-  const child = useMemo(() => me?.children.find((c) => c.id === picked) || me?.children[0], [me, picked]);
+  const child = useMemo(() => selectionReady ? (me?.children.find((c) => c.id === picked) || me?.children[0]) : undefined, [me, picked, selectionReady]);
 
-  return <Ctx.Provider value={{ me, child, pick, stale, loading, error: me ? null : error, reload }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ me, child, pick, stale, loading, error: me ? null : error, reload }}>
+    {!selectionReady || switchingTo ? <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-3 bg-[#F7F9FC] px-6 text-center" role="status" aria-live="polite" aria-busy="true">
+      <span className="h-7 w-7 animate-spin rounded-full border-2 border-[#DCE4ED] border-t-[#0D2A5E] motion-reduce:animate-none" aria-hidden="true" />
+      {switchingTo && <p className="text-lg font-semibold text-ink-900">{me?.children.find(c => c.id === switchingTo)?.name}</p>}
+      <p className="text-sm text-ink-600">{L({"hi":"प्रोफ़ाइल लोड हो रही है","en":"Loading profile"})}</p>
+    </div> : <Fragment key={child?.id || "no-child"}>{children}</Fragment>}
+  </Ctx.Provider>;
 }
 
 export const useParent = () => useContext(Ctx);

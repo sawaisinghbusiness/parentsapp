@@ -88,6 +88,17 @@ export function refreshAll() {
   window.dispatchEvent(new Event(REFRESH));
 }
 
+/** Discard server responses for the selected child without touching local study sessions. */
+export function invalidateChildCache(id: string) {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (!key.startsWith(KEY)) continue;
+      const query = new URL(key.slice(KEY.length), "https://cache.local").searchParams;
+      if (query.get("student") === id) localStorage.removeItem(key);
+    }
+  } catch { /* Switching still works when cache access is unavailable. */ }
+}
+
 export function clearCache() {
   try {
     for (const k of Object.keys(localStorage)) if (k.startsWith(KEY)) localStorage.removeItem(k);

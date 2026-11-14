@@ -44,7 +44,7 @@ interface PageInfo {
   own?: boolean;
   /** No tab bar (a chat, whose message box sits at the bottom). */
   bare?: boolean;
-  /** No floating School Sahayak button: it must not cover a payment, a form or the school's phone number. */
+  /** No floating AI Assistant button: it must not cover a payment, a form or the school's phone number. */
   noOwl?: boolean;
   /** No top bar at all (no menu button, no title). */
   noHeader?: boolean;
@@ -75,7 +75,7 @@ const PAGES: Record<string, PageInfo> = {
   "/search/": { title: { hi: "खोजें", en: "Search" }, back: "/" },
   "/teachers/": { title: { hi: "टीचर से पूछें", en: "Ask Teacher" }, back: "/", perChild: true },
   "/teachers/chat/": { title: { hi: "टीचर से बात", en: "Chat" }, back: "/teachers/", perChild: true, own: true, bare: true },
-  "/assistant/": { title: { hi: "स्कूल सहायक", en: "School Sahayak" }, back: "/", perChild: true, own: true, bare: true },
+  "/assistant/": { title: { hi: "एआई असिस्टेंट", en: "AI Assistant" }, back: "/", perChild: true, own: true, bare: true },
 };
 
 const norm = (p: string) => (p.endsWith("/") ? p : p + "/");
@@ -163,7 +163,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </main>
 
-      {/* School Sahayak (the AI chat): a round button on every tab screen that can be dragged to either side. */}
+      {/* AI Assistant (the AI chat): a round button on every tab screen that can be dragged to either side. */}
       {!page?.bare && !page?.noOwl && !isHome && <SahayakButton />}
 
       {!page?.bare && (

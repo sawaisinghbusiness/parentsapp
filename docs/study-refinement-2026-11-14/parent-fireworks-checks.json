@@ -1,0 +1,22 @@
+[
+  {
+    "name": "completion still launches fireworks",
+    "pass": true
+  },
+  {
+    "name": "celebration creates no audio context",
+    "pass": true
+  },
+  {
+    "name": "canvas has transparent background",
+    "pass": true
+  },
+  {
+    "name": "canvas corner remains transparent",
+    "pass": true
+  },
+  {
+    "name": "celebration cleans up",
+    "pass": true
+  }
+]

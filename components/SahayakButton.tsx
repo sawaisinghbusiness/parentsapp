@@ -7,7 +7,7 @@ import { useSahayakPreference } from "@/lib/sahayakPreference";
 import { useL } from "@/lib/i18n";
 
 /**
- * The floating School Sahayak button. A tap opens the chat; a drag moves it anywhere, and on letting go it
+ * The floating AI Assistant button. A tap opens the chat; a drag moves it anywhere, and on letting go it
  * glides to the nearer side (left or right) at that height (the user's ask, 2026-10-23). The spot is kept
  * on this phone. It stays inside the app's column on wide screens and clear of the tab bar.
  */
@@ -104,7 +104,7 @@ export function SahayakButton() {
         touch.current = null;
         setDrag(null);
       }}
-      aria-label={L({ hi: "स्कूल सहायक से पूछें", en: "Ask School Sahayak" })}
+      aria-label={L({ hi: "एआई असिस्टेंट से पूछें", en: "Ask AI Assistant" })}
       className="fixed left-0 top-0 z-20 grid place-items-center overflow-hidden rounded-full border-[3px] border-white bg-[#FFF4E4] shadow-[0_8px_20px_rgba(226,97,27,0.35)] active:scale-95"
       style={{
         width: SIZE,

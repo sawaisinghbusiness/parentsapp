@@ -1,0 +1,34 @@
+[
+  {
+    "name": "timeline above clock",
+    "pass": true
+  },
+  {
+    "name": "four round stops",
+    "pass": true
+  },
+  {
+    "name": "half focus advances line toward stop two",
+    "pass": true
+  },
+  {
+    "name": "first round marked current",
+    "pass": true
+  },
+  {
+    "name": "break continues toward next stop",
+    "pass": true
+  },
+  {
+    "name": "break ends automatically into round two",
+    "pass": true
+  },
+  {
+    "name": "line reaches second stop",
+    "pass": true
+  },
+  {
+    "name": "clock text updates round two",
+    "pass": true
+  }
+]

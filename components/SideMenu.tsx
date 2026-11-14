@@ -203,7 +203,7 @@ export function SideMenu({ active, layerRef, onClose, onSwitchChild }: { active:
 
         <div className="shrink-0 border-t border-ink-100 px-4 pb-2">
           <button type="button" role="switch" aria-checked={owlEnabled} onClick={() => setOwlEnabled(!owlEnabled)} className="flex min-h-[52px] w-full items-center justify-between gap-3 rounded-md px-1 text-left text-[14px] font-medium text-ink-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34483D]">
-            <span>{L({"hi":"तैरता उल्लू दिखाएँ","en":"Show floating owl"})}</span>
+            <span>{L({"hi":"एआई असिस्टेंट","en":"AI Assistant"})}</span>
             <span aria-hidden="true" className={clsx("relative h-[26px] w-[46px] shrink-0 rounded-full transition-colors motion-reduce:transition-none", owlEnabled ? "bg-[#15803D]" : "bg-[#C9CEC9]")}>
               <span className={clsx("absolute left-[3px] top-[3px] h-5 w-5 rounded-full bg-white shadow-sm transition-transform motion-reduce:transition-none", owlEnabled && "translate-x-5")} />
             </span>

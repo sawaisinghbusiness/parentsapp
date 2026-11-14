@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import Link from "next/link";
-import { ChevronRight, Minus, Pause, Play, Plus, Square } from "lucide-react";
+import { ChevronDown, ChevronRight, Info, Minus, Pause, Play, Plus, Square } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
@@ -78,28 +78,9 @@ const hm = (min: number, hi: boolean) => {
   return h ? `${h} h ${m} min` : `${m} min`;
 };
 
-/** A short two-note chime made in the browser (no sound file), then a buzz. */
-function chime() {
-  try {
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-    const ctx = new Ctx();
-    [880, 1175].forEach((f, i) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.frequency.value = f;
-      o.connect(g);
-      g.connect(ctx.destination);
-      const t = ctx.currentTime + i * 0.28;
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-      o.start(t);
-      o.stop(t + 0.55);
-    });
-  } catch {
-    /* no sound on this phone */
-  }
-  navigator.vibrate?.([300, 120, 300]);
+/** Completion stays silent; supported phones can give a brief vibration. */
+function notifyCompletion() {
+  try { navigator.vibrate?.([120, 60, 120]); } catch { /* Optional vibration. */ }
 }
 
 interface HomeworkItem {
@@ -184,7 +165,7 @@ export function StudyScreen() {
   // A block has run out: record it, celebrate a finished study block, and in Pomodoro go on to the next part.
   useEffect(() => {
     if (!run?.endsAt || now < run.endsAt) return;
-    chime();
+    notifyCompletion();
     if (run.phase === "focus") {
       setDone(record(run.subject, run.total, run.mode));
       setParty(true);
@@ -288,6 +269,9 @@ export function StudyScreen() {
   const scrub = useDurationScrub(minutes, setMinutes, !run && view === "timer");
   const durationChoices = PRESETS.includes(minutes) ? PRESETS : [15, minutes, 45, 60];
   const round = run?.round || 1;
+  const cycleSeconds = (POMO.focus + POMO.rest) * 60;
+  const cycleElapsed = run?.mode === "pomodoro" ? (run.phase === "break" ? POMO.focus * 60 : 0) + Math.max(0, run.total - left) : 0;
+  const roundProgress = Math.min(1, Math.max(0, (round - 1 + cycleElapsed / cycleSeconds) / (POMO.rounds - 1)));
   const pomoToday = todays.filter((s) => s.mode === "pomodoro");
   // The dial: 60 ticks like a clock face; they darken one by one as the block runs.
   const lit = Math.round(doneFrac * 60);
@@ -339,7 +323,7 @@ export function StudyScreen() {
                     {onBreak ? L({ hi: "ब्रेक", en: "Break" }) : L({ hi: `राउंड ${round} / ${POMO.rounds}`, en: `Round ${round} of ${POMO.rounds}` })}
                   </span>
                 )}
-                <span {...(!run && view === "timer" ? scrub.bindings : {})} onKeyDown={scrub.keyboard} tabIndex={!run && view === "timer" ? 0 : undefined} className={clsx("tnum select-none text-[52px] font-semibold leading-none tracking-tight text-ink-900", !run && view === "timer" && "cursor-ew-resize touch-none")} role={!run && view === "timer" ? "slider" : "timer"} aria-label={!run && view === "timer" ? L({"hi":"पढ़ाई के मिनट","en":"Study minutes"}) : undefined} aria-valuemin={!run && view === "timer" ? 1 : undefined} aria-valuemax={!run && view === "timer" ? 180 : undefined} aria-valuenow={!run && view === "timer" ? minutes : undefined} aria-valuetext={!run && view === "timer" ? `${minutes} min` : undefined} aria-live="off">
+                <span data-swipe="duration" {...(!run && view === "timer" ? scrub.bindings : {})} onKeyDown={scrub.keyboard} tabIndex={!run && view === "timer" ? 0 : undefined} className={clsx("tnum select-none text-[52px] font-semibold leading-none tracking-tight text-ink-900", !run && view === "timer" && "cursor-ew-resize touch-none")} role={!run && view === "timer" ? "slider" : "timer"} aria-label={!run && view === "timer" ? L({"hi":"पढ़ाई के मिनट","en":"Study minutes"}) : undefined} aria-valuemin={!run && view === "timer" ? 1 : undefined} aria-valuemax={!run && view === "timer" ? 180 : undefined} aria-valuenow={!run && view === "timer" ? minutes : undefined} aria-valuetext={!run && view === "timer" ? `${minutes} min` : undefined} aria-live="off">
                   {mmss(left)}
                 </span>
                 <span className={clsx("mt-1.5 text-[13px]", run?.endsAt ? "font-medium text-[#21613F]" : "text-ink-500")}>{status}</span>
@@ -373,7 +357,7 @@ export function StudyScreen() {
                 <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
                   <Minus className="h-4 w-4" aria-hidden />
                 </button>
-                <div {...scrub.bindings} data-duration-presets="true" className="relative grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]">
+                <div {...scrub.bindings} data-swipe="duration" data-duration-presets="true" className="relative grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]">
                   {scrub.active && <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10"><DurationRuler position={scrub.position} /></div>}
                   {durationChoices.map((m, index) => (
                     <button key={index} type="button" onKeyDown={minutes === m ? scrub.keyboard : undefined} onClick={() => { if (!scrub.consumeClick()) setMinutes(m); }} aria-pressed={minutes === m} aria-label={`${m} ${L({ hi: "मिनट", en: "minutes" })}`} className={clsx("tnum h-[34px] rounded-lg text-[13.5px] transition-colors", minutes === m && "touch-none select-none cursor-ew-resize", scrub.active && "opacity-0", minutes === m ? "bg-white font-semibold text-[#BE4D25] shadow-sm" : "font-medium text-ink-500")}>
@@ -488,25 +472,21 @@ export function StudyScreen() {
         <div key="pomodoro" className="study-from-right space-y-8" role="tabpanel">
           <div className="space-y-4">
             <section className="flex flex-col items-center">
+
+              <div className="relative mb-5 w-full pt-2" data-round-timeline>
+                <div className="absolute left-[12.5%] right-[12.5%] top-[13px] h-[3px] overflow-hidden rounded-full bg-[#E4DDD3]" role="progressbar" aria-label="Pomodoro rounds" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(roundProgress * 100)}>
+                  <div className="h-full bg-[#BE4D25]" style={{ width: (roundProgress * 100) + "%" }} />
+                </div>
+                <ol className="relative grid grid-cols-4">
+                  {Array.from({ length: POMO.rounds }, (_, i) => <li key={i} aria-current={i + 1 === round ? "step" : undefined} className="flex flex-col items-center gap-2">
+                    <span className={clsx("relative h-[13px] w-[13px] rounded-full border-2", i + 1 <= round ? "border-[#BE4D25] bg-[#BE4D25]" : "border-[#C7C5C1] bg-[#FFFCF7]")} />
+                    <span className={clsx("text-[12px]", i + 1 === round ? "font-semibold text-[#9B3C1B]" : "text-ink-500")}>{L({ hi: "\u0930\u093e\u0909\u0902\u0921", en: "Round" })} {i + 1}</span>
+                  </li>)}
+                </ol>
+              </div>
               {dial}
-              {/* The four rounds, as four steps: done ones filled, the current one outlined. */}
-              <ol className="mt-4 grid w-full grid-cols-4 gap-1.5" aria-label={L({ hi: "राउंड", en: "Rounds" })}>
-                {Array.from({ length: POMO.rounds }, (_, i) => {
-                  const n = i + 1;
-                  const finished = !!run && (n < round || (n === round && run.phase === "break"));
-                  return (
-                    <li key={n} className={clsx("tnum grid h-10 place-items-center rounded-[10px] border text-[13.5px]", finished ? "border-[#BE4D25] bg-[#BE4D25] font-medium text-white" : n === round ? "border-[#BE4D25] bg-white font-semibold text-[#BE4D25]" : "border-[#E4DDD3] bg-white text-ink-500")}>
-                      {L({ hi: `राउंड ${n}`, en: `Round ${n}` })}
-                    </li>
-                  );
-                })}
-              </ol>
-              <p className="mt-3 text-center text-[13.5px] leading-5 text-ink-600">
-                {L({
-                  hi: `हर राउंड: ${POMO.focus} मिनट पढ़ाई, फिर ${POMO.rest} मिनट का ब्रेक। अगला राउंड अपने आप शुरू होता है।`,
-                  en: `Each round: ${POMO.focus} min study, then a ${POMO.rest} min break. The next round starts by itself.`,
-                })}
-              </p>
+
+
             </section>
             {subjectRow}
             <div className="space-y-3">
@@ -536,6 +516,19 @@ export function StudyScreen() {
               </ul>
             )}
           </section>
+          <details className="group border-t border-[#E4DDD3]">
+            <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 text-[13px] font-medium text-ink-600 [&::-webkit-details-marker]:hidden">
+              <Info className="h-4 w-4" aria-hidden />
+              <span className="flex-1">{L({"hi":"पोमोडोरो कैसे काम करता है","en":"How Pomodoro works"})}</span>
+              <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden />
+            </summary>
+              <p className="pb-3 text-[13px] leading-6 text-ink-600">
+                {L({
+                  hi: `हर राउंड: ${POMO.focus} मिनट पढ़ाई, फिर ${POMO.rest} मिनट का ब्रेक। अगला राउंड अपने आप शुरू होता है।`,
+                  en: `Each round: ${POMO.focus} min study, then a ${POMO.rest} min break. The next round starts by itself.`,
+                })}
+              </p>
+          </details>
         </div>
       )}
 

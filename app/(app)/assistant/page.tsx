@@ -30,7 +30,7 @@ const QUESTIONS: Question[] = [
 const speechApi = () => (typeof window === "undefined" ? null : (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null);
 
 /**
- * School Sahayak: the parent asks about their child in their own words; the backend answers from
+ * AI Assistant: the parent asks about their child in their own words; the backend answers from
  * that child's data only. Opens on the orb and four big questions (the user's reference, 2026-10-22).
  */
 export default function AssistantPage() {
@@ -154,7 +154,7 @@ export default function AssistantPage() {
             <ChevronLeft className="h-6 w-6" aria-hidden />
           </Link>
           <div className="min-w-0">
-            <p className="text-[17px] font-semibold leading-tight">{L({ hi: "स्कूल सहायक", en: "School Sahayak" })}</p>
+            <p className="text-[17px] font-semibold leading-tight">{L({ hi: "एआई असिस्टेंट", en: "AI Assistant" })}</p>
             <p className="truncate text-[12.5px] text-[#666A6E]">{child ? L({ hi: `${child.name} · कक्षा ${child.classSec}`, en: `${child.name} · Class ${child.classSec}` }) : ""}</p>
           </div>
         </div>

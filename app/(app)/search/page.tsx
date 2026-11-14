@@ -25,7 +25,7 @@ interface Notice {
   date: string;
 }
 
-/** Questions that go straight to School Sahayak. */
+/** Questions that go straight to AI Assistant. */
 const ASK: Bi[] = [
   { hi: "आज का होमवर्क?", en: "Today's homework?" },
   { hi: "कितनी फ़ीस बाकी है?", en: "How much fee is due?" },
@@ -46,9 +46,9 @@ const speechApi = () => (typeof window === "undefined" ? null : (window as any).
 
 /**
  * Search, opening like PhonePe's (the user's reference, 2026-10-23): a coloured glow wakes under the bar,
- * "Ask School Sahayak" types itself in, the chips, Popular and New for you ease in one after another, and
+ * "Ask AI Assistant" types itself in, the chips, Popular and New for you ease in one after another, and
  * after a few seconds the glow settles and the hint becomes "Type or speak here…". Typing searches this
- * child's homework and the school's notices; any question can also go to School Sahayak.
+ * child's homework and the school's notices; any question can also go to AI Assistant.
  */
 export default function SearchPage() {
   const { child } = useParent();
@@ -64,7 +64,7 @@ export default function SearchPage() {
   const notices = useApi<{ notices: Notice[] }>(child ? `/notices?student=${child.id}` : null);
   // Same request as Home, so it is usually already on the phone.
   const home = useApi<{ events?: { id: string; title: string; date: string; coverUrl?: string | null; scene?: string | null }[] }>(child ? `/home?student=${child.id}` : null);
-  const prompt = L({ hi: "स्कूल सहायक से पूछें", en: "Ask School Sahayak" });
+  const prompt = L({ hi: "एआई असिस्टेंट से पूछें", en: "Ask AI Assistant" });
 
   // The hint types itself in, then settles into a plain one.
   useEffect(() => {
@@ -157,7 +157,7 @@ export default function SearchPage() {
           <Link href={askHref(q.trim())} className="row-card flex items-center gap-3">
             <Sparkles className="h-5 w-5 shrink-0 text-[#E2558E]" aria-hidden />
             <span className="min-w-0 flex-1 truncate text-[15px]">
-              {L({ hi: "स्कूल सहायक से पूछें:", en: "Ask School Sahayak:" })} <b className="font-semibold">{q.trim()}</b>
+              {L({ hi: "एआई असिस्टेंट से पूछें:", en: "Ask AI Assistant:" })} <b className="font-semibold">{q.trim()}</b>
             </span>
           </Link>
           {found.hw.length + found.notices.length === 0 ? (
@@ -204,7 +204,7 @@ export default function SearchPage() {
         </div>
       ) : (
         <>
-          {/* Questions for School Sahayak */}
+          {/* Questions for AI Assistant */}
           <div className="search-in no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" style={stagger(0)}>
             {ASK.map((a) => (
               <Link key={a.en} href={askHref(L(a))} className="search-chip h-[38px] shrink-0 rounded-xl px-3.5 text-[14px] font-medium leading-[36px] text-ink-900">
