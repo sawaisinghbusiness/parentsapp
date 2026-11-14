@@ -63,7 +63,7 @@ export default function FeesPage() {
     if (error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
     return (
       <div className="space-y-3">
-        <Skeleton className="h-[300px] w-full rounded-2xl" />
+        <Skeleton className="h-[300px] w-full rounded-[10px]" />
         <ListSkeleton rows={3} />
       </div>
     );
@@ -88,7 +88,7 @@ export default function FeesPage() {
   }
 
   const receiptList = (list: Receipt[]) => (
-    <ul className="divide-y divide-[#E6ECF3] overflow-hidden rounded-2xl border border-[#DCE4ED] bg-white">
+    <ul className="divide-y divide-[#E6ECF3] overflow-hidden rounded-[10px] border border-[#DCE4ED] bg-white">
       {list.map((r) => (
         <li key={r.id}>
           <button onClick={() => share(r)} className="flex min-h-[72px] w-full items-center gap-4 px-4 py-3 text-left active:bg-[#F1F5F9]">
@@ -118,7 +118,7 @@ export default function FeesPage() {
   if (!data.available) {
     return (
       <div className="animate-rise space-y-4">
-        <section className="space-y-4 rounded-2xl border border-[#DCE4ED] bg-white p-4">
+        <section className="space-y-4 rounded-[10px] border border-[#DCE4ED] bg-white p-4">
           <p className="text-[16px] leading-6 text-ink-700">{L(F.notAvailable)}</p>
           <CallOffice phone={data.pay.officePhone} className="w-full" />
         </section>
@@ -165,7 +165,7 @@ export default function FeesPage() {
    * Pay button. After two tries the user still found full cards too tall, so each instalment is two lines
    * and what it is made of opens from the row (Fee Detail). Only the first unpaid one's Pay is filled.
    */
-  const card = "overflow-hidden rounded-2xl border border-[#DCE4ED] bg-white";
+  const card = "overflow-hidden rounded-[10px] border border-[#DCE4ED] bg-white";
   const money = "tnum shrink-0 text-[16px] font-medium leading-6 text-ink-900";
   const support = "tnum block truncate text-[14px] leading-5 text-ink-500";
   const band = { background: "linear-gradient(160deg,#F4F7FF 0%,#DCE5FF 100%)" };

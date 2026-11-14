@@ -141,7 +141,7 @@ function PayFlow({ info }: { info: PayInfo }) {
    * (one line) or 64 (two); buttons 44 to 48. The Pay button is part of the page, straight after the choices:
    * no bar floating over the content.
    */
-  const card = "overflow-hidden rounded-2xl border border-[#DCE4ED] bg-white";
+  const card = "overflow-hidden rounded-[10px] border border-[#DCE4ED] bg-white";
   const h2 = "text-[20px] font-semibold leading-7 text-ink-900";
   const button = "flex h-12 w-full items-center justify-center rounded-xl bg-[#0D2A5E] text-[16px] font-semibold leading-6 text-white active:bg-[#0A2149] disabled:opacity-50";
   const band = { background: "linear-gradient(160deg,#F4F7FF 0%,#DCE5FF 100%)" };
