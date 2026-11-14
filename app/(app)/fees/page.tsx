@@ -283,7 +283,7 @@ export default function FeesPage() {
                 </div>
 
                 <div className="flex items-center gap-2 px-4 pb-4 pt-3">
-                  {data.pay.upiId && (
+                  {data.pay.qrUrl && (
                     <Link
                       href={`${PAY}?i=${k}`}
                       className={clsx(
@@ -294,7 +294,7 @@ export default function FeesPage() {
                       {L({ hi: `${rupees(toPay(i))} भरें`, en: `Pay ${rupees(toPay(i))}` })}
                     </Link>
                   )}
-                  <Link href={`/fees/detail/?i=${k}`} className={clsx("flex h-11 items-center justify-center rounded-xl text-[14px] font-semibold leading-5 text-[#0D2A5E] active:bg-[#EAF0F6]", data.pay.upiId ? "px-4" : "flex-1 border border-[#DCE4ED]")}>
+                  <Link href={`/fees/detail/?i=${k}`} className={clsx("flex h-11 items-center justify-center rounded-xl text-[14px] font-semibold leading-5 text-[#0D2A5E] active:bg-[#EAF0F6]", data.pay.qrUrl ? "px-4" : "flex-1 border border-[#DCE4ED]")}>
                     {L({ hi: "ब्योरा", en: "Details" })}
                   </Link>
                 </div>
@@ -302,7 +302,7 @@ export default function FeesPage() {
             );
           })}
         </ul>
-        {!data.pay.upiId && unpaid.length > 0 && (
+        {!data.pay.qrUrl && unpaid.length > 0 && (
           <p className="mt-3 text-[14px] leading-5 text-ink-600">
             {L(F.noOnline)}{" "}
             {data.pay.officePhone && (

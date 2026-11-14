@@ -33,7 +33,7 @@ export interface Instalment {
   paidOn?: string | null;
 }
 export interface Pay {
-  upiId: string | null;
+  qrUrl: string | null;
   upiName: string;
   officePhone: string;
 }

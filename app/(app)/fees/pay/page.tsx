@@ -15,8 +15,7 @@ import "@/components/study.css";
 
 type Choice = "this" | "due" | "full" | "other";
 
-/** The phone's own chooser opens, so the parent picks any UPI app they have; these logos only show what works. */
-const UPI_SCHEME = "upi://pay";
+/** The parent scans the school's QR (uploaded in the ERP) with any UPI app; these logos only show what works. */
 const UPI_LOGOS = [
   { name: "PhonePe", src: "/img/upi/phonepe.svg" },
   { name: "Google Pay", src: "/img/upi/googlepay.svg" },
@@ -42,7 +41,7 @@ export default function PayPage() {
     if (error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
     return <ListSkeleton rows={3} />;
   }
-  if (!data.available || !data.pay.upiId || data.session.balance <= 0 || !child) return <Empty>{!data.available ? L(F.notAvailable) : !data.pay.upiId ? L(F.noOnline) : L(F.allPaid)}</Empty>;
+  if (!data.available || !data.pay.qrUrl || data.session.balance <= 0 || !child) return <Empty>{!data.available ? L(F.notAvailable) : !data.pay.qrUrl ? L(F.noOnline) : L(F.allPaid)}</Empty>;
 
   const ins = index !== null ? data.instalments[index] : undefined;
   const suggest = ins && ins.outstanding > 0 ? ins.outstanding + (ins.overdue ? ins.fine : 0) : 0;
@@ -54,7 +53,7 @@ export default function PayPage() {
         srNo: child.srNo,
         childName: child.name,
         asOf: data.asOf,
-        upiId: data.pay.upiId,
+        qrUrl: data.pay.qrUrl,
         upiName: data.pay.upiName,
         dueNow: data.options.dueNow,
         full: data.options.full,
@@ -70,7 +69,7 @@ interface PayInfo {
   srNo: string;
   childName: string;
   asOf: string;
-  upiId: string;
+  qrUrl: string;
   upiName: string;
   dueNow: number;
   full: number;
@@ -91,11 +90,6 @@ function PayFlow({ info }: { info: PayInfo }) {
 
   const amount = choice === "due" ? info.dueNow : choice === "full" ? info.full : choice === "this" ? info.suggest : Math.floor(Number(other.replace(/\D/g, "")) || 0);
   const amountOk = amount >= 1 && amount <= info.full;
-  // UPI note: shows on the school's bank statement, so the office can match it to the child.
-  const note = `Fee ${info.srNo} ${info.childName}`.slice(0, 50);
-  const query = `pa=${encodeURIComponent(info.upiId)}&pn=${encodeURIComponent(info.upiName)}&am=${amount}.00&cu=INR&tn=${encodeURIComponent(note)}`;
-  const link = `${UPI_SCHEME}?${query}`;
-
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -177,7 +171,7 @@ function PayFlow({ info }: { info: PayInfo }) {
     </section>
   );
 
-  // After the UPI app: the same slip, then two fields in one card like "How much", one button, and two
+  // After paying: the same slip, then two fields in one card like "How much", one button, and two
   // small ways back. Redrawn 2026-11-14 with far fewer words (the user found the first one wordy).
   if (step === "utr")
     return (
@@ -221,9 +215,9 @@ function PayFlow({ info }: { info: PayInfo }) {
             <button type="button" onClick={() => setStep("choose")} className="flex h-11 items-center text-[14px] font-medium leading-5 text-[#0D2A5E]">
               {L({ hi: "रकम बदलें", en: "Change amount" })}
             </button>
-            <a href={link} className="flex h-11 items-center text-[14px] leading-5 text-ink-500">
-              {L({ hi: "UPI ऐप फिर खोलें", en: "Open UPI app again" })}
-            </a>
+            <button type="button" onClick={() => setStep("choose")} className="flex h-11 items-center text-[14px] leading-5 text-ink-500">
+              {L({ hi: "QR फिर दिखाएँ", en: "Show QR again" })}
+            </button>
           </div>
         </section>
       </form>
@@ -260,20 +254,33 @@ function PayFlow({ info }: { info: PayInfo }) {
         )}
       </fieldset>
 
-      {/* One button first, then the apps it works with. The phone asks which app to open. */}
+      {/* The school's QR, then one button for "I have paid". Nothing opens another app by itself. */}
       <div className="study-in" style={{ animationDelay: "70ms" }}>
-        {/* Opens the UPI app; when the parent comes back, the page is already asking for the UTR. */}
-        <a href={amountOk ? link : undefined} onClick={() => amountOk && setStep("utr")} aria-disabled={!amountOk} className={clsx(button, !amountOk && "pointer-events-none opacity-50")}>
-          {amountOk ? L({ hi: `${rupees(amount)} भरें`, en: `Pay ${rupees(amount)}` }) : L({ hi: "रकम चुनें", en: "Choose an amount" })}
-        </a>
-        <p className="mt-4 text-center text-[13px] font-medium leading-5 text-ink-500">{L({ hi: "किसी भी UPI ऐप से भुगतान करें", en: "Pay with any UPI app" })}</p>
-        <ul className="mt-2 flex items-center justify-center gap-3" aria-label={L({ hi: "UPI ऐप", en: "UPI apps" })}>
-          {UPI_LOGOS.map((l) => (
-            <li key={l.name} className="flex h-12 w-[88px] items-center justify-center rounded-xl border border-[#DCE4ED] bg-white">
-              <img src={l.src} alt={l.name} className="h-6 w-auto max-w-[64px] object-contain" />
-            </li>
-          ))}
-        </ul>
+        <div className={clsx(card, "px-4 pb-4 pt-4 text-center")}>
+          <p className="text-[16px] font-semibold leading-6 text-ink-900">
+            {amountOk ? L({ hi: `QR स्कैन करके ${rupees(amount)} भरें`, en: `Scan the QR and pay ${rupees(amount)}` }) : L({ hi: "पहले रकम चुनें", en: "Choose an amount first" })}
+          </p>
+          <div className="mx-auto mt-3 flex aspect-square w-full max-w-[260px] items-center justify-center overflow-hidden rounded-xl border border-[#DCE4ED] bg-white p-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={info.qrUrl} alt={L({ hi: "स्कूल का पेमेंट QR", en: "School payment QR" })} className="h-full w-full object-contain" />
+          </div>
+          <p className="mt-3 text-[13px] leading-5 text-ink-500">{L({ hi: "किसी भी UPI ऐप से स्कैन करें", en: "Pay with any UPI app" })}</p>
+          <ul className="mt-2 flex items-center justify-center gap-3" aria-label={L({ hi: "UPI ऐप", en: "UPI apps" })}>
+            {UPI_LOGOS.map((l) => (
+              <li key={l.name} className="flex h-10 w-[76px] items-center justify-center rounded-xl border border-[#DCE4ED] bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={l.src} alt={l.name} className="h-5 w-auto max-w-[56px] object-contain" />
+              </li>
+            ))}
+          </ul>
+          {/* Same phone? You cannot scan your own screen: save the picture and pick it in the UPI app. */}
+          <a href={info.qrUrl} download="school-payment-qr" className="mt-3 inline-flex min-h-[44px] items-center text-[14px] font-medium leading-5 text-[#0D2A5E]">
+            {L({ hi: "इसी फ़ोन में हैं? QR सेव करें", en: "On this phone? Save the QR" })}
+          </a>
+        </div>
+        <button type="button" onClick={() => amountOk && setStep("utr")} disabled={!amountOk} className={clsx(button, "mt-4")}>
+          {amountOk ? L({ hi: `${rupees(amount)} भर दिए`, en: `I have paid ${rupees(amount)}` }) : L({ hi: "रकम चुनें", en: "Choose an amount" })}
+        </button>
       </div>
 
       {/* What the button really does, folded away like Study's "How Pomodoro works": not a payment gateway,
@@ -286,8 +293,8 @@ function PayFlow({ info }: { info: PayInfo }) {
         </summary>
         <p className="pb-3 text-[13px] leading-6 text-ink-600">
           {L({
-            hi: "आपका UPI ऐप रकम भरकर खुलेगा। पेमेंट के बाद यहाँ लौटकर UTR नंबर लिखें, स्कूल बैंक से मिलान करके रसीद बनाएगा।",
-            en: "Your UPI app opens with the amount filled in. After paying, come back here and enter the UTR number; the school checks it with the bank and makes the receipt.",
+            hi: "QR को किसी भी UPI ऐप से स्कैन करके दिखाई गई रकम भरें। फिर यहाँ आकर UTR नंबर लिखें, स्कूल बैंक से मिलान करके रसीद बनाएगा।",
+            en: "Scan the QR with any UPI app and pay the amount shown. Then come here and enter the UTR number; the school checks it with the bank and makes the receipt.",
           })}
         </p>
       </details>

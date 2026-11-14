@@ -30,7 +30,7 @@ export interface School {
   heroUrl?: string | null;
   address: string;
   officePhone: string;
-  upiId: string | null;
+  payQrUrl: string | null;
   upiName: string;
 }
 

@@ -36,7 +36,7 @@ const SCHOOL = {
   logoUrl: null,
   address: "Nehru Nagar, Barmer",
   officePhone: "94600 62543",
-  upiId: "mtnabarmer@sbi",
+  payQrUrl: "/img/upi/demo-qr.svg",
   upiName: "Mother Teresa Nobles Academy",
 };
 
@@ -127,7 +127,7 @@ function feesFor(kid: Kid, s: Store) {
     return {
       asOf: t,
       available: true,
-      pay: { upiId: SCHOOL.upiId, upiName: SCHOOL.upiName, officePhone: SCHOOL.officePhone },
+      pay: { qrUrl: "/img/upi/demo-qr.svg", upiName: SCHOOL.upiName, officePhone: SCHOOL.officePhone },
       session: { total: 24000, paid: 8500, balance: 15500 },
       dueNow,
       fine,
@@ -140,7 +140,7 @@ function feesFor(kid: Kid, s: Store) {
   return {
     asOf: t,
     available: true,
-    pay: { upiId: SCHOOL.upiId, upiName: SCHOOL.upiName, officePhone: SCHOOL.officePhone },
+    pay: { qrUrl: "/img/upi/demo-qr.svg", upiName: SCHOOL.upiName, officePhone: SCHOOL.officePhone },
     session: { total: 43500, paid: 25500, balance: 18000 },
     dueNow: 0,
     fine: 0,
