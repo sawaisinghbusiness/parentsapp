@@ -10,15 +10,16 @@
 .study .study-tick{animation:study-tick .32s cubic-bezier(.2,.8,.2,1) both}
 @keyframes study-pop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes study-tick{from{opacity:.4;transform:translateY(4px) scale(.92)}to{opacity:1;transform:none}}
-/* Letting go of the length ruler: the row springs back, the highlight lands with a spreading ring,
-   and the number grows past its size and settles. Spring-like, but one short move each. */
-.study .study-land-row{animation:study-land-row .5s cubic-bezier(.34,1.56,.64,1) both}
-.study .study-land-pill{animation:study-land-pill .7s cubic-bezier(.2,.8,.2,1) both}
-.study .study-land-num{animation:study-land-num .55s cubic-bezier(.34,1.56,.64,1) both}
-@keyframes study-land-row{0%{opacity:0;transform:scaleY(.6) translateY(6px)}60%{opacity:1}100%{opacity:1;transform:none}}
-@keyframes study-land-pill{0%{transform:var(--x) scale(.7);box-shadow:0 0 0 0 rgba(190,77,37,.45)}45%{transform:var(--x) scale(1.06);box-shadow:0 0 0 6px rgba(190,77,37,.18)}100%{transform:var(--x) scale(1);box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 12px rgba(190,77,37,0)}}
-@keyframes study-land-num{0%{opacity:.3;transform:scale(.7)}60%{opacity:1;transform:scale(1.22)}100%{transform:none}}
-@media(prefers-reduced-motion:reduce){.study .study-from-left,.study .study-from-right,.study .study-in,.study .study-pop,.study .study-tick,.study .study-land-row,.study .study-land-pill,.study .study-land-num{animation:none}}
+/* Letting go of the length ruler: it folds up into the chosen number (narrows toward that number's place
+   and fades), the highlight opens out of the same spot, and the numbers come back. One short move each. */
+.study .study-ruler-fold{animation:study-ruler-fold .34s cubic-bezier(.55,0,.75,.35) both}
+.study .study-pill-open{animation:study-pill-open .38s cubic-bezier(.2,.8,.2,1) .12s both}
+.study .study-chip-back{animation:study-chip-back .3s ease-out .16s both}
+@keyframes study-ruler-fold{from{opacity:1;transform:none}to{opacity:0;transform:scaleX(.12)}}
+@keyframes study-pill-open{from{opacity:0;transform:var(--x) scaleX(.3)}to{opacity:1;transform:var(--x)}}
+@keyframes study-chip-back{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.study .study-ruler-fold,.study .study-pill-open,.study .study-chip-back{animation:none}}
+@media(prefers-reduced-motion:reduce){.study .study-from-left,.study .study-from-right,.study .study-in,.study .study-pop,.study .study-tick{animation:none}}
 
 /* Study: bright paper and ink; burnt orange belongs to the action. */
 .study-page { background: #FFFCF7; }
