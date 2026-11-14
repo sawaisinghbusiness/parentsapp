@@ -25,7 +25,7 @@ import { ChildSheet } from "@/components/ChildSheet";
 const NAVY = "#0D2A5E";
 const INK = "#242628";
 const MUTED = "#666A6E";
-const LINE = "#E6E7E8";
+const LINE = "#E5DED4";
 const TILE = "#F3F4F4";
 
 type Lang = "hi" | "en";
@@ -118,11 +118,11 @@ export default function HomePage() {
       </span>
     </>
   );
-  const cardClass = "flex min-h-[112px] w-full items-stretch rounded-[14px] border bg-white py-3";
+  const cardClass = "-mx-2 flex min-h-[96px] w-[calc(100%+1rem)] items-stretch rounded-[14px] border bg-white py-2";
 
   return (
     <div className="parents-home" style={{ color: INK }}>
-      {/* ── Header: photo on the right, a neutral shade behind the text, fading to white at the bottom ── */}
+      {/* School photograph fades into the warm stone Home background. */}
       <header className="relative h-[calc(210px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#25282A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img ref={fx.img} src={school?.heroUrl || "/img/school-hero.jpg"} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
@@ -130,7 +130,7 @@ export default function HomePage() {
         <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(18,22,24,.4) 0%, rgba(18,22,24,0) 100%)" }} />
         {/* Darkens as the page scrolls, so the cards stand out over the building. */}
         <div ref={fx.shade} className="absolute inset-0 bg-[#25282A] opacity-0" aria-hidden />
-        <div className="absolute inset-x-0 bottom-0 h-[60px]" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 100%)" }} />
+        <div className="home-photo-fade absolute inset-x-0 bottom-0 h-[60px]" />
 
         <div ref={fx.text} className="pt-safe relative z-[1] px-4 will-change-[opacity,transform]">
           <div className="flex items-center pt-5">
@@ -203,14 +203,14 @@ export default function HomePage() {
         )}
 
         {/* ── Four tiles ── */}
-        <div className="grid grid-cols-4 gap-2 border-b pb-5">
+        <div className="grid grid-cols-4 gap-2 border-b pb-5" style={{ borderColor: LINE }}>
           {[
             { href: "/calendar/", icon: CalendarCheck, t: L({ hi: "हाज़िरी", en: "Attendance" }) },
             { href: "/homework/", icon: BookOpen, t: L({ hi: "होमवर्क", en: "Homework" }) },
             { href: "/fees/", icon: Wallet, t: L({ hi: "फ़ीस", en: "Fees" }) },
             { href: "/exam/?tab=result", icon: Trophy, t: L({ hi: "रिज़ल्ट", en: "Results" }) },
           ].map(({ href, icon: Icon, t }) => (
-            <Link key={href} href={href} className="flex h-[68px] flex-col items-center justify-center gap-2 rounded-[10px] bg-white transition-colors hover:bg-neutral-50 active:bg-neutral-100">
+            <Link key={href} href={href} className="flex h-[68px] flex-col items-center justify-center gap-2 rounded-[10px] transition-colors hover:bg-white/60 active:bg-white/80">
               <Icon className="h-6 w-6" style={{ color: INK }} strokeWidth={1.6} aria-hidden />
               <span className="text-[12px] font-medium">{t}</span>
             </Link>
@@ -220,7 +220,7 @@ export default function HomePage() {
         {data && <TodaySummary data={data} />}
 
         {/* ── Latest Notices ── */}
-        <section className="bg-white pt-1" style={{ borderColor: LINE }}>
+        <section className="pt-1" style={{ borderColor: LINE }}>
           <CardHead title={L({ hi: "ताज़ा सूचनाएँ", en: "Latest Notices" })} link={L({ hi: "सब देखें", en: "View All" })} href="/notice/" />
           {notice === undefined ? (
             <RowSkeleton />
@@ -240,7 +240,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Upcoming Events ── */}
-        <section className="border-t bg-white pt-2" style={{ borderColor: LINE }}>
+        <section className="border-t pt-2" style={{ borderColor: LINE }}>
           <CardHead title={L({ hi: "आने वाले कार्यक्रम", en: "Upcoming Events" })} link={L({ hi: "सब देखें", en: "View All" })} href="/events/" />
           {ev === undefined ? (
             <RowSkeleton />
@@ -306,18 +306,18 @@ function TodaySummary({ data }: { data: HomeData }) {
   if (!isToday(data.date)) return null;
   const due = data.fees ? data.fees.dueNow + data.fees.fine : 0;
   const rows = [
-    data.fees && { href: due > 0 ? "/fees/pay/" : "/fees/", label: L({hi:"अभी देय फ़ीस",en:"Fees due now"}), value: new Intl.NumberFormat(lang === "hi" ? "hi-IN" : "en-IN", {style:"currency",currency:"INR",maximumFractionDigits:0}).format(due), detail: due > 0 ? L({hi:"विवरण देखें और भुगतान करें",en:"View details & pay"}) : L({hi:"अभी कोई फ़ीस देय नहीं",en:"No payment due now"}), icon: Wallet, attention: due > 0 },
-    data.homework && { href: "/homework/", label: L({hi:"आज का होमवर्क",en:"Today's homework"}), value: data.homework.length ? String(data.homework.length) : "", detail: data.homework.length ? L({hi:"डायरी में काम देखें",en:"View assignments in the diary"}) : L({hi:"कोई काम नहीं दिया गया",en:"Nothing assigned"}), icon: BookOpen, attention: false },
-    data.result !== undefined && { href: "/exam/?tab=result", label: L({hi:"परीक्षा का रिज़ल्ट",en:"Exam results"}), value: "", detail: data.result ? data.result.exam : L({hi:"अभी जारी नहीं हुआ",en:"Not published yet"}), icon: Trophy, attention: false },
+    data.fees && { href: due > 0 ? "/fees/pay/" : "/fees/", label: L({hi:"अभी देय फ़ीस",en:"Fees due now"}), value: new Intl.NumberFormat(lang === "hi" ? "hi-IN" : "en-IN", {style:"currency",currency:"INR",maximumFractionDigits:0}).format(due), detail: due > 0 ? L({hi:"विवरण देखें और भुगतान करें",en:"View details & pay"}) : L({hi:"अभी कोई फ़ीस देय नहीं",en:"No payment due now"}), icon: Wallet },
+    data.homework && { href: "/homework/", label: L({hi:"आज का होमवर्क",en:"Today's homework"}), value: data.homework.length ? String(data.homework.length) : "", detail: data.homework.length ? L({hi:"डायरी में काम देखें",en:"View assignments in the diary"}) : L({hi:"कोई काम नहीं दिया गया",en:"Nothing assigned"}), icon: BookOpen },
+    data.result !== undefined && { href: "/exam/?tab=result", label: L({hi:"परीक्षा का रिज़ल्ट",en:"Exam results"}), value: "", detail: data.result ? data.result.exam : L({hi:"अभी जारी नहीं हुआ",en:"Not published yet"}), icon: Trophy },
   ].filter((row): row is Exclude<typeof row, false | null | undefined> => !!row);
   if (!rows.length) return null;
   return <section aria-labelledby="today-title">
     <h2 id="today-title" className="mb-3 text-[18px] font-semibold">{L({hi:"आज की जानकारी",en:"Today at school"})}</h2>
     <ul className="home-updates">
-      {rows.map(({href,label,value,detail,icon:Icon,attention}) => <li key={href}>
-        <Link href={href} className={attention ? "home-update home-update-due" : "home-update"}>
+      {rows.map(({href,label,value,detail,icon:Icon}) => <li key={href}>
+        <Link href={href} className="home-update">
           <Icon className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden />
-          <span className="min-w-0 flex-1"><span className="block text-[14px] font-semibold">{label}</span><span className="mt-1 block break-words text-[12px] leading-5" style={{color:attention ? "#78552D" : MUTED}}>{detail}</span></span>
+          <span className="min-w-0 flex-1"><span className="block text-[14px] font-semibold">{label}</span><span className="mt-1 block break-words text-[12px] leading-5" style={{color:MUTED}}>{detail}</span></span>
           {value && <span className="max-w-[40%] break-words text-right text-[18px] font-semibold tabular-nums">{value}</span>}
           <ChevronRight className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
         </Link>
