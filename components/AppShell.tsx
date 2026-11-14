@@ -90,7 +90,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, child, stale, error, reload } = useParent();
   const L = useL();
   const [switching, setSwitching] = useState(false);
-  const page = PAGES[path];
+  // Design previews (/preview/meetings/ …) borrow the real screen's bar until they are approved.
+  const page = PAGES[path] ?? PAGES[path.replace(/^\/preview\//, "/")];
   const isHome = path === "/";
   const isStudy = path === "/study/";
   const big = !!page?.big;

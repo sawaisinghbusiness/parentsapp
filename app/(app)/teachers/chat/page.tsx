@@ -62,6 +62,34 @@ export default function TeacherChatPage() {
     return () => clearInterval(t);
   }, [load]);
 
+  /*
+   * The keyboard. Android Chrome does not shrink the page when it opens; it slides the whole page up
+   * so the box stays visible, which pushed the teacher's name off the top and left a blank screen.
+   * So the chat is pinned to the part of the screen above the keyboard (the visual viewport): the
+   * name stays on top, the messages scroll in between, and the box sits right on the keyboard.
+   */
+  const [box, setBox] = useState<{ h: number; top: number } | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const fit = () => {
+      setBox({ h: vv.height, top: vv.offsetTop });
+      // Undo the browser's slide-up so the page itself never scrolls behind the chat.
+      if (window.scrollY) window.scrollTo(0, 0);
+    };
+    fit();
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    return () => {
+      vv.removeEventListener("resize", fit);
+      vv.removeEventListener("scroll", fit);
+    };
+  }, []);
+  // When the keyboard opens (the chat gets shorter), keep the newest message in view.
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [box?.h]);
+
   // Down to the newest message when one arrives.
   useEffect(() => {
     const n = data?.messages.length || 0;
@@ -106,8 +134,8 @@ export default function TeacherChatPage() {
   const role = t ? [t.classTeacher ? L({ hi: "क्लास टीचर", en: "Class teacher" }) : "", t.subjects.join(", ")].filter(Boolean).join(" · ") : "";
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-ink-50">
-      <header className="pt-safe sticky top-0 z-20 border-b border-ink-100 bg-white">
+    <div className="fixed inset-x-0 top-0 z-20 mx-auto flex h-[100dvh] max-w-[560px] flex-col overflow-hidden bg-ink-50" style={box ? { height: box.h, transform: `translateY(${box.top}px)` } : undefined}>
+      <header className="pt-safe shrink-0 border-b border-ink-100 bg-white">
         <div className="flex h-14 items-center gap-2 pl-1.5 pr-4">
           <Link href="/teachers/" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={L({ hi: "वापस", en: "Back" })}>
             <ChevronLeft className="h-6 w-6" aria-hidden />
@@ -126,7 +154,7 @@ export default function TeacherChatPage() {
         </div>
       </header>
 
-      <div className="flex-1 px-4 pb-28 pt-3" aria-live="polite">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3" aria-live="polite">
         {!data ? (
           error ? (
             <ErrorCard offline={error.status === 0} onRetry={load} />
@@ -160,7 +188,7 @@ export default function TeacherChatPage() {
         <div ref={end} />
       </div>
 
-      <div className="pb-safe fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-ink-100 bg-white">
+      <div className="pb-safe shrink-0 border-t border-ink-100 bg-white">
         {fail && (
           <p className="px-4 pt-2 text-[13px] text-rose-600" role="alert">
             {fail}

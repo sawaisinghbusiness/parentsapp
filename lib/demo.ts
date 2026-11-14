@@ -405,6 +405,30 @@ function examSchedule(kid: Kid) {
   return { exam: { title: "Unit Test 2", startDate: papers[0].date, endDate: papers[papers.length - 1].date }, papers };
 }
 
+/** Meetings for the class: a PTM to pick a time in, a general meeting, an online one and a past one. */
+const MEETING_STATE: Record<string, { answer?: "yes" | "no"; slot?: string }> = {};
+function demoMeetings(t: string) {
+  const base = { host: "Rakesh Bishnoi", place: "Classroom, first floor", onlineUrl: null as string | null, agenda: null as string | null, slotMinutes: null as number | null, audience: "Class Nursery - A", answer: null as "yes" | "no" | null, slot: null as string | null, taken: [] as string[], coming: 0 };
+  return [
+    { ...base, id: "meet-ptm", title: "Parent–teacher meeting", kind: "ptm" as const, date: addDays(t, 7), start: "09:00", end: "11:00", slotMinutes: 15, agenda: "Half Yearly answer sheets and the term's progress.", taken: ["09:00", "09:15", "09:45", "10:30"] },
+    { ...base, id: "meet-annual", title: "Annual function planning", kind: "general" as const, host: "Principal", place: "School hall", date: addDays(t, 12), start: "16:00", end: "17:00", agenda: "Dances, costumes and the programme for 12 December.", coming: 18 },
+    { ...base, id: "meet-online", title: "Winter timings and transport", kind: "general" as const, host: "Principal", place: null, onlineUrl: "https://meet.google.com/abc-defg-hij", date: addDays(t, 3), start: "19:00", end: "19:30", answer: "yes" as const, coming: 42 },
+    { ...base, id: "meet-past", title: "Parent–teacher meeting", kind: "ptm" as const, date: addDays(t, -40), start: "09:00", end: "11:00", slotMinutes: 15, slot: "10:15" },
+  ]
+    .map((m) => ({ ...m, answer: MEETING_STATE[m.id]?.answer ?? m.answer, slot: MEETING_STATE[m.id]?.slot ?? m.slot }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+function ptmSlots(m: { start: string; end: string; slotMinutes: number | null; slot: string | null; kind: string }, taken: string[]) {
+  if (m.kind !== "ptm" || !m.slotMinutes) return [];
+  const min = (x: string) => +x.slice(0, 2) * 60 + +x.slice(3);
+  const out: { time: string; taken: boolean; mine: boolean }[] = [];
+  for (let x = min(m.start); x + m.slotMinutes <= min(m.end); x += m.slotMinutes) {
+    const time = `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`;
+    out.push({ time, taken: taken.includes(time) && time !== m.slot, mine: time === m.slot });
+  }
+  return out;
+}
+
 /** School events with their photos. A real school uploads photos; the demo draws scenes. */
 function events() {
   const t = today();
@@ -641,6 +665,23 @@ export async function demoApi(path: string, method: string, body: any): Promise<
           reply = kid.bus ? `${first} ${kid.busRoute} bus se aate-jaate hain. Live location Bus page par dikhti hai.` : `${first} school bus nahi lete.`;
         }
         return { reply };
+      }
+      case "/meetings": {
+        const all = demoMeetings(t).map(({ taken, coming, ...m }) => ({ ...m, slotsLeft: m.kind === "ptm" ? ptmSlots(m, taken).filter((x) => !x.taken).length : null }));
+        return { upcoming: all.filter((m) => m.date >= t), past: all.filter((m) => m.date < t).reverse() };
+      }
+      case "/meetings/detail":
+      case "/meetings/answer":
+      case "/meetings/slot": {
+        const id = u.searchParams.get("id") || body?.id;
+        const m = demoMeetings(t).find((x) => x.id === id);
+        if (!m) throw new DemoError(404, "Meeting not found.");
+        const st = (MEETING_STATE[m.id] ||= {});
+        if (p === "/meetings/answer") st.answer = body?.answer === "no" ? "no" : "yes";
+        if (p === "/meetings/slot") st.slot = String(body?.time || "");
+        const live = { ...m, answer: st.answer ?? m.answer, slot: st.slot ?? m.slot };
+        const { taken, ...rest } = live;
+        return { ...rest, slots: ptmSlots(live, taken) };
       }
       case "/report-card":
         return reportCard(kid, u.searchParams.get("exam"));

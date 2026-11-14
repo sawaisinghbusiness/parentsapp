@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { CalendarDays } from "lucide-react";
 import { api, useApi } from "@/lib/api";
@@ -20,6 +20,45 @@ interface Page {
   page: number;
   notices: Notice[];
   hasMore: boolean;
+}
+
+/**
+ * One notice. "Read more" shows only when the two lines really cut the text: it is measured on the
+ * screen, not guessed from the number of letters (a short Hindi notice used to get "Read more" with
+ * nothing more to read).
+ */
+function NoticeCard({ n, isOpen, onToggle }: { n: Notice; isOpen: boolean; onToggle: () => void }) {
+  const L = useL();
+  const { lang } = useT();
+  const body = useRef<HTMLSpanElement>(null);
+  const [cut, setCut] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = body.current;
+    if (!el || isOpen) return;
+    const measure = () => setCut(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isOpen, n.body]);
+
+  const more = cut || isOpen;
+  return (
+    <button onClick={() => more && onToggle()} aria-expanded={more ? isOpen : undefined} className="row-card">
+      <span className="meta">
+        <span>
+          <CalendarDays aria-hidden />
+          {weekdayDate(n.date, lang)}
+        </span>
+      </span>
+      <span className="mt-1 block text-[15.5px] font-bold leading-snug">{n.title}</span>
+      <span ref={body} className={clsx("mt-1 whitespace-pre-line break-words text-[14px] leading-relaxed text-ink-600", isOpen ? "block" : "line-clamp-2")}>
+        {n.body}
+      </span>
+      {cut && !isOpen && <span className="mt-0.5 block text-[13px] font-semibold text-brand-600">{L({ hi: "पूरा पढ़ें", en: "Read more" })}</span>}
+    </button>
+  );
 }
 
 /** Notices from the school: date and title, two lines of the text; tap to read it all. */
@@ -70,24 +109,9 @@ export default function NoticePage() {
       <ul className="space-y-2">
         {all.map((n) => {
           const isOpen = open.has(n.id);
-          const long = n.body.length > 110;
           return (
             <li key={n.id}>
-              <button
-                onClick={() => long && setOpen((s) => new Set(isOpen ? Array.from(s).filter((x) => x !== n.id) : [...Array.from(s), n.id]))}
-                aria-expanded={long ? isOpen : undefined}
-                className="row-card"
-              >
-                <span className="meta">
-                  <span>
-                    <CalendarDays aria-hidden />
-                    {weekdayDate(n.date, lang)}
-                  </span>
-                </span>
-                <span className="mt-1 block text-[15.5px] font-bold leading-snug">{n.title}</span>
-                <span className={clsx("mt-1 block whitespace-pre-line break-words text-[14px] leading-relaxed text-ink-600", !isOpen && "line-clamp-2")}>{n.body}</span>
-                {long && !isOpen && <span className="mt-0.5 block text-[13px] font-semibold text-brand-600">{L({ hi: "पूरा पढ़ें", en: "Read more" })}</span>}
-              </button>
+              <NoticeCard n={n} isOpen={isOpen} onToggle={() => setOpen((s) => new Set(isOpen ? Array.from(s).filter((x) => x !== n.id) : [...Array.from(s), n.id]))} />
             </li>
           );
         })}
