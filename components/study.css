@@ -31,4 +31,6 @@
 .study .text-ink-400 { color: #677081; }
 .study-dial { border-radius: 50%; background: #fff; border: 1px solid #E9E1D6; }
 .study :focus-visible { outline: 2px solid #BE4D25; outline-offset: 3px; }
+/* Inside a field box the box itself shows focus (blue ring); no orange outline on the input. */
+.study .field-box :focus-visible { outline: none; }
 .study ::selection { background: #F9D8C7; color: #612711; }
