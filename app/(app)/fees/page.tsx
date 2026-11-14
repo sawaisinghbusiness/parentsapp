@@ -182,8 +182,8 @@ export default function FeesPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/img/fee-receipt.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
           {/* Always "Total due"; when nothing is left it simply reads ₹0 (the user removed the "All paid" words). */}
-          <p className="min-w-0 flex-1 text-[16px] font-medium leading-6 text-ink-700">{L({ hi: "कुल बाकी", en: "Total due" })}</p>
-          <p className="tnum shrink-0 text-[28px] font-semibold leading-9 tracking-tight text-ink-900">{rupees(left)}</p>
+          <p className={clsx("min-w-0 flex-1 text-[16px] font-medium leading-6", left > 0 ? "text-[#A32F35]" : "text-ink-700")}>{L({ hi: "कुल बाकी", en: "Total due" })}</p>
+          <p className={clsx("tnum shrink-0 text-[28px] font-semibold leading-9 tracking-tight", left > 0 ? "text-[#A32F35]" : "text-ink-900")}>{rupees(left)}</p>
         </div>
         <p className="tnum px-4 pb-2 pt-3 text-[14px] leading-5 text-ink-600">
           {L({ hi: `${rupees(session.total)} में से ${rupees(session.paid)} जमा`, en: `${rupees(session.paid)} of ${rupees(session.total)} paid` })}
@@ -244,16 +244,23 @@ export default function FeesPage() {
               );
             return (
               <li key={i.name} className={card}>
-                <div className="flex items-start justify-between gap-3 px-4 pt-3">
-                  <div className="min-w-0">
-                    <h3 className="text-[16px] font-semibold leading-6 text-ink-900">{i.name}</h3>
-                    <p className={clsx("tnum text-[14px] leading-5", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
-                      {st === "overdue"
-                          ? L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)} थी`, en: `Last date was ${fullDate(i.due, lang)}` })
-                          : L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)}`, en: `Last date ${fullDate(i.due, lang)}` })}
-                    </p>
+                {/* Name and status share one line, centred; the last date sits small under it, on the right. */}
+                <div className="px-4 pt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="min-w-0 truncate text-[16px] font-semibold leading-6 text-ink-900">{i.name}</h3>
+                    {st === "overdue" ? (
+                      /* Same outlined look as "Paid", with a red dot instead of the green one. */
+                      <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-900 bg-transparent py-px pl-2.5 pr-2 text-[12px] font-semibold leading-5 text-ink-900">
+                        {L(INS_TEXT[st])}
+                        <span className="h-2 w-2 rounded-full bg-[#D93636]" aria-hidden />
+                      </span>
+                    ) : (
+                      <Status tone={INS_TONE[st]}>{L(INS_TEXT[st])}</Status>
+                    )}
                   </div>
-                  <Status tone={INS_TONE[st]}>{L(INS_TEXT[st])}</Status>
+                  <p className={clsx("tnum text-right text-[12px] leading-4", st === "overdue" ? "text-[#A32F35]" : "text-ink-500")}>
+                    {L({ hi: `आख़िरी तारीख ${fullDate(i.due, lang)}`, en: `Last date ${fullDate(i.due, lang)}` })}
+                  </p>
                 </div>
 
                 {/* What it is made of, then what is paid and what is left: names left, amounts in one column. */}
