@@ -53,7 +53,7 @@ interface PageInfo {
 }
 
 const PAGES: Record<string, PageInfo> = {
-  "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true, big: true, noTitle: true },
+  "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true },
   "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true, warm: true, noOwl: true },
   "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true, noOwl: true },
   "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true, noOwl: true },
