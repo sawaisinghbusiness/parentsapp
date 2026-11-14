@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SahayakOwl } from "./SahayakOwl";
+import { useSahayakPreference } from "@/lib/sahayakPreference";
 import { useL } from "@/lib/i18n";
 
 /**
@@ -35,6 +36,7 @@ const column = () => {
 
 export function SahayakButton() {
   const L = useL();
+  const [enabled] = useSahayakPreference();
   const router = useRouter();
   const [spot, setSpot] = useState<Spot | null>(null);
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
@@ -47,7 +49,7 @@ export function SahayakButton() {
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
   }, []);
-  if (!spot) return null;
+  if (!spot || !enabled) return null;
 
   const col = column();
   const restX = spot.side === "left" ? col.left + GAP : col.left + col.width - GAP - SIZE;

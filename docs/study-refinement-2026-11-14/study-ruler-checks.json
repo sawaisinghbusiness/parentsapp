@@ -1,0 +1,50 @@
+[
+  {
+    "name": "hold reveals tick ruler",
+    "pass": true
+  },
+  {
+    "name": "five detents increase 25 to 30",
+    "pass": true
+  },
+  {
+    "name": "continuous drag survives changing preset",
+    "pass": true
+  },
+  {
+    "name": "reverse drag decreases minutes",
+    "pass": true
+  },
+  {
+    "name": "tick audio scheduled",
+    "pass": true
+  },
+  {
+    "name": "release closes ruler and retains value",
+    "pass": true
+  },
+  {
+    "name": "lower boundary 1 minute",
+    "pass": true
+  },
+  {
+    "name": "upper boundary 180 minutes",
+    "pass": true
+  },
+  {
+    "name": "quick preset still selects normally",
+    "pass": true
+  },
+  {
+    "name": "clock digits also support hold-drag",
+    "pass": true
+  },
+  {
+    "name": "subject selected fill is white",
+    "pass": true
+  },
+  {
+    "name": "no document overflow",
+    "pass": true
+  }
+]

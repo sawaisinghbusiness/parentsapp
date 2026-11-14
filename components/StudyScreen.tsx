@@ -7,6 +7,7 @@ import { ChevronRight, Minus, Pause, Play, Plus, Square } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
+import { DurationRuler, useDurationScrub } from "./DurationRuler";
 import { Fireworks } from "@/components/Fireworks";
 import "./study.css";
 
@@ -21,7 +22,7 @@ import "./study.css";
  * Pomodoro is the same dial with the four rounds as four steps under it, one sentence of how it runs, and
  * today's rounds (the strip and the "how it runs" table of the first try confused the user, 2026-11-14).
  * Nothing sits in a card: the time is the one large thing, the rest are plain ruled lists on the canvas.
- * One accent (navy), weights 400 to 500 with 600 for headings only. A tab's screen slides in from its
+ * Burnt orange actions with ink text, weights 400 to 500 with 600 for headings only. A tab's screen slides in from its
  * own side; the sections under it rise in once. The normal header comes from AppShell.
  */
 
@@ -275,7 +276,7 @@ export function StudyScreen() {
   const subjectRow = (
     <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4" role="group" aria-label={L({ hi: "विषय", en: "Subject" })}>
       {subjects.map((s) => (
-        <button key={s} type="button" disabled={busy} onClick={() => setSubject(s)} aria-pressed={(run ? run.subject : subject) === s} className={clsx("h-9 shrink-0 rounded-full border px-3.5 text-[14px] transition-colors disabled:opacity-50", (run ? run.subject : subject) === s ? "border-[#0D2A5E] bg-[#0D2A5E] font-medium text-white disabled:opacity-100" : "border-[#DCE4ED] bg-white text-ink-800")}>
+        <button key={s} type="button" disabled={busy} onClick={() => setSubject(s)} aria-pressed={(run ? run.subject : subject) === s} className={clsx("h-9 shrink-0 rounded-full border px-3.5 text-[14px] transition-colors disabled:opacity-50", (run ? run.subject : subject) === s ? "border-[#BE4D25] bg-white font-medium text-[#9B3C1B] disabled:opacity-100" : "border-[#E4DDD3] bg-white text-ink-800")}>
           {s}
         </button>
       ))}
@@ -284,6 +285,8 @@ export function StudyScreen() {
 
   // What is on screen: the running block's own mode, else the chosen tab.
   const view: Mode = run ? run.mode : mode;
+  const scrub = useDurationScrub(minutes, setMinutes, !run && view === "timer");
+  const durationChoices = PRESETS.includes(minutes) ? PRESETS : [15, minutes, 45, 60];
   const round = run?.round || 1;
   const pomoToday = todays.filter((s) => s.mode === "pomodoro");
   // The dial: 60 ticks like a clock face; they darken one by one as the block runs.
@@ -291,24 +294,24 @@ export function StudyScreen() {
   const stagger = (i: number) => ({ animationDelay: `${i * 70}ms` });
 
   const controls = !run ? (
-    <button type="button" onClick={start} disabled={!subject} className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-[#0D2A5E] text-[15px] font-semibold text-white active:bg-[#0A2149] disabled:opacity-50">
+    <button type="button" onClick={start} disabled={!subject} className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-[#BE4D25] text-[15px] font-semibold text-white active:bg-[#9D3A18] disabled:opacity-50">
       <Play className="h-4 w-4" fill="currentColor" aria-hidden />
       {view === "pomodoro" ? L({ hi: "पहला राउंड शुरू करें", en: "Start round 1" }) : L({ hi: "पढ़ाई शुरू करें", en: "Start studying" })}
     </button>
   ) : (
     <div className="grid w-full grid-cols-2 gap-2">
       {run.endsAt ? (
-        <button type="button" onClick={pause} className="flex h-12 items-center justify-center gap-2 rounded-[12px] border border-[#DCE4ED] bg-white text-[15px] font-medium text-ink-900 active:bg-[#EAF0F6]">
+        <button type="button" onClick={pause} className="flex h-12 items-center justify-center gap-2 rounded-[12px] border border-[#E4DDD3] bg-white text-[15px] font-medium text-ink-900 active:bg-[#F0ECE5]">
           <Pause className="h-4 w-4" fill="currentColor" aria-hidden />
           {L({ hi: "रोकें", en: "Pause" })}
         </button>
       ) : (
-        <button type="button" onClick={resume} className="flex h-12 items-center justify-center gap-2 rounded-[12px] bg-[#0D2A5E] text-[15px] font-semibold text-white active:bg-[#0A2149]">
+        <button type="button" onClick={resume} className="flex h-12 items-center justify-center gap-2 rounded-[12px] bg-[#BE4D25] text-[15px] font-semibold text-white active:bg-[#9D3A18]">
           <Play className="h-4 w-4" fill="currentColor" aria-hidden />
           {L({ hi: "फिर शुरू", en: "Resume" })}
         </button>
       )}
-      <button type="button" onClick={stop} className="flex h-12 items-center justify-center gap-2 rounded-[12px] border border-[#DCE4ED] bg-white text-[15px] font-medium text-[#A32F35] active:bg-[#FCEEEF]">
+      <button type="button" onClick={stop} className="flex h-12 items-center justify-center gap-2 rounded-[12px] border border-[#E4DDD3] bg-white text-[15px] font-medium text-[#A32F35] active:bg-[#FCEEEF]">
         <Square className="h-3.5 w-3.5" fill="currentColor" aria-hidden />
         {L({ hi: "ख़त्म करें", en: "Finish" })}
       </button>
@@ -323,11 +326,11 @@ export function StudyScreen() {
 
   // The time: the same dial, in the same place, on both tabs.
   const dial = (
-            <div className="relative h-[200px] w-[200px]">
+            <div className="study-dial relative h-[224px] w-[224px]">
               <svg viewBox="0 0 232 232" className="h-full w-full" aria-hidden>
                 {Array.from({ length: 60 }, (_, i) => {
                   const five = i % 5 === 0;
-                  return <line key={i} x1="116" y1={five ? 6 : 10} x2="116" y2="20" transform={`rotate(${i * 6} 116 116)`} stroke={i < lit ? (onBreak ? "#7D8998" : "#0D2A5E") : "#C3CEDC"} strokeWidth={five ? 2.5 : 1.5} strokeLinecap="round" style={{ transition: "stroke .4s ease" }} />;
+                  return <line key={i} x1="116" y1={five ? 6 : 10} x2="116" y2="20" transform={`rotate(${i * 6} 116 116)`} stroke={i < lit ? (onBreak ? "#7C827A" : "#BE4D25") : (five ? "#66758A" : "#CED4DD")} strokeWidth={five ? 2.5 : 1.5} strokeLinecap="round" style={{ transition: "stroke .4s ease" }} />;
                 })}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -336,7 +339,7 @@ export function StudyScreen() {
                     {onBreak ? L({ hi: "ब्रेक", en: "Break" }) : L({ hi: `राउंड ${round} / ${POMO.rounds}`, en: `Round ${round} of ${POMO.rounds}` })}
                   </span>
                 )}
-                <span className="tnum text-[46px] font-medium leading-none tracking-tight text-ink-900" role="timer" aria-live="off">
+                <span {...(!run && view === "timer" ? scrub.bindings : {})} onKeyDown={scrub.keyboard} tabIndex={!run && view === "timer" ? 0 : undefined} className={clsx("tnum select-none text-[52px] font-semibold leading-none tracking-tight text-ink-900", !run && view === "timer" && "cursor-ew-resize touch-none")} role={!run && view === "timer" ? "slider" : "timer"} aria-label={!run && view === "timer" ? L({"hi":"पढ़ाई के मिनट","en":"Study minutes"}) : undefined} aria-valuemin={!run && view === "timer" ? 1 : undefined} aria-valuemax={!run && view === "timer" ? 180 : undefined} aria-valuenow={!run && view === "timer" ? minutes : undefined} aria-valuetext={!run && view === "timer" ? `${minutes} min` : undefined} aria-live="off">
                   {mmss(left)}
                 </span>
                 <span className={clsx("mt-1.5 text-[13px]", run?.endsAt ? "font-medium text-[#21613F]" : "text-ink-500")}>{status}</span>
@@ -346,9 +349,9 @@ export function StudyScreen() {
 
   return (
     <div className="study space-y-5 pb-16 pt-1">
-      {/* Timer or Pomodoro: two tabs as one pill, the navy part sliding to the chosen one (as on Calendar). */}
-      <div className="relative grid grid-cols-2 rounded-full bg-[#EAF0F6] p-1 ring-1 ring-[#DCE4ED]" role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
-        <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[#0D2A5E]" style={{ transform: view === "pomodoro" ? "translateX(100%)" : "none" }} />
+      {/* Timer or Pomodoro: two tabs as one pill, the white selection sliding to the chosen one (as on Calendar). */}
+      <div className="relative grid grid-cols-2 rounded-full bg-[#F0ECE5] p-1 ring-1 ring-[#E4DDD3]" role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
+        <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[#24324B]" style={{ transform: view === "pomodoro" ? "translateX(100%)" : "none" }} />
         {(["timer", "pomodoro"] as const).map((m) => (
           <button key={m} type="button" role="tab" aria-selected={view === m} disabled={busy} onClick={() => setMode(m)} className={clsx("relative h-10 rounded-full text-[14.5px] transition-colors duration-300", view === m ? "font-semibold text-white" : "font-medium text-ink-600", busy && view !== m && "opacity-50")}>
             {m === "timer" ? L({ hi: "टाइमर", en: "Timer" }) : L({ hi: "पोमोडोरो", en: "Pomodoro" })}
@@ -367,17 +370,18 @@ export function StudyScreen() {
             {/* Length, before starting: one row, the chosen length in words. */}
             {!run && (
               <div className="mt-4 flex w-full items-center gap-2">
-                <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[#DCE4ED] bg-white text-ink-800 active:bg-[#EAF0F6]">
+                <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
                   <Minus className="h-4 w-4" aria-hidden />
                 </button>
-                <div className="grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#EAF0F6] p-[3px]">
-                  {PRESETS.map((m) => (
-                    <button key={m} type="button" onClick={() => setMinutes(m)} aria-pressed={minutes === m} aria-label={`${m} ${L({ hi: "मिनट", en: "minutes" })}`} className={clsx("tnum h-[34px] rounded-lg text-[13.5px] transition-colors", minutes === m ? "bg-white font-semibold text-[#0D2A5E] shadow-sm" : "font-medium text-ink-500")}>
+                <div {...scrub.bindings} data-duration-presets="true" className="relative grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]">
+                  {scrub.active && <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10"><DurationRuler position={scrub.position} /></div>}
+                  {durationChoices.map((m, index) => (
+                    <button key={index} type="button" onKeyDown={minutes === m ? scrub.keyboard : undefined} onClick={() => { if (!scrub.consumeClick()) setMinutes(m); }} aria-pressed={minutes === m} aria-label={`${m} ${L({ hi: "मिनट", en: "minutes" })}`} className={clsx("tnum h-[34px] rounded-lg text-[13.5px] transition-colors", minutes === m && "touch-none select-none cursor-ew-resize", scrub.active && "opacity-0", minutes === m ? "bg-white font-semibold text-[#BE4D25] shadow-sm" : "font-medium text-ink-500")}>
                       {m}
                     </button>
                   ))}
                 </div>
-                <button type="button" onClick={() => setMinutes((m) => (m < 5 ? 5 : Math.min(180, m + 5)))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[#DCE4ED] bg-white text-ink-800 active:bg-[#EAF0F6]">
+                <button type="button" onClick={() => setMinutes((m) => (m < 5 ? 5 : Math.min(180, m + 5)))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
                   <Plus className="h-4 w-4" aria-hidden />
                 </button>
               </div>
@@ -396,11 +400,11 @@ export function StudyScreen() {
             <section className="study-in" style={stagger(1)}>
               <div className="flex items-center justify-between">
                 <h2 className="text-[16px] font-semibold text-ink-900">{L({ hi: "बाकी होमवर्क", en: "Homework to do" })}</h2>
-                <Link href="/homework/" className="-my-2 flex min-h-[44px] items-center text-[13px] font-medium text-[#0D2A5E]">
+                <Link href="/homework/" className="-my-2 flex min-h-[44px] items-center text-[13px] font-medium text-[#BE4D25]">
                   {L({ hi: "सब देखें", en: "View all" })}
                 </Link>
               </div>
-              <ul className="mt-1 divide-y divide-[#DCE4ED] border-y border-[#DCE4ED]">
+              <ul className="mt-1 divide-y divide-[#E4DDD3] border-y border-[#E4DDD3]">
                 {toDo.map((h) => (
                   <li key={h.id}>
                     <Link href="/homework/" className="flex min-h-[52px] items-center gap-3 py-2">
@@ -429,18 +433,18 @@ export function StudyScreen() {
                 <div className="grid h-[74px] grid-cols-7 items-end gap-1.5">
                   {week.map((w) => (
                     <div key={w.k} className="flex h-full flex-col items-center justify-end gap-1.5" title={hm(w.min, hi)}>
-                      <span className={clsx("block w-2.5 rounded-full", w.min === 0 ? "bg-[#DCE4ED]" : w.k === today ? "bg-[#0D2A5E]" : "bg-[#B9C7DC]")} style={{ height: w.min === 0 ? 3 : `${Math.max(8, Math.round((w.min / top) * 100))}%` }} />
+                      <span className={clsx("block w-2.5 rounded-full", w.min === 0 ? "bg-[#E4DDD3]" : w.k === today ? "bg-[#BE4D25]" : "bg-[#B9C7DC]")} style={{ height: w.min === 0 ? 3 : `${Math.max(8, Math.round((w.min / top) * 100))}%` }} />
                       <span className={clsx("text-[11px]", w.k === today ? "font-semibold text-ink-900" : "text-ink-500")}>{w.label}</span>
                     </div>
                   ))}
                 </div>
-                <dl className="grid grid-cols-3 border-t border-[#DCE4ED] pt-3">
+                <dl className="grid grid-cols-3 border-t border-[#E4DDD3] pt-3">
                   {[
                     [L({ hi: "कुल", en: "Total" }), hm(weekMin, hi)],
                     [L({ hi: "रोज़ औसत", en: "Daily average" }), hm(weekMin / 7, hi)],
                     [L({ hi: "दिन", en: "Days" }), `${daysStudied} / 7`],
                   ].map(([k, v], i) => (
-                    <div key={k} className={clsx("min-w-0", i > 0 && "border-l border-[#DCE4ED] pl-3")}>
+                    <div key={k} className={clsx("min-w-0", i > 0 && "border-l border-[#E4DDD3] pl-3")}>
                       <dt className="text-[12px] text-ink-500">{k}</dt>
                       <dd className="tnum truncate text-[15px] font-medium text-ink-900">{v}</dd>
                     </div>
@@ -451,15 +455,15 @@ export function StudyScreen() {
                     {change >= 0 ? L({ hi: `पिछले हफ़्ते से ${change}% ज़्यादा`, en: `${change}% more than last week` }) : L({ hi: `पिछले हफ़्ते से ${-change}% कम`, en: `${-change}% less than last week` })}
                   </p>
                 )}
-                <ul className="space-y-2 border-t border-[#DCE4ED] pt-3">
+                <ul className="space-y-2 border-t border-[#E4DDD3] pt-3">
                   {bySubject.map(([subj, min]) => (
                     <li key={subj}>
                       <div className="flex items-baseline justify-between text-[13px]">
                         <span className="font-medium text-ink-800">{subj}</span>
                         <span className="tnum text-ink-500">{hm(min, hi)}</span>
                       </div>
-                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#EAF0F6]">
-                        <div className="h-full rounded-full bg-[#0D2A5E]" style={{ width: `${Math.max(4, Math.round((min / topSubject) * 100))}%` }} />
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#F0ECE5]">
+                        <div className="h-full rounded-full bg-[#BE4D25]" style={{ width: `${Math.max(4, Math.round((min / topSubject) * 100))}%` }} />
                       </div>
                     </li>
                   ))}
@@ -467,7 +471,7 @@ export function StudyScreen() {
               </>
             )}
             {todays.length > 0 && (
-              <ul className="divide-y divide-[#DCE4ED] border-t border-[#DCE4ED]">
+              <ul className="divide-y divide-[#E4DDD3] border-t border-[#E4DDD3]">
                 {todays.map((s) => (
                   <li key={s.at} className="flex items-center justify-between py-2.5 text-[13.5px]">
                     <span className="font-medium text-ink-800">{s.subject}</span>
@@ -478,8 +482,6 @@ export function StudyScreen() {
                 ))}
               </ul>
             )}
-            {/* The record never leaves this phone: say so, so it is not taken for a school record. */}
-            <p className="text-[12px] text-ink-500">{L({ hi: "यह रिकॉर्ड सिर्फ़ इसी फ़ोन में रहता है, स्कूल या टीचर को नहीं दिखता", en: "Saved on this phone only, not shown to the school or teachers" })}</p>
           </section>
         </div>
       ) : (
@@ -493,7 +495,7 @@ export function StudyScreen() {
                   const n = i + 1;
                   const finished = !!run && (n < round || (n === round && run.phase === "break"));
                   return (
-                    <li key={n} className={clsx("tnum grid h-10 place-items-center rounded-[10px] border text-[13.5px]", finished ? "border-[#0D2A5E] bg-[#0D2A5E] font-medium text-white" : n === round ? "border-[#0D2A5E] bg-white font-semibold text-[#0D2A5E]" : "border-[#DCE4ED] bg-white text-ink-500")}>
+                    <li key={n} className={clsx("tnum grid h-10 place-items-center rounded-[10px] border text-[13.5px]", finished ? "border-[#BE4D25] bg-[#BE4D25] font-medium text-white" : n === round ? "border-[#BE4D25] bg-white font-semibold text-[#BE4D25]" : "border-[#E4DDD3] bg-white text-ink-500")}>
                       {L({ hi: `राउंड ${n}`, en: `Round ${n}` })}
                     </li>
                   );
@@ -522,7 +524,7 @@ export function StudyScreen() {
             {pomoToday.length === 0 ? (
               <p className="mt-1 text-[13.5px] leading-5 text-ink-500">{L({ hi: "आज अभी कोई राउंड पूरा नहीं हुआ", en: "No rounds finished yet today" })}</p>
             ) : (
-              <ul className="mt-1 divide-y divide-[#DCE4ED] border-y border-[#DCE4ED]">
+              <ul className="mt-1 divide-y divide-[#E4DDD3] border-y border-[#E4DDD3]">
                 {pomoToday.map((s) => (
                   <li key={s.at} className="flex items-center justify-between py-2.5 text-[13.5px]">
                     <span className="font-medium text-ink-800">{s.subject}</span>

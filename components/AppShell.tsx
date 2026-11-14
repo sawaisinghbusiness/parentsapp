@@ -92,6 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [switching, setSwitching] = useState(false);
   const page = PAGES[path];
   const isHome = path === "/";
+  const isStudy = path === "/study/";
   const big = !!page?.big;
   const own = !!page?.own;
   const { active: menu, openMenu, closeMenu, layerRef } = useSideMenuMotion(!page?.bare);
@@ -108,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <MenuContext.Provider value={{ openMenu }}>
-    <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-[#F7F9FC]" : own || big ? "bg-[#F7F9FC]" : "bg-[#F7F9FC]")}>
+    <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isStudy && "study-page", isHome ? "bg-[#F7F9FC]" : own || big ? "bg-[#F7F9FC]" : "bg-[#F7F9FC]")}>
       {big && page && (
         <header className="pt-safe px-4">
           <div className="-ml-2.5 flex items-center gap-1 pb-1 pt-4">

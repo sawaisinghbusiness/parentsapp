@@ -1,0 +1,54 @@
+[
+  {
+    "name": "note removed",
+    "pass": true
+  },
+  {
+    "name": "owl off initially",
+    "pass": true
+  },
+  {
+    "name": "warm study canvas",
+    "pass": true
+  },
+  {
+    "name": "no mobile overflow",
+    "pass": true
+  },
+  {
+    "name": "switch defaults off",
+    "pass": true
+  },
+  {
+    "name": "enable shows owl",
+    "pass": true
+  },
+  {
+    "name": "switch is on",
+    "pass": true
+  },
+  {
+    "name": "opt-in survives reload",
+    "pass": true
+  },
+  {
+    "name": "disable hides owl immediately",
+    "pass": true
+  },
+  {
+    "name": "Pomodoro selectable",
+    "pass": true
+  },
+  {
+    "name": "timer starts",
+    "pass": true
+  },
+  {
+    "name": "timer pauses",
+    "pass": true
+  },
+  {
+    "name": "switch works when storage writes fail",
+    "pass": true
+  }
+]

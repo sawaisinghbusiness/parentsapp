@@ -6,3 +6,15 @@
 @keyframes study-from-right{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
 @keyframes study-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.study .study-from-left,.study .study-from-right,.study .study-in{animation:none}}
+
+/* Study: bright paper and ink; burnt orange belongs to the action. */
+.study-page { background: #FFFCF7; }
+.study-page > header { background: rgb(255 252 247 / .97); }
+.study { color: #1E2C43; }
+.study :is(.text-ink-900, .text-ink-950) { color: #1E2C43; }
+.study :is(.text-ink-800, .text-ink-700) { color: #344157; }
+.study :is(.text-ink-600, .text-ink-500) { color: #596273; }
+.study .text-ink-400 { color: #677081; }
+.study-dial { border-radius: 50%; background: #fff; border: 1px solid #E9E1D6; }
+.study :focus-visible { outline: 2px solid #BE4D25; outline-offset: 3px; }
+.study ::selection { background: #F9D8C7; color: #612711; }

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "touch hold reveals ruler",
+    "pass": true
+  },
+  {
+    "name": "touch drag updates 25 to 30",
+    "pass": true
+  },
+  {
+    "name": "touch release retains 30 minutes",
+    "pass": true
+  }
+]

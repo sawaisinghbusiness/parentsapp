@@ -25,6 +25,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { useSahayakPreference } from "@/lib/sahayakPreference";
 import { api, clearCache, markSignedIn } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
@@ -59,6 +60,7 @@ export function SideMenu({ active, layerRef, onClose, onSwitchChild }: { active:
   const { me, child } = useParent();
   const L = useL();
   const { lang, setLang } = useT();
+  const [owlEnabled, setOwlEnabled] = useSahayakPreference();
   const path = usePathname();
   const panel = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -196,6 +198,15 @@ export function SideMenu({ active, layerRef, onClose, onSwitchChild }: { active:
           <button type="button" onClick={logout} disabled={leaving} className="ml-auto flex h-10 items-center gap-2 rounded-lg px-3 text-[14px] font-semibold text-rose-600 active:bg-rose-50 disabled:opacity-50">
             <LogOut className="h-[18px] w-[18px]" aria-hidden />
             {L({ hi: "साइन आउट", en: "Sign out" })}
+          </button>
+        </div>
+
+        <div className="shrink-0 border-t border-ink-100 px-4 pb-2">
+          <button type="button" role="switch" aria-checked={owlEnabled} onClick={() => setOwlEnabled(!owlEnabled)} className="flex min-h-[52px] w-full items-center justify-between gap-3 rounded-md px-1 text-left text-[14px] font-medium text-ink-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34483D]">
+            <span>{L({"hi":"तैरता उल्लू दिखाएँ","en":"Show floating owl"})}</span>
+            <span aria-hidden="true" className={clsx("relative h-[26px] w-[46px] shrink-0 rounded-full transition-colors motion-reduce:transition-none", owlEnabled ? "bg-[#15803D]" : "bg-[#C9CEC9]")}>
+              <span className={clsx("absolute left-[3px] top-[3px] h-5 w-5 rounded-full bg-white shadow-sm transition-transform motion-reduce:transition-none", owlEnabled && "translate-x-5")} />
+            </span>
           </button>
         </div>
       </div>
