@@ -15,12 +15,12 @@ import "@/components/study.css";
 
 type Choice = "this" | "due" | "full" | "other";
 
-/** Each app opens straight to the payment; "any app" lets the phone ask which one. */
-const APPS = [
-  { key: "any", name: { hi: "कोई भी UPI ऐप", en: "Any UPI app" }, mark: "₹", bg: "#1446A0", scheme: "upi://pay" },
-  { key: "phonepe", name: { hi: "PhonePe", en: "PhonePe" }, mark: "Pe", bg: "#5F259F", scheme: "phonepe://pay" },
-  { key: "gpay", name: { hi: "Google Pay", en: "Google Pay" }, mark: "G", bg: "#1A73E8", scheme: "tez://upi/pay" },
-  { key: "paytm", name: { hi: "Paytm", en: "Paytm" }, mark: "Pt", bg: "#00B9F1", scheme: "paytmmp://pay" },
+/** The phone's own chooser opens, so the parent picks any UPI app they have; these logos only show what works. */
+const UPI_SCHEME = "upi://pay";
+const UPI_LOGOS = [
+  { name: "PhonePe", src: "/img/upi/phonepe.svg" },
+  { name: "Google Pay", src: "/img/upi/googlepay.svg" },
+  { name: "Paytm", src: "/img/upi/paytm.svg" },
 ] as const;
 
 /**
@@ -84,7 +84,6 @@ function PayFlow({ info }: { info: PayInfo }) {
   const [step, setStep] = useState<"choose" | "utr" | "sent">("choose");
   const [choice, setChoice] = useState<Choice>(info.suggest ? "this" : info.dueNow > 0 ? "due" : "full");
   const [other, setOther] = useState("");
-  const [app, setApp] = useState<(typeof APPS)[number]["key"]>("any");
   const [utr, setUtr] = useState("");
   const [paidOn, setPaidOn] = useState(info.asOf);
   const [busy, setBusy] = useState(false);
@@ -95,7 +94,7 @@ function PayFlow({ info }: { info: PayInfo }) {
   // UPI note: shows on the school's bank statement, so the office can match it to the child.
   const note = `Fee ${info.srNo} ${info.childName}`.slice(0, 50);
   const query = `pa=${encodeURIComponent(info.upiId)}&pn=${encodeURIComponent(info.upiName)}&am=${amount}.00&cu=INR&tn=${encodeURIComponent(note)}`;
-  const link = `${APPS.find((a) => a.key === app)!.scheme}?${query}`;
+  const link = `${UPI_SCHEME}?${query}`;
 
 
   async function send(e: React.FormEvent) {
@@ -262,23 +261,21 @@ function PayFlow({ info }: { info: PayInfo }) {
         )}
       </fieldset>
 
-      {/* The app to open: plain names, no made-up logos. The button follows straight after the two choices. */}
-      <fieldset className="study-in" style={{ animationDelay: "70ms" }}>
-        <legend className={h2}>{L({ hi: "किससे भरें", en: "Pay with" })}</legend>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {APPS.map((a) => (
-            <label key={a.key} className={clsx("flex h-11 cursor-pointer items-center justify-center rounded-xl border bg-white px-2 text-center text-[14px] leading-5 transition-colors focus-within:ring-2 focus-within:ring-[#0D2A5E]/30", app === a.key ? "border-[#0D2A5E] font-semibold text-[#0D2A5E] shadow-[inset_0_0_0_1px_#0D2A5E]" : "border-[#DCE4ED] font-medium text-ink-800")}>
-              <input type="radio" name="app" className="sr-only" checked={app === a.key} onChange={() => setApp(a.key)} />
-              {L(a.name)}
-            </label>
-          ))}
-        </div>
-
+      {/* One button first, then the apps it works with. The phone asks which app to open. */}
+      <div className="study-in" style={{ animationDelay: "70ms" }}>
         {/* Opens the UPI app; when the parent comes back, the page is already asking for the UTR. */}
-        <a href={amountOk ? link : undefined} onClick={() => amountOk && setStep("utr")} aria-disabled={!amountOk} className={clsx(button, "mt-4", !amountOk && "pointer-events-none opacity-50")}>
+        <a href={amountOk ? link : undefined} onClick={() => amountOk && setStep("utr")} aria-disabled={!amountOk} className={clsx(button, !amountOk && "pointer-events-none opacity-50")}>
           {amountOk ? L({ hi: `UPI ऐप में ${rupees(amount)} भरें`, en: `Pay ${rupees(amount)} in UPI app` }) : L({ hi: "रकम चुनें", en: "Choose an amount" })}
         </a>
-      </fieldset>
+        <p className="mt-4 text-center text-[13px] font-medium leading-5 text-ink-500">{L({ hi: "किसी भी UPI ऐप से भुगतान करें", en: "Pay with any UPI app" })}</p>
+        <ul className="mt-2 flex items-center justify-center gap-3" aria-label={L({ hi: "UPI ऐप", en: "UPI apps" })}>
+          {UPI_LOGOS.map((l) => (
+            <li key={l.name} className="flex h-12 w-[88px] items-center justify-center rounded-xl border border-[#DCE4ED] bg-white">
+              <img src={l.src} alt={l.name} className="h-6 w-auto max-w-[64px] object-contain" />
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {/* What the button really does, folded away like Study's "How Pomodoro works": not a payment gateway,
           and the receipt comes from the school. */}
