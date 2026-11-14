@@ -14,7 +14,7 @@ import "@fontsource-variable/noto-sans-devanagari";
 import "./home.css";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bell, BookOpen, CalendarCheck, ChevronRight, Clock, RotateCw, Trophy, Wallet, WifiOff } from "lucide-react";
+import { Bell, BookOpen, ChevronRight, Clock, RotateCw, Trophy, Wallet, WifiOff } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { useApi } from "@/lib/api";
 import { useL, useT } from "@/lib/i18n";
@@ -125,9 +125,9 @@ export default function HomePage() {
       {/* School photograph fades into the warm stone Home background. */}
       <header className="relative h-[calc(210px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#25282A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={fx.img} src={school?.heroUrl || "/img/school-hero.jpg"} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(18,22,24,.76) 0%, rgba(18,22,24,.64) 45%, rgba(18,22,24,.28) 75%, rgba(18,22,24,.12) 100%)" }} />
-        <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(18,22,24,.4) 0%, rgba(18,22,24,0) 100%)" }} />
+        <img ref={fx.img} src={school?.heroUrl || "/img/school-hero-morning.jpg"} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(18,22,24,.52) 0%, rgba(18,22,24,.36) 45%, rgba(18,22,24,.12) 75%, rgba(18,22,24,0) 100%)" }} />
+        <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(18,22,24,.28) 0%, rgba(18,22,24,0) 100%)" }} />
         {/* Darkens as the page scrolls, so the cards stand out over the building. */}
         <div ref={fx.shade} className="absolute inset-0 bg-[#25282A] opacity-0" aria-hidden />
         <div className="home-photo-fade absolute inset-x-0 bottom-0 h-[60px]" />
@@ -138,14 +138,14 @@ export default function HomePage() {
             <button type="button" onClick={openMenu} aria-haspopup="dialog" aria-label={L({ hi: "मेन्यू", en: "Menu" })} className="flex min-w-0 flex-1 items-center text-left active:opacity-80">
               {school?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={school.logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-full bg-white object-cover ring-1 ring-white/50" />
+                <img src={school.logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full bg-white object-cover ring-1 ring-white/50" />
               ) : (
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/50 text-[15px] font-semibold text-white">{school ? initials(school.name) : ""}</span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/50 text-[12px] font-semibold text-white">{school ? initials(school.name) : ""}</span>
               )}
-              <span className="mx-2.5 h-8 w-px shrink-0 bg-white/35" aria-hidden />
+              <span className="mx-2 h-6 w-px shrink-0 bg-white/35" aria-hidden />
               <span className="min-w-0 flex-1 text-white">
-                <span className="block truncate text-[16px] font-semibold leading-[1.2]">{school?.name || " "}</span>
-                <span className="mt-0.5 flex items-center gap-1 text-[14px] font-medium text-white/85">
+                <span className="block truncate text-[14px] font-semibold leading-[1.2]">{school?.name || " "}</span>
+                <span className="mt-0.5 flex items-center gap-1 text-[12px] font-medium text-white/85">
                   <span className="truncate">{town}</span>
 
                 </span>
@@ -167,7 +167,7 @@ export default function HomePage() {
 
           {/* The greeting stays in the left 70%, where the photo overlay is strongest. */}
           <div className="mt-5 max-w-full text-white">
-            <div className="text-[22px] font-medium leading-snug text-white">{greet}</div>
+            <div className="text-[19px] font-medium leading-snug text-white">{greet}</div>
           </div>
         </div>
       </header>
@@ -205,14 +205,15 @@ export default function HomePage() {
         {/* ── Four tiles ── */}
         <div className="grid grid-cols-4 gap-2 border-b pb-5" style={{ borderColor: LINE }}>
           {[
-            { href: "/calendar/", icon: CalendarCheck, t: L({ hi: "हाज़िरी", en: "Attendance" }) },
-            { href: "/homework/", icon: BookOpen, t: L({ hi: "होमवर्क", en: "Homework" }) },
-            { href: "/fees/", icon: Wallet, t: L({ hi: "फ़ीस", en: "Fees" }) },
-            { href: "/exam/?tab=result", icon: Trophy, t: L({ hi: "रिज़ल्ट", en: "Results" }) },
-          ].map(({ href, icon: Icon, t }) => (
-            <Link key={href} href={href} className="flex h-[68px] flex-col items-center justify-center gap-2 rounded-[10px] transition-colors hover:bg-white/60 active:bg-white/80">
-              <Icon className="h-6 w-6" style={{ color: INK }} strokeWidth={1.6} aria-hidden />
-              <span className="text-[12px] font-medium">{t}</span>
+            { href: "/bus/", art: "/img/tiles/bus.png", h: "h-[32px]", fx: "bus", t: L({ hi: "ट्रांसपोर्ट", en: "Transport" }) },
+            { href: "/homework/", art: "/img/tiles/homework.png", h: "h-[42px]", fx: "rise", t: L({ hi: "होमवर्क", en: "Homework" }) },
+            { href: "/fees/", art: "/img/tiles/fees.png", h: "h-[42px]", fx: "tilt", t: L({ hi: "फ़ीस", en: "Fees" }) },
+            { href: "/exam/?tab=result", art: "/img/tiles/results.png", h: "h-[42px]", fx: "cheer", t: L({ hi: "रिज़ल्ट", en: "Results" }) },
+          ].map(({ href, art, h, fx, t }, i) => (
+            <Link key={href} href={href} className="home-tile flex h-[68px] flex-col items-center justify-between overflow-hidden rounded-[10px] border px-0.5 pt-1.5 active:opacity-80" style={{ animationDelay: `${i * 80}ms` }}>
+              <span className="text-[11.5px] font-bold leading-[1.15]">{t}</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={art} alt="" className={`home-art-${fx} ${h} max-w-full object-contain object-bottom`} style={{ animationDelay: `${i * 80 + 150}ms` }} />
             </Link>
           ))}
         </div>
