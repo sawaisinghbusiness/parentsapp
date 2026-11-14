@@ -30,13 +30,13 @@
 @layer components {
   /* ── Kit building blocks (same names in the parent and the staff app) ── */
 
-  /* Grey rounded row card: the kit's list item. */
+  /* White bordered row card on the cool canvas: the kit's list item (shared look, 2026-11-14). */
   .row-card {
-    @apply block rounded-2xl bg-ink-50 px-3.5 py-3;
+    @apply block rounded-[14px] border border-[#DCE4ED] bg-white px-3.5 py-3;
   }
   a.row-card,
   button.row-card {
-    @apply w-full text-left transition-colors active:bg-ink-100;
+    @apply w-full text-left transition-colors active:bg-[#EAF0F6];
   }
   /* Small grey line of facts with icons: subject · date · time. */
   .meta {
@@ -50,7 +50,7 @@
   }
   /* Grey label above a group: "October 2026", "This week". */
   .mlabel {
-    @apply px-0.5 text-[13px] font-medium text-ink-400;
+    @apply px-0.5 text-[13px] font-medium text-ink-500;
   }
   .sec-head {
     @apply flex items-baseline justify-between;
@@ -78,16 +78,16 @@
     @apply inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-2.5 py-px text-[12px] font-semibold leading-5;
   }
   .status-ok {
-    @apply status text-jade-600;
+    @apply status border-transparent bg-[#EAF4EE] text-[#21613F];
   }
   .status-bad {
-    @apply status text-rose-600;
+    @apply status border-transparent bg-[#FCEEEF] text-[#A32F35];
   }
   .status-wait {
-    @apply status text-marigold-500;
+    @apply status border-transparent bg-[#F6F0E7] text-[#78552D];
   }
   .status-mute {
-    @apply status text-ink-400;
+    @apply status border-transparent bg-[#EAF0F6] text-ink-500;
   }
 
   /* Bordered field (dropdown, date, text) with an optional small label inside. */
@@ -198,7 +198,7 @@
     @apply inline-flex min-h-[50px] select-none items-center justify-center gap-2 rounded-xl px-5 text-[15px] font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+    @apply btn bg-[#0D2A5E] text-white hover:bg-[#0A2149];
   }
   .btn-line {
     @apply btn border border-brand-100 bg-white text-brand-600 hover:bg-brand-50;

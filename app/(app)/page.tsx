@@ -25,7 +25,7 @@ import { ChildSheet } from "@/components/ChildSheet";
 const NAVY = "#0D2A5E";
 const INK = "#242628";
 const MUTED = "#666A6E";
-const LINE = "#E5DED4";
+const LINE = "#DCE4ED";
 const TILE = "#F3F4F4";
 
 type Lang = "hi" | "en";
@@ -122,7 +122,7 @@ export default function HomePage() {
 
   return (
     <div className="parents-home" style={{ color: INK }}>
-      {/* School photograph fades into the warm stone Home background. */}
+      {/* School photograph fades into the cool Home background. */}
       <header className="relative h-[calc(210px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#25282A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img ref={fx.img} src={school?.heroUrl || "/img/school-hero-morning.jpg"} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
@@ -202,7 +202,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── Four tiles ── */}
+        {/* ── Four tiles: the school's illustrations, each arriving in its own way (see home.css) ── */}
         <div className="grid grid-cols-4 gap-2 border-b pb-5" style={{ borderColor: LINE }}>
           {[
             { href: "/bus/", art: "/img/tiles/bus.png", h: "h-[32px]", fx: "bus", t: L({ hi: "ट्रांसपोर्ट", en: "Transport" }) },

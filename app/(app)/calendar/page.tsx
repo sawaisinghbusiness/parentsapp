@@ -24,9 +24,9 @@ export default function CalendarPage() {
 
   return (
     <div className="animate-rise space-y-4">
-      {/* Two tabs as one pill, the teal part sliding to the chosen one. */}
-      <div className="relative grid grid-cols-2 rounded-full bg-[#E8F3F5] p-1 ring-1 ring-[#CFE6EA]" role="tablist" aria-label={L({ hi: "कैलेंडर", en: "Calendar" })}>
-        <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[#177386] shadow-[0_2px_8px_rgba(23,115,134,.25)]" style={{ transform: tab === "timetable" ? "translateX(100%)" : "none" }} />
+      {/* Two tabs as one pill, the navy part sliding to the chosen one. */}
+      <div className="relative grid grid-cols-2 rounded-full bg-[#EAF0F6] p-1 ring-1 ring-[#DCE4ED]" role="tablist" aria-label={L({ hi: "कैलेंडर", en: "Calendar" })}>
+        <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[#0D2A5E]" style={{ transform: tab === "timetable" ? "translateX(100%)" : "none" }} />
         {(["attendance", "timetable"] as const).map((k) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={clsx("relative h-10 rounded-full text-[14.5px] transition-colors duration-300", tab === k ? "font-semibold text-white" : "font-medium text-ink-600")}>
             {k === "attendance" ? L({ hi: "हाज़िरी", en: "Attendance" }) : L({ hi: "टाइम टेबल", en: "Time Table" })}
@@ -190,7 +190,8 @@ function Attendance({ studentId }: { studentId: string }) {
                 const k = dayLook(d, shown.today, L);
                 // A school day with a mark is a full circle in its colour. A Sunday or holiday stays a red date, never a circle.
                 const off = d.sunday || !!d.holiday;
-                const fill = !later && !off && d.mark ? k.dot : null;
+                // White date text needs a darker circle than the small dots use (4.5:1 contrast).
+                const fill = !later && !off && d.mark ? (d.mark === "P" ? "bg-jade-800" : d.mark === "A" ? "bg-rose-600" : "bg-marigold-700") : null;
                 return (
                   <span key={d.date} role="gridcell" aria-label={`${+d.date.slice(8)} · ${later ? "" : k.word}`} className="flex h-[46px] items-center justify-center">
                     <span

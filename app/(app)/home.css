@@ -14,3 +14,21 @@
 .parents-home .home-shortcut+.home-shortcut{border-left:1px solid #E7ECF2}
 .parents-home .home-shortcut:hover{background:#F4F7FB}
 .parents-home .home-shortcut:active{background:#EDF2F7}
+/* Home quick tiles: a soft blue card that fades in, then each picture glides in its own way and settles on the card's bottom edge.
+   One long ease-out per picture, no overshoot, so each comes to rest smoothly. */
+.parents-home .home-tile{border-color:#E1E7F8;background:linear-gradient(160deg,#F4F7FF 0%,#DCE5FF 100%);animation:home-tile-in .35s ease-out both}
+.parents-home .home-tile img{animation-fill-mode:both;animation-timing-function:cubic-bezier(.16,1,.3,1);will-change:transform}
+.parents-home .home-art-bus{animation-name:home-art-bus;animation-duration:1.3s}
+.parents-home .home-art-rise{animation-name:home-art-rise;animation-duration:1s}
+.parents-home .home-art-tilt{transform-origin:50% 100%;animation-name:home-art-tilt;animation-duration:1.1s}
+.parents-home .home-art-cheer{transform-origin:50% 100%;animation-name:home-art-cheer;animation-duration:1.1s}
+@keyframes home-tile-in{from{opacity:0}to{opacity:1}}
+/* The bus drives in from the left and slows to a gentle stop. */
+@keyframes home-art-bus{from{transform:translateX(-160%)}to{transform:none}}
+/* The boy and his desk rise up out of the card's bottom edge. */
+@keyframes home-art-rise{from{transform:translateY(105%)}to{transform:none}}
+/* The hand rises while turning upright, as if offering the coin. */
+@keyframes home-art-tilt{from{transform:translateY(105%) rotate(-14deg)}to{transform:none}}
+/* The girl rises while growing to full size, trophy held up. */
+@keyframes home-art-cheer{from{transform:translateY(60%) scale(.7);opacity:0}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.parents-home .home-tile,.parents-home .home-tile img{animation:none}}

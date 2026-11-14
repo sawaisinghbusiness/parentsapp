@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { Check, Copy } from "lucide-react";
+import { Check, Clock, Copy } from "lucide-react";
 import { api, ApiError, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL } from "@/lib/i18n";
@@ -127,10 +127,17 @@ function PayFlow({ info }: { info: PayInfo }) {
   if (step === "sent")
     return (
       <div className="animate-rise space-y-4 pt-2">
-        <p className="flex items-center gap-2 text-xl font-bold">
-          <Check className="h-6 w-6 text-jade-600" strokeWidth={2.5} aria-hidden /> <span className="tnum">{rupees(amount)}</span>
-        </p>
+        {/* Not a receipt yet: the school still has to match the UTR with the bank, so no green "paid" tick here. */}
+        <div role="status">
+          <p className="flex items-center gap-2 text-[17px] font-bold text-marigold-700">
+            <Clock className="h-5 w-5 shrink-0" strokeWidth={2.2} aria-hidden />
+            {L({ hi: "जानकारी भेज दी गई, स्कूल की जाँच बाकी है", en: "Details sent. School verification pending" })}
+          </p>
+          <p className="tnum mt-2 text-[22px] font-extrabold">{rupees(amount)}</p>
+          <p className="tnum mt-0.5 break-all text-[13px] text-ink-500">UTR {utr.replace(/[\s-]/g, "").toUpperCase()}</p>
+        </div>
         <p className="text-ink-700">{L(F.thanks)}</p>
+        <p className="text-[14px] font-medium text-ink-900">{L({ hi: "दोबारा पेमेंट न करें। जाँच पूरी होने तक बाकी रकम पहले जैसी दिख सकती है।", en: "Please do not pay again. The balance may look unchanged until the school finishes checking." })}</p>
         <Link href="/fees/" className="btn-primary w-full">
           {L({ hi: "फ़ीस पर वापस", en: "Back to Fees" })}
         </Link>
@@ -141,7 +148,7 @@ function PayFlow({ info }: { info: PayInfo }) {
     return (
       <form onSubmit={send} className="animate-rise space-y-3.5" noValidate>
         <div className="row-card">
-          <p className="mlabel !px-0">{L({ hi: "UPI ऐप में भरे", en: "Paid in UPI app" })}</p>
+          <p className="mlabel !px-0">{L({ hi: "चुनी हुई रकम", en: "Amount you chose" })}</p>
           <p className="tnum mt-0.5 text-[22px] font-extrabold">{rupees(amount)}</p>
         </div>
         <p className="text-[15px] leading-relaxed text-ink-700">
@@ -179,12 +186,13 @@ function PayFlow({ info }: { info: PayInfo }) {
           <button type="submit" disabled={busy} className="btn-primary w-full">
             {busy ? "…" : L(F.send)}
           </button>
-          <a href={link} className="btn-line w-full">
-            {L({ hi: "ऐप में फिर से भरें", en: "Pay again in app" })}
-          </a>
           <button type="button" onClick={() => setStep("choose")} className="link w-full justify-center text-[14px]">
             {L({ hi: "रकम बदलें", en: "Change amount" })}
           </button>
+          {/* A quiet link, not a second button: paying twice by mistake is the costly error here. */}
+          <a href={link} className="link w-full justify-center text-[13px] !text-ink-500">
+            {L({ hi: "पेमेंट नहीं हुआ? UPI ऐप फिर खोलें", en: "Payment did not go through? Open the UPI app again" })}
+          </a>
         </div>
       </form>
     );

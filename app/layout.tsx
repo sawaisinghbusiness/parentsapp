@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/inter";
+import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/noto-sans-devanagari";
 import "./globals.css";
 import { LangProvider } from "@/lib/i18n";

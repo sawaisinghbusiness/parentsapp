@@ -44,25 +44,27 @@ interface PageInfo {
   own?: boolean;
   /** No tab bar (a chat, whose message box sits at the bottom). */
   bare?: boolean;
+  /** No floating School Sahayak button: it must not cover a payment, a form or the school's phone number. */
+  noOwl?: boolean;
   /** No top bar at all (no menu button, no title). */
   noHeader?: boolean;
-  /** Normal top bar on a warm paper page, so the white fee bill stands out (Fees). */
+  /** Normal top bar on the shared cool canvas, so the white fee bill stands out (Fees). */
   warm?: boolean;
 }
 
 const PAGES: Record<string, PageInfo> = {
   "/calendar/": { title: { hi: "कैलेंडर", en: "Calendar" }, perChild: true, big: true, noTitle: true },
-  "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true, warm: true },
-  "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true },
-  "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true },
-  "/profile/": { title: { hi: "प्रोफ़ाइल", en: "Profile" } },
-  "/study/": { title: { hi: "पढ़ाई", en: "Study" }, perChild: true, noHeader: true },
+  "/fees/": { title: { hi: "फ़ीस", en: "Fees" }, perChild: true, warm: true, noOwl: true },
+  "/fees/detail/": { title: { hi: "फ़ीस का ब्योरा", en: "Fee Detail" }, back: "/fees/", tab: "/fees/", perChild: true, noOwl: true },
+  "/fees/pay/": { title: { hi: "भुगतान", en: "Payment" }, back: "/fees/", tab: "/fees/", perChild: true, noOwl: true },
+  "/profile/": { title: { hi: "प्रोफ़ाइल", en: "Profile" }, noOwl: true },
+  "/study/": { title: { hi: "पढ़ाई का टाइमर", en: "Study timer" }, perChild: true },
   "/id-card/": { title: { hi: "आईडी कार्ड", en: "ID Card" }, back: "/profile/", tab: "/profile/", perChild: true },
   "/exam/": { title: { hi: "परीक्षा", en: "Exam" }, back: "/", perChild: true },
   "/report-card/": { title: { hi: "रिपोर्ट कार्ड", en: "Report Card" }, back: "/", perChild: true },
   "/exam/detail/": { title: { hi: "रिज़ल्ट", en: "Result" }, back: "/exam/?tab=result", perChild: true },
   "/leave/": { title: { hi: "छुट्टी", en: "Leave" }, back: "/", perChild: true, action: { href: "/leave/apply/", text: { hi: "छुट्टी की अर्ज़ी", en: "Apply leave" } } },
-  "/leave/apply/": { title: { hi: "छुट्टी की अर्ज़ी", en: "Apply Leave" }, back: "/leave/", perChild: true },
+  "/leave/apply/": { title: { hi: "छुट्टी की अर्ज़ी", en: "Apply Leave" }, back: "/leave/", perChild: true, noOwl: true },
   "/homework/": { title: { hi: "होमवर्क", en: "Homework" }, back: "/", perChild: true },
   "/events/": { title: { hi: "कार्यक्रम", en: "Events" }, back: "/" },
   "/events/album/": { title: { hi: "फ़ोटो", en: "Photos" }, back: "/events/" },
@@ -106,7 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <MenuContext.Provider value={{ openMenu }}>
-    <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-[#FAF8F4]" : own || big ? "bg-ink-50" : page?.warm ? "bg-[#FFF4E5]" : "bg-white")}>
+    <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isHome ? "bg-[#F7F9FC]" : own || big ? "bg-[#F7F9FC]" : "bg-[#F7F9FC]")}>
       {big && page && (
         <header className="pt-safe px-4">
           <div className="-ml-2.5 flex items-center gap-1 pb-1 pt-4">
@@ -118,7 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
       {page?.noHeader && <div className="pt-safe" aria-hidden />}
       {!isHome && !big && !own && !page?.noHeader && (
-        <header className={clsx("pt-safe sticky top-0 z-20 backdrop-blur-sm", page?.warm ? "bg-[#FFF4E5]/95" : "bg-white/95")}>
+        <header className={clsx("pt-safe sticky top-0 z-20 backdrop-blur-sm", "bg-[#F7F9FC]/95")}>
           <div className="grid h-14 grid-cols-[48px_1fr_48px] items-center px-1.5">
             {page?.back ? (
               <Link href={page.back} onClick={markBack} className="grid h-11 w-11 place-items-center rounded-full text-ink-900 active:bg-ink-100" aria-label={L({ hi: "वापस", en: "Back" })}>
@@ -161,7 +163,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* School Sahayak (the AI chat): a round button on every tab screen that can be dragged to either side. */}
-      {!page?.bare && !isHome && <SahayakButton />}
+      {!page?.bare && !page?.noOwl && !isHome && <SahayakButton />}
 
       {!page?.bare && (
       // Flat, five equal tabs (the user's design, 2026-11-13; it used to raise Study as a green disc):

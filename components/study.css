@@ -1,0 +1,8 @@
+/* Study: one easing curve, opacity and transform only, one short entrance. */
+.study .study-from-left{animation:study-from-left .38s cubic-bezier(.2,.8,.2,1) both}
+.study .study-from-right{animation:study-from-right .38s cubic-bezier(.2,.8,.2,1) both}
+.study .study-in{animation:study-in .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes study-from-left{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes study-from-right{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes study-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.study .study-from-left,.study .study-from-right,.study .study-in{animation:none}}

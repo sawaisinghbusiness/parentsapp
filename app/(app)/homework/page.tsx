@@ -182,7 +182,7 @@ function Item({ h, today }: { h: Homework; today: string }) {
           )}
         </div>
       )}
-      {due && <p className={clsx("mt-1 text-[13px]", due.soon ? "font-medium text-marigold-600" : "text-ink-500")}>{due.text}</p>}
+      {due && <p className={clsx("mt-1 text-[13px]", due.soon ? "font-medium text-[#78552D]" : "text-ink-500")}>{due.text}</p>}
     </li>
   );
 }

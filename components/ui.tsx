@@ -20,7 +20,9 @@ export const TINTS: [string, string][] = [
 ];
 
 export function Avatar({ name, url, size = 48, tint = 0 }: { name: string; url?: string | null; size?: number; tint?: number }) {
-  const [bg, fg] = TINTS[tint % TINTS.length];
+  // People get one neutral tile: the pastel tints include green and orange, which read as statuses.
+  void tint;
+  const [bg, fg] = ["#EAF0F6", "#0D2A5E"];
   // A photo replaced in the ERP deletes the old file: if a saved (old) link fails, show initials, not a broken image.
   const [failed, setFailed] = useState<string | null>(null);
   return url && failed !== url ? (

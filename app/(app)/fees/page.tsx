@@ -66,7 +66,7 @@ export default function FeesPage() {
     <ul className="divide-y divide-[#F5E6D0] overflow-hidden rounded-[14px] bg-white">
       {list.map((r) => (
         <li key={r.id}>
-          <button onClick={() => share(r)} className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left active:bg-[#FFF8EE]">
+          <button onClick={() => share(r)} className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left active:bg-[#EAF0F6]">
             <span className="min-w-0 flex-1">
               <span className="block text-[15px] font-semibold">
                 {fullDate(r.date, lang)} · {r.mode}
@@ -77,7 +77,7 @@ export default function FeesPage() {
               </span>
             </span>
             <span className="tnum text-[15px] font-semibold">{rupees(r.amount)}</span>
-            <Share2 className="h-5 w-5 shrink-0 text-[#C2410C]" aria-label={L(F.share)} />
+            <Share2 className="h-5 w-5 shrink-0 text-[#0D2A5E]" aria-label={L(F.share)} />
           </button>
         </li>
       ))}
@@ -144,7 +144,7 @@ export default function FeesPage() {
 
       {first ? (
         <section className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_0_#F2D9B5,0_8px_24px_rgba(146,64,14,0.08)]">
-          <div className="flex items-center gap-3 border-b border-[#F5E6D0] px-[18px] pb-3.5 pt-4">
+          <div className="flex items-center gap-3 border-b border-[#DCE4ED] px-[18px] pb-3.5 pt-4">
             {me?.school ? <SchoolMark name={me.school.name} url={me.school.logoUrl} size={40} /> : null}
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[15px] font-bold">
@@ -154,10 +154,8 @@ export default function FeesPage() {
                 {child?.name} · {child?.classSec}
               </span>
             </span>
-            <span className={clsx("tnum shrink-0 text-right text-[12px] font-bold leading-tight", days < 0 ? "text-rose-600" : "text-[#B45309]")}>
-              {days < 0 ? L({ hi: `${-days} दिन`, en: `${-days} days` }) : days === 0 ? L({ hi: "आज", en: "Today" }) : L({ hi: `${days} दिन`, en: `${days} days` })}
-              <br />
-              {days < 0 ? L({ hi: "से लेट", en: "late" }) : days === 0 ? L({ hi: "आख़िरी दिन", en: "last day" }) : L({ hi: "बाकी", en: "left" })}
+            <span className={clsx("tnum shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold", days < 0 ? "bg-[#FCEEEF] text-[#A32F35]" : "bg-[#EAF0F6] text-[#242628]")}>
+              {days < 0 ? L({ hi: "तारीख निकल गई", en: "Overdue" }) : days === 0 ? L({ hi: "आज आख़िरी दिन", en: "Due today" }) : L({ hi: `${days} दिन बाकी`, en: `${days} days left` })}
             </span>
           </div>
 
@@ -180,7 +178,7 @@ export default function FeesPage() {
             </div>
           </dl>
 
-          <div className="mx-[18px] border-t-2 border-dashed border-[#F2D9B5]" />
+          <div className="mx-[18px] border-t-2 border-dashed border-[#DCE4ED]" />
 
           <div className="px-[18px] pb-[18px] pt-3.5">
             <div className="flex items-baseline justify-between gap-3">
@@ -214,7 +212,7 @@ export default function FeesPage() {
           <ul className="divide-y divide-[#F5E6D0] overflow-hidden rounded-[14px] bg-white">
             {later.map(({ i, k, st }) => (
               <li key={i.name}>
-                <Link href={`/fees/detail/?i=${k}`} className="flex min-h-[60px] items-center gap-3 px-4 py-3 active:bg-[#FFF8EE]">
+                <Link href={`/fees/detail/?i=${k}`} className="flex min-h-[60px] items-center gap-3 px-4 py-3 active:bg-[#EAF0F6]">
                   <span className="h-5 w-5 shrink-0 rounded-full border-2 border-stone-300" aria-hidden />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] font-semibold">{i.name}</span>
@@ -241,7 +239,7 @@ export default function FeesPage() {
               const line = [on && `${L({ hi: "जमा", en: "Paid" })} ${dayMonth(on, lang)}`, r && `${L(F.receiptNo)} ${shortNo(r.receiptNo)}`].filter(Boolean).join(" · ") || L(F.insPaid);
               return (
                 <li key={i.name}>
-                  <Link href={`/fees/detail/?i=${k}`} className="flex min-h-[60px] items-center gap-3 px-4 py-3 active:bg-[#FFF8EE]">
+                  <Link href={`/fees/detail/?i=${k}`} className="flex min-h-[60px] items-center gap-3 px-4 py-3 active:bg-[#EAF0F6]">
                     <Check className="h-5 w-5 shrink-0 text-jade-700" strokeWidth={2.5} aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className="block text-[15px] font-semibold">{i.name}</span>
@@ -264,20 +262,20 @@ export default function FeesPage() {
       )}
 
       {first && (
-        <div className="sticky bottom-[calc(104px+env(safe-area-inset-bottom))] -mx-4 flex items-center gap-3 border-t border-[#F5E6D0] bg-white px-4 py-3">
+        <div className="sticky bottom-[calc(104px+env(safe-area-inset-bottom))] -mx-4 flex items-center gap-3 border-t border-[#DCE4ED] bg-white px-4 py-3">
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[12px] text-stone-500">{owing.map(({ i }) => i.name).join(", ")}</span>
             <span className="tnum block text-[20px] font-extrabold leading-tight">{rupees(owe)}</span>
           </span>
           {data.pay.upiId ? (
-            <Link href={`/fees/pay/?i=${first.k}`} className="flex h-12 items-center rounded-xl bg-[#EA580C] px-7 text-[16px] font-bold text-white active:bg-[#C2410C]">
+            <Link href={`/fees/pay/?i=${first.k}`} className="flex h-12 items-center rounded-xl bg-[#0D2A5E] px-7 text-[16px] font-semibold text-white active:bg-[#0A2149]">
               {L({ hi: "अभी भरें", en: "Pay now" })}
             </Link>
           ) : (
             <span className="max-w-[60%] text-right text-[12px] leading-snug text-stone-500">
               {L(F.noOnline)}{" "}
               {data.pay.officePhone && (
-                <a href={`tel:${data.pay.officePhone.replace(/\s/g, "")}`} className="tnum font-semibold text-[#C2410C]">
+                <a href={`tel:${data.pay.officePhone.replace(/\s/g, "")}`} className="tnum font-semibold text-[#0D2A5E]">
                   {data.pay.officePhone}
                 </a>
               )}
