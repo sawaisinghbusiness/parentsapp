@@ -171,7 +171,6 @@ function PayFlow({ info }: { info: PayInfo }) {
           <dt className="shrink-0 text-ink-500">{L({ hi: "किसे", en: "To" })}</dt>
           <dd className="min-w-0 text-right">
             <span className="block truncate font-medium text-ink-900">{info.upiName}</span>
-            <span className="tnum block break-all text-[12px] leading-4 text-ink-500">{info.upiId}</span>
           </dd>
         </div>
       </dl>
@@ -265,7 +264,7 @@ function PayFlow({ info }: { info: PayInfo }) {
       <div className="study-in" style={{ animationDelay: "70ms" }}>
         {/* Opens the UPI app; when the parent comes back, the page is already asking for the UTR. */}
         <a href={amountOk ? link : undefined} onClick={() => amountOk && setStep("utr")} aria-disabled={!amountOk} className={clsx(button, !amountOk && "pointer-events-none opacity-50")}>
-          {amountOk ? L({ hi: `UPI ऐप में ${rupees(amount)} भरें`, en: `Pay ${rupees(amount)} in UPI app` }) : L({ hi: "रकम चुनें", en: "Choose an amount" })}
+          {amountOk ? L({ hi: `${rupees(amount)} भरें`, en: `Pay ${rupees(amount)}` }) : L({ hi: "रकम चुनें", en: "Choose an amount" })}
         </a>
         <p className="mt-4 text-center text-[13px] font-medium leading-5 text-ink-500">{L({ hi: "किसी भी UPI ऐप से भुगतान करें", en: "Pay with any UPI app" })}</p>
         <ul className="mt-2 flex items-center justify-center gap-3" aria-label={L({ hi: "UPI ऐप", en: "UPI apps" })}>
