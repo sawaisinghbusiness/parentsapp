@@ -107,7 +107,7 @@ export default function ReportCardPage() {
         <button onClick={share} className="action-primary grid h-12 w-12 shrink-0 place-items-center rounded-[10px] border border-ink-200 text-ink-900 active:bg-ink-50" aria-label={L({ hi: "शेयर करें", en: "Share" })}>
           <Share2 className="h-5 w-5" aria-hidden />
         </button>
-        <button onClick={() => window.print()} className="grid h-12 w-12 shrink-0 place-items-center rounded-[10px] bg-brand-600 text-white active:bg-brand-700" aria-label={L({ hi: "PDF डाउनलोड करें", en: "Download PDF" })}>
+        <button onClick={() => window.print()} className="action-primary grid h-12 w-12 shrink-0 place-items-center rounded-[10px] bg-brand-600 text-white active:bg-brand-700" aria-label={L({ hi: "प्रिंट करें / PDF सेव करें", en: "Print / Save PDF" })}>
           <Download className="h-5 w-5" aria-hidden />
         </button>
       </div>
@@ -123,7 +123,7 @@ export default function ReportCardPage() {
           aria-pressed={flipped}
           aria-label={flipped ? L({ hi: "आगे का हिस्सा दिखाएँ", en: "Show the front" }) : L({ hi: "पीछे का हिस्सा दिखाएँ", en: "Show the back" })}
         >
-          <span className={clsx("flip-inner", flipped && "is-flipped", !touched && "nudge")}>
+          <span className={clsx("flip-inner", flipped && "is-flipped")}>
             <Face h={h} scale={scale}>
               {front}
             </Face>

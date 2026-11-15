@@ -1,4 +1,5 @@
 "use client";
+import { useUnsavedChanges } from "@/lib/useUnsavedChanges";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -85,6 +86,7 @@ function PayFlow({ info }: { info: PayInfo }) {
   const [other, setOther] = useState("");
   const [utr, setUtr] = useState("");
   const [paidOn, setPaidOn] = useState(info.asOf);
+  const {markSaved}=useUnsavedChanges(step!=="sent" && (!!utr.trim()||!!other.trim()));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -100,6 +102,7 @@ function PayFlow({ info }: { info: PayInfo }) {
     setBusy(true);
     try {
       await api("/fees/claim", { body: { student: info.studentId, amount, utr: clean, paidOn } });
+      markSaved();
       setStep("sent");
     } catch (err) {
       setError(err instanceof ApiError && err.message ? err.message : L({ hi: "भेजा नहीं जा सका। दोबारा कोशिश करें।", en: "Could not send. Please try again." }));

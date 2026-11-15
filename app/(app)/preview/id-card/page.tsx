@@ -1,4 +1,5 @@
 "use client";
+import { notFound } from "next/navigation";
 
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
@@ -16,6 +17,7 @@ import "@/components/study.css";
  * "Show back / Show front" control under it, and the official-card note.
  */
 export default function IdCardPreviewPage() {
+  if(process.env.NODE_ENV === "production")notFound();
   const { child } = useParent();
   const L = useL();
   const { data, error, reload } = useApi<IdCardData>(child ? `/id-card?student=${child.id}` : null);

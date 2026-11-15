@@ -8,6 +8,7 @@ import { useL, useT } from "@/lib/i18n";
 import { phoneText } from "@/lib/format";
 import { DEMO, DEMO_CODE } from "@/lib/demo";
 import { SchoolMark } from "@/components/ui";
+import { Onboarding } from "@/components/Onboarding";
 
 interface PublicSchool {
   name: string;
@@ -34,17 +35,11 @@ export default function LoginPage() {
   const [wait, setWait] = useState(0);
   const codeRef = useRef<HTMLInputElement>(null);
   const demoCode = DEMO || !!school?.demoLogin;
+  // The welcome slides come first every time sign-in opens. They start as the very first frame (no redirect),
+  // so the sign-in form never shows for a moment before them.
+  const [intro, setIntro] = useState(true);
 
   useEffect(() => {
-    // First time on this phone: the welcome slides come before sign-in.
-    try {
-      if (!localStorage.getItem("pa:onboarded")) {
-        window.location.replace("/onboarding/");
-        return;
-      }
-    } catch {
-      /* storage blocked: skip the slides */
-    }
     api<PublicSchool>("/school").then(setSchool).catch(() => null);
   }, []);
 
@@ -107,8 +102,10 @@ export default function LoginPage() {
     }
   }
 
+  if (intro) return <Onboarding onDone={() => setIntro(false)} />;
+
   return (
-    <main className="pt-safe mx-auto flex min-h-[100dvh] max-w-[440px] flex-col bg-white px-5 pb-6">
+    <main className="pt-safe mx-auto flex min-h-[100dvh] max-w-[440px] animate-rise flex-col bg-white px-5 pb-6">
       <div className="flex justify-end pt-3">
         <button onClick={() => setLang(lang === "hi" ? "en" : "hi")} className="min-h-[44px] rounded-lg px-3 text-[14px] font-semibold text-brand-600">
           {lang === "hi" ? "English" : "हिंदी"}

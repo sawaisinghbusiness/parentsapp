@@ -118,7 +118,9 @@ export default function SearchPage() {
     ...(home.data?.events || []).slice(0, 3).map((e) => ({ id: `e${e.id}`, href: "/events/", title: e.title, date: e.date, cover: e.coverUrl || null, scene: e.scene || null, kind: "event" as const })),
     ...(notices.data?.notices || []).slice(0, 2).map((n) => ({ id: `n${n.id}`, href: "/notice/", title: n.title, date: n.date, cover: null, scene: null, kind: "notice" as const })),
   ];
-  const stagger = (i: number) => ({ animationDelay: `${1.3 + i * 0.12}s` });
+  const stagger = (i: number) => ({ animationDelay: `${i * 0.04}s` });
+  const searchPending = (!hw.data && hw.loading) || (!notices.data && notices.loading);
+  const unavailable = [hw.error && L({hi:"होमवर्क",en:"homework"}), notices.error && L({hi:"सूचनाएँ",en:"notices"})].filter(Boolean);
 
   return (
     <div className="space-y-5 pb-4 pt-2">
@@ -160,7 +162,8 @@ export default function SearchPage() {
               {L({ hi: "एआई असिस्टेंट से पूछें:", en: "Ask AI Assistant:" })} <b className="font-semibold">{q.trim()}</b>
             </span>
           </Link>
-          {found.hw.length + found.notices.length === 0 ? (
+          {unavailable.length>0 && <div role="status" className="rounded-xl border border-ink-200 bg-white px-4 py-3 text-[14px] leading-relaxed"><p>{L({hi:`${unavailable.join(", ")} की खोज पूरी नहीं हो सकी।`,en:`Could not search ${unavailable.join(" and ")}.`})}</p><button type="button" className="min-h-[44px] font-semibold" onClick={()=>Promise.all([hw.reload(),notices.reload()])}>{L({hi:"फिर कोशिश करें",en:"Try again"})}</button></div>}
+          {searchPending ? <p role="status" className="text-[14px] text-ink-500">{L({hi:"रिकॉर्ड खोज रहे हैं…",en:"Searching records…"})}</p> : found.hw.length + found.notices.length === 0 && !unavailable.length ? (
             <p className="px-0.5 pt-1 text-[14px] text-ink-500">{L({ hi: "होमवर्क या सूचना में कुछ नहीं मिला।", en: "Nothing found in homework or notices." })}</p>
           ) : (
             <ul className="space-y-2">

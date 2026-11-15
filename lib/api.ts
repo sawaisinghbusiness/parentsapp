@@ -1,4 +1,5 @@
 "use client";
+import { setResourceFailure } from "@/lib/resourceStatus";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEMO, demoApi } from "./demo";
@@ -118,9 +119,10 @@ export function useApi<T>(path: string | null) {
   const [loading, setLoading] = useState(!!path);
   const [stale, setStale] = useState(false);
   const live = useRef(path);
+  const resourceKey = useRef(Symbol("resource"));
 
   const load = useCallback(async () => {
-    if (!path) return;
+    if (!path) return false;
     live.current = path;
     setLoading(true);
     try {
@@ -130,6 +132,7 @@ export function useApi<T>(path: string | null) {
       setError(null);
       setStale(false);
       writeCache(path, fresh);
+      return true;
     } catch (e) {
       if (live.current !== path) return;
       const err = e instanceof ApiError ? e : new ApiError(0, "offline");
@@ -139,6 +142,7 @@ export function useApi<T>(path: string | null) {
         markSignedIn(false);
         window.location.replace("/login/");
       }
+      return false;
     } finally {
       if (live.current === path) setLoading(false);
     }
@@ -160,5 +164,10 @@ export function useApi<T>(path: string | null) {
     return () => window.removeEventListener(REFRESH, again);
   }, [path, load]);
 
+  useEffect(() => {
+    const key = resourceKey.current;
+    setResourceFailure(key, path && error ? {path,hasData:data!==undefined,status:error.status,retry:load} : null);
+    return () => setResourceFailure(key,null);
+  }, [path,error,data,load]);
   return { data, error, loading, stale, reload: load };
 }

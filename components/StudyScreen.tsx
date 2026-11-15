@@ -257,7 +257,7 @@ export function StudyScreen() {
   const subjectRow = (
     <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4" role="group" aria-label={L({ hi: "विषय", en: "Subject" })}>
       {subjects.map((s) => (
-        <button key={s} type="button" disabled={busy} onClick={() => setSubject(s)} aria-pressed={(run ? run.subject : subject) === s} className={clsx("h-9 shrink-0 rounded-full border px-3.5 text-[14px] transition-colors disabled:opacity-50", (run ? run.subject : subject) === s ? "border-[#BE4D25] bg-white font-medium text-[#9B3C1B] disabled:opacity-100" : "border-[#E4DDD3] bg-white text-ink-800")}>
+        <button key={s} type="button" disabled={busy} onClick={() => setSubject(s)} aria-pressed={(run ? run.subject : subject) === s} className={clsx("min-h-[44px] shrink-0 rounded-full border px-3.5 text-[14px] transition-colors disabled:opacity-50", (run ? run.subject : subject) === s ? "border-[#BE4D25] bg-white font-medium text-[#9B3C1B] disabled:opacity-100" : "border-[#E4DDD3] bg-white text-ink-800")}>
           {s}
         </button>
       ))}
@@ -352,7 +352,7 @@ export function StudyScreen() {
       <div className="relative grid grid-cols-2 rounded-full bg-[#F0ECE5] p-1 ring-1 ring-[#E4DDD3]" role="tablist" aria-label={L({ hi: "टाइमर का तरीका", en: "Timer type" })}>
         <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[#24324B]" style={{ transform: view === "pomodoro" ? "translateX(100%)" : "none" }} />
         {(["timer", "pomodoro"] as const).map((m) => (
-          <button key={m} type="button" role="tab" aria-selected={view === m} disabled={busy} onClick={() => setMode(m)} className={clsx("relative h-10 rounded-full text-[14.5px] transition-colors duration-300", view === m ? "font-semibold text-white" : "font-medium text-ink-600", busy && view !== m && "opacity-50")}>
+          <button key={m} type="button" role="tab" aria-selected={view === m} disabled={busy} onClick={() => setMode(m)} className={clsx("relative min-h-[44px] rounded-full text-[14.5px] transition-colors duration-300", view === m ? "font-semibold text-white" : "font-medium text-ink-600", busy && view !== m && "opacity-50")}>
             {m === "timer" ? L({ hi: "टाइमर", en: "Timer" }) : L({ hi: "पोमोडोरो", en: "Pomodoro" })}
           </button>
         ))}
@@ -369,7 +369,7 @@ export function StudyScreen() {
             {/* Length, before starting: one row, the chosen length in words. */}
             {!run && (
               <div className="mt-4 flex w-full items-center gap-2">
-                <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
+                <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
                   <Minus className="h-4 w-4" aria-hidden />
                 </button>
                 <div {...scrub.bindings} data-swipe="duration" data-duration-presets="true" className="relative grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]">
@@ -395,7 +395,7 @@ export function StudyScreen() {
                     </button>
                   ))}
                 </div>
-                <button type="button" onClick={() => setMinutes((m) => (m < 5 ? 5 : Math.min(180, m + 5)))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
+                <button type="button" onClick={() => setMinutes((m) => (m < 5 ? 5 : Math.min(180, m + 5)))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
                   <Plus className="h-4 w-4" aria-hidden />
                 </button>
               </div>

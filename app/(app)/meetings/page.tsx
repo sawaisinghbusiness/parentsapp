@@ -14,7 +14,7 @@ import "@/components/study.css";
 
 /** The kit Button's look, for the "Pick a time" link (kit Button is a <button>). */
 const LINK_PRIMARY =
-  "inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[#0D2A5E] px-5 text-[16px] font-semibold text-white transition-colors active:bg-[#0A2149]";
+  "action-primary inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[#0D2A5E] px-5 text-[16px] font-semibold text-white transition-colors active:bg-[#0A2149]";
 
 /**
  * Every meeting for this child's class: upcoming ones to answer, and past ones.

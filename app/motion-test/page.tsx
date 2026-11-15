@@ -1,4 +1,5 @@
 "use client";
+import { notFound } from "next/navigation";
 
 /**
  * DESIGN REFERENCE (2026-11-13): the user liked this screen's spacing and look, and the slide motion.
@@ -15,6 +16,7 @@ type Screen = { id: string; title: string };
 const HOME: Screen = { id: "home", title: "Home" };
 
 export default function MotionTest() {
+  if(process.env.NODE_ENV === "production")notFound();
   const [stack, setStack] = useState<Screen[]>([HOME]);
   const [dir, setDir] = useState<"fwd" | "back">("fwd");
   const top = stack[stack.length - 1];

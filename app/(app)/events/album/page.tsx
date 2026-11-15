@@ -1,6 +1,7 @@
 "use client";
+import { useDialog } from "@/lib/useDialog";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Download, Play, X } from "lucide-react";
 import { useApi } from "@/lib/api";
@@ -62,7 +63,7 @@ export default function AlbumPage() {
                 )}
               </button>
               {!p.video && (
-                <button onClick={() => savePhoto(p, name(i))} className="absolute bottom-0.5 right-0.5 grid h-9 w-9 place-items-center" aria-label={L({ hi: "फ़ोन में सेव करें", en: "Save to phone" })}>
+                <button onClick={() => savePhoto(p, name(i))} className="absolute bottom-0 right-0 grid h-11 w-11 place-items-center" aria-label={L({ hi: "फ़ोन में सेव करें", en: "Save to phone" })}>
                   <span className="grid h-7 w-7 place-items-center rounded-full bg-white/90 text-ink-900">
                     <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden />
                   </span>
@@ -81,25 +82,26 @@ export default function AlbumPage() {
 function Viewer({ album, index, onIndex, onClose, name }: { album: Album; index: number; onIndex: (i: number) => void; onClose: () => void; name: (i: number) => string }) {
   const L = useL();
   const p = album.photos[index];
+  const dialog=useRef<HTMLDivElement>(null);
+  useDialog(true,dialog,onClose);
   const last = album.photos.length - 1;
 
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+
     const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+
       if (e.key === "ArrowLeft" && index > 0) onIndex(index - 1);
       if (e.key === "ArrowRight" && index < last) onIndex(index + 1);
     };
     window.addEventListener("keydown", key);
     return () => {
-      document.body.style.overflow = prev;
+
       window.removeEventListener("keydown", key);
     };
   }, [index, last, onClose, onIndex]);
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex animate-fadeIn flex-col bg-night-950" role="dialog" aria-modal="true" aria-label={album.title}>
+    <div ref={dialog} tabIndex={-1} className="fixed inset-0 z-50 flex animate-fadeIn flex-col bg-night-950 outline-none" role="dialog" aria-modal="true" aria-label={album.title}>
       <div className="pt-safe flex items-center justify-between px-2 text-white">
         <button onClick={onClose} className="grid h-12 w-12 place-items-center" aria-label={L({ hi: "बंद करें", en: "Close" })}>
           <X className="h-6 w-6" aria-hidden />

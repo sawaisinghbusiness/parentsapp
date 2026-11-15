@@ -1,4 +1,5 @@
 "use client";
+import { useUnsavedChanges } from "@/lib/useUnsavedChanges";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -34,6 +35,7 @@ export default function ApplyLeavePage() {
   const [to, setTo] = useState("");
   const [half, setHalf] = useState(false);
   const [reason, setReason] = useState("");
+  const {markSaved}=useUnsavedChanges(!!reason.trim());
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
 
@@ -59,6 +61,7 @@ export default function ApplyLeavePage() {
     setProblem("");
     try {
       await api("/leave", { method: "POST", body: { student: child.id, from, to: to || from, type, halfDay: half && oneDay, reason: reason.trim() } });
+      markSaved();
       router.replace("/leave/?sent=1");
     } catch (err) {
       const x = err instanceof ApiError ? err : null;

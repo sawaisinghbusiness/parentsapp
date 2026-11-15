@@ -39,7 +39,7 @@ export function CalendarScreen() {
       <div className="relative grid grid-cols-2 rounded-full bg-[#EAF0F6] p-1 ring-1 ring-[#DCE4ED]" role="tablist" aria-label={L({ hi: "कैलेंडर", en: "Calendar" })}>
         <span aria-hidden className="slide-pill absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[#0D2A5E]" style={{ transform: tab === "timetable" ? "translateX(100%)" : "none" }} />
         {(["attendance", "timetable"] as const).map((k) => (
-          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={clsx("relative h-10 rounded-full text-[14.5px] transition-colors duration-300", tab === k ? "font-semibold text-white" : "font-medium text-ink-600")}>
+          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={clsx("relative min-h-[44px] rounded-full text-[14.5px] transition-colors duration-300", tab === k ? "font-semibold text-white" : "font-medium text-ink-600")}>
             {k === "attendance" ? L({ hi: "हाज़िरी", en: "Attendance" }) : L({ hi: "टाइम टेबल", en: "Time table" })}
           </button>
         ))}

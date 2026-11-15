@@ -257,10 +257,10 @@ function MeetCard({ m, today, busy, onAnswer }: { m: ChatMessage; today: string;
       </div>
       {x.status === "waiting" && !past ? (
         <div className="grid grid-cols-2 gap-2 border-t border-ink-100 p-3">
-          <button disabled={busy} onClick={() => onAnswer("yes")} className="action-primary h-10 rounded-xl bg-brand-700 text-[14.5px] font-semibold text-white disabled:opacity-50">
+          <button disabled={busy} onClick={() => onAnswer("yes")} className="action-primary min-h-[44px] rounded-xl bg-brand-700 text-[14.5px] font-semibold text-white disabled:opacity-50">
             {L({ hi: "ठीक है", en: "Okay" })}
           </button>
-          <button disabled={busy} onClick={() => onAnswer("other")} className="h-10 rounded-xl border border-ink-200 bg-white text-[14.5px] font-semibold text-ink-800 disabled:opacity-50">
+          <button disabled={busy} onClick={() => onAnswer("other")} className="min-h-[44px] rounded-xl border border-ink-200 bg-white text-[14.5px] font-semibold text-ink-800 disabled:opacity-50">
             {L({ hi: "दूसरा समय", en: "Another time" })}
           </button>
         </div>

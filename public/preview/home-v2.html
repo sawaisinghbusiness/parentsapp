@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home v2 preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink900:#16213A;--ink800:#262E42;--ink700:#384155;--ink500:#5F687B;--ink400:#8A93A6;--ink200:#DCE2EC;--ink100:#EAEEF5;--ink50:#F5F7FB;
+    --brand:#1446A0;--brand700:#103A86;--jade:#128A3E;--rose:#B91C1C;--mari:#B86405;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#D9DDE5;font-family:Inter,"Noto Sans Devanagari",system-ui,sans-serif;color:var(--ink900);-webkit-font-smoothing:antialiased}
+  .phone{width:360px;min-height:740px;margin:0 auto;background:#F3F5F9;position:relative;padding-bottom:64px}
+  @media (max-width:420px){.phone{width:100%}}
+  .shot .phone{margin:0}.shot .tabs{left:0;transform:none}
+  .top{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--ink100);height:52px;display:flex;align-items:center;gap:10px;padding:0 10px 0 6px}
+  .ib{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;color:var(--ink900);position:relative}
+  .ib svg{width:22px;height:22px}
+  .school{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+  .school img{width:26px;height:26px;object-fit:contain}
+  .school b{font-size:14.5px;font-weight:600;color:var(--ink900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#DC2626;border:2px solid #fff}
+
+  .child{background:#fff;padding:14px 16px 16px;display:flex;align-items:center;gap:14px}
+  .av{width:60px;height:60px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:600;font-size:22px;flex:none}
+  .child h1{font-size:21px;font-weight:700;line-height:1.15;letter-spacing:-.01em}
+  .child p{font-size:13px;color:var(--ink500);margin-top:3px}
+  .child p span{color:var(--ink800)}
+  .child .sw{margin-left:auto;flex:none;color:var(--ink400)}
+
+  .sec{padding:16px 12px 0}
+  .h{display:flex;align-items:baseline;justify-content:space-between;margin:0 4px 8px}
+  .h h2{font-size:15px;font-weight:600;color:var(--ink700)}
+  .h span{font-size:12.5px;color:var(--ink500)}
+  .h a{font-size:13px;color:var(--brand);font-weight:500;text-decoration:none}
+  .card{background:#fff;border:1px solid var(--ink100);border-radius:12px;overflow:hidden}
+  .row{display:flex;align-items:center;gap:12px;padding:11px 14px;min-height:60px;border-top:1px solid var(--ink100)}
+  .row:first-child{border-top:0}
+  .row img.ic{width:34px;height:34px;flex:none}
+  .row .t{flex:1;min-width:0}
+  .row .t b{display:block;font-size:15px;font-weight:600}
+  .row .t small{display:block;font-size:12.5px;color:var(--ink500);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ok{color:var(--jade);font-weight:500}.due{color:var(--rose);font-weight:600}.wait{color:var(--mari);font-weight:500}
+  .btn{background:var(--brand);color:#fff;font-size:13.5px;font-weight:600;padding:9px 13px;border-radius:9px;flex:none}
+  .chev{width:18px;height:18px;color:var(--ink400);flex:none}
+
+  .prog{padding:12px 14px}
+  .prog .l{display:flex;justify-content:space-between;font-size:13px;color:var(--ink500);margin-bottom:6px}
+  .prog .l b{color:var(--ink900);font-size:15px;font-weight:600}
+  .bar{height:6px;border-radius:3px;background:var(--ink100);overflow:hidden}
+  .bar i{display:block;height:100%;width:100%;background:var(--jade)}
+  .split{display:grid;grid-template-columns:1fr 1fr}
+  .split>div+div{border-left:1px solid var(--ink100)}
+
+  .ev{display:flex;gap:12px;padding:11px 14px;align-items:center}
+  .ev img{width:52px;height:52px;border-radius:8px;object-fit:cover;flex:none}
+  .ev b{display:block;font-size:15px;font-weight:600}
+  .ev small{display:block;font-size:12.5px;color:var(--ink500);margin-top:2px}
+  .notice{padding:12px 14px;border-top:1px solid var(--ink100)}
+  .notice b{display:block;font-size:14.5px;font-weight:600}
+  .notice p{font-size:13px;color:var(--ink700);margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .notice small{font-size:12px;color:var(--ink500);display:block;margin-top:4px}
+
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:360px;height:60px;background:#fff;border-top:1px solid var(--ink200);display:grid;grid-template-columns:repeat(5,1fr)}
+  @media (max-width:420px){.tabs{width:100%}}
+  .tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;color:var(--ink500);font-weight:500}
+  .tab svg{width:22px;height:22px}
+  .tab.on{color:var(--brand);font-weight:600}
+  .tab.on::before{content:"";position:absolute;top:0;width:28px;height:3px;background:var(--brand);border-radius:0 0 2px 2px}
+</style>
+</head>
+<body><script>if(location.search.includes("shot"))document.body.className="shot"</script>
+<div class="phone">
+
+  <div class="top">
+    <span class="ib" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
+    <div class="school"><img src="/api/parent/logo" alt=""><b>St. Paul School, Barmer</b></div>
+    <span class="ib" aria-label="Notices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><i class="dot"></i></span>
+  </div>
+
+  <div class="child">
+    <div class="av">PJ</div>
+    <div style="min-width:0">
+      <h1>Prisha Joshi</h1>
+      <p>Nursery - A · Roll 02</p>
+      <p>Class teacher <span>Sunita Sharma</span></p>
+    </div>
+    <svg class="sw" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+  </div>
+
+  <div class="sec">
+    <div class="h"><h2>आज</h2><span>मंगलवार, 27 अक्टूबर</span></div>
+    <div class="card">
+      <div class="row">
+        <img class="ic" src="/icons/quick/attendance.svg" alt="">
+        <div class="t"><b>हाज़िरी</b><small><span class="ok">उपस्थित</span> · 9:05 बजे पहुँची</small></div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div class="row">
+        <img class="ic" src="/icons/quick/fees.svg" alt="">
+        <div class="t"><b>फ़ीस</b><small><span class="due">₹3,200 बाकी</span> · 31 अक्टूबर तक</small></div>
+        <span class="btn">भरें</span>
+      </div>
+      <div class="row">
+        <img class="ic" src="/icons/quick/homework.svg" alt="">
+        <div class="t"><b>होमवर्क</b><small>English · A to E लिखो · कल तक</small></div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div class="row">
+        <img class="ic" src="/icons/quick/bus.svg" alt="">
+        <div class="t"><b>बस</b><small>Route 3 · Station Road · सुबह 7:40</small></div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="h"><h2>इस महीने</h2><a>पूरा देखें</a></div>
+    <div class="card split">
+      <div class="prog">
+        <div class="l"><span>हाज़िरी</span><b>100%</b></div>
+        <div class="bar"><i></i></div>
+        <div class="l" style="margin:6px 0 0"><span>4 में से 4 दिन</span></div>
+      </div>
+      <div class="prog">
+        <div class="l"><span>Periodic Test 3</span><b>A1</b></div>
+        <div class="bar"><i style="width:100%"></i></div>
+        <div class="l" style="margin:6px 0 0"><span>100% · कक्षा में 1st</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec" style="padding-bottom:18px">
+    <div class="h"><h2>स्कूल से</h2><a>सब देखें</a></div>
+    <div class="card">
+      <div class="ev">
+        <img src="/img/events/diwali.webp" alt="">
+        <div style="flex:1;min-width:0"><b>Diwali Celebration</b><small>शुक्र, 6 नवंबर · 10 दिन में</small></div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div class="notice">
+        <b>PTM — शनिवार 1 नवंबर</b>
+        <p>Nursery से Class 5 के अभिभावक सुबह 10 से 12 बजे के बीच क्लास टीचर से मिल सकते हैं।</p>
+        <small>प्रिंसिपल · कल</small>
+      </div>
+    </div>
+  </div>
+
+
+  <nav class="tabs">
+    <a class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3z"/></svg>होम</a>
+    <a class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>फ़ीस</a>
+    <a class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h8"/></svg>पढ़ाई</a>
+    <a class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>हाज़िरी</a>
+    <a class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>मेन्यू</a>
+  </nav>
+</div>
+</body>
+</html>

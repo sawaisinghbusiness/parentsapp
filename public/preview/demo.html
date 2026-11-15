@@ -1,0 +1,5 @@
+<!doctype html><meta charset="utf-8"><title>demo sign-in</title><script>
+// Local review only: signs in to the demo fixtures, then opens ?to=<path>.
+localStorage.setItem("pa:demo-session","1");localStorage.setItem("pa:onboarded","1");
+location.replace(new URLSearchParams(location.search).get("to")||"/");
+</script>

@@ -1,4 +1,5 @@
 "use client";
+import { ResourceStatus } from "@/components/ResourceStatus";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -151,7 +152,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main className={clsx("relative z-10 flex-1", !page?.bare && "pb-28", !isHome && !own && "space-y-3.5 px-4", !isHome && !own && (big ? "pt-3" : "pt-1"))}>
-        {!isHome && !own && <OfflineNote show={stale && !!me} />}
+        {!isHome && !own && <ResourceStatus />}
         {error && error.status !== 401 ? (
           <div className={clsx(isHome && "px-4 pt-6")}>
             <ErrorCard offline={error.status === 0} onRetry={reload} />
@@ -174,15 +175,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       // Flat, five equal tabs (the user's design, 2026-11-13; it used to raise Study as a green disc):
       // white, a hairline on top, and a navy line over the lit tab, whose icon is filled navy.
       <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-[#DFE5EF] bg-white pb-[env(safe-area-inset-bottom,0px)]" aria-label="Main">
-        <ul className="relative grid h-16 grid-cols-5">
+        <ul className="relative grid min-h-[64px] grid-cols-5">
           {TABS.map(({ href, text, icon: Icon }) => {
             const on = lit === href;
             return (
               <li key={href} className="relative">
                 {on && <span className="absolute inset-x-1 top-[-1px] h-[3px] rounded-b bg-[#0D2A5E]" aria-hidden />}
-                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-16 flex-col items-center justify-center gap-1 text-[12px] transition-colors duration-300", on ? "font-bold text-[#0D2A5E]" : "font-medium text-[#5B6478]")}>
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-full min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 py-2 text-[12px] transition-colors duration-300", on ? "font-bold text-[#0D2A5E]" : "font-medium text-[#5B6478]")}>
                   <Icon className="h-6 w-6" strokeWidth={on ? 2.2 : 1.7} fill={on ? "currentColor" : "none"} aria-hidden />
-                  {L(text)}
+                  <span className="block w-full min-w-0 break-words text-center leading-snug">{L(text)}</span>
                 </Link>
               </li>
             );
