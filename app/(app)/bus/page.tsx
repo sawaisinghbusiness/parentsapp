@@ -1,7 +1,10 @@
 "use client";
 
+import { BusDisclosure } from "@/components/BusDisclosure";
+import Link from "next/link";
+import "./bus-overview.css";
 import clsx from "clsx";
-import { Bus as BusIcon, Check, Phone, School } from "lucide-react";
+import { Bus as BusIcon, Check, Phone, School, ChevronRight } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
@@ -11,7 +14,7 @@ import type { LiveBus } from "@/lib/bus";
 import { ErrorCard, ListSkeleton, Skeleton, Status } from "@/components/ui";
 import { useLiveBus } from "@/components/LiveBus";
 import { CARD, Group, Row, Section, SUPPORT, TITLE } from "@/components/kit";
-import { LiveSheet, clock } from "./live";
+import { clock } from "./live";
 import "@/components/study.css";
 
 interface Bus {
@@ -91,24 +94,14 @@ export default function BusPage() {
   return (
     <div className="study space-y-6 pb-4 pt-1">
       <Section>
-        {running && live && child ? (
-          <LiveSheet live={live} childName={child.name} myTime={myTime} />
-        ) : (
-          <div className={CARD}>
-            <div className="relative flex min-h-[128px] items-center overflow-hidden bg-[#EEF3FD] px-4 py-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/img/bus.webp" alt="" className="absolute inset-y-0 right-0 h-full w-[46%] object-cover object-right" />
-              <div className="relative w-[58%]">
-                <p className={SUPPORT}>{data.pickup ? L(M.pickup) : L(M.stop)}</p>
-                <p className="tnum mt-1 text-[28px] font-semibold leading-9 text-ink-900">{data.pickup ? clock(data.pickup) : data.stop || L(M.notSet)}</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-[#DCE4ED] px-4 py-3">
-              <p className="min-w-0 text-[16px] leading-6 text-ink-900">{[data.pickup ? data.stop : null, data.routeName].filter(Boolean).join(" · ")}</p>
-              {live && !live.running && <Status tone="mute">{L({ hi: "अभी नहीं चल रही", en: "Not running now" })}</Status>}
-            </div>
-          </div>
-        )}
+        <div className={clsx(CARD,"bus-overview")}>
+          <div className="bus-overview-route"><BusIcon size={20} aria-hidden/><span>{data.routeName}</span>{r?.vehicleNo&&<span className="bus-overview-plate">{r.vehicleNo}</span>}</div>
+          <h2>{data.stop || L(M.notSet)}</h2>
+          <p className="bus-overview-stop-label">{L({hi:"आपके बच्चे का स्टॉप",en:"Your child's stop"})}</p>
+          <div className="bus-overview-time"><span>{L({hi:"सुबह का तय पिकअप",en:"Scheduled morning pickup"})}</span><strong>{data.pickup?clock(data.pickup):L({hi:"तय नहीं",en:"Not set"})}</strong></div>
+          <div className="bus-overview-status"><span className={running?"is-current":"is-quiet"}/><div><strong>{!live?L({hi:"स्थिति देख रहे हैं…",en:"Checking trip status…"}):live.unavailable?L({hi:"ताज़ा स्थिति नहीं मिली",en:"Current status unavailable"}):live.absent?L({hi:"आज बच्चे का पिकअप नहीं है",en:"No pickup expected today"}):!live.running?L({hi:"अभी ट्रिप नहीं चल रही",en:"No trip running right now"}):live.child.done?(live.kind==="morning"?L({hi:"बच्चे के चढ़ने की एंट्री हो गई",en:"Boarding recorded"}):L({hi:"बच्चे के उतरने की एंट्री हो गई",en:"Drop-off recorded"})):live.delay?L({hi:`ड्राइवर ने ${live.delay.minutes>=30?"30+":live.delay.minutes} मिनट देरी बताई`,en:`Driver reports ${live.delay.minutes>=30?"30+":live.delay.minutes} min delay`}):L({hi:"ट्रिप जारी है",en:"Trip in progress"})}</strong><p>{L({hi:"लोकेशन और बच्चे की एंट्री ट्रैकिंग में देखें।",en:"Open tracking for location and your child's trip status."})}</p></div></div>
+          <Link href="/bus/tracking/" className="bus-overview-track">{L({hi:"लाइव ट्रैकिंग",en:"Live tracking"})}<ChevronRight size={19} aria-hidden/></Link>
+        </div>
       </Section>
 
       {(r?.vehicleNo || r?.driverName || r?.conductorName) && (
@@ -135,12 +128,12 @@ export default function BusPage() {
       )}
 
       {r && r.stops.length > 0 && (
-        <Section title={L(M.allStops)} delay={140}>
+        <BusDisclosure title={L(M.allStops)}>
           <p className={clsx("-mt-1 mb-3", SUPPORT)}>
             {data.routeName} · {L({ hi: "समय तय समय-सारणी के हैं", en: "times are as scheduled" })}
           </p>
-          <Timeline route={r.stops} myStop={data.stop || null} live={running ? live : null} childName={child?.name || ""} />
-        </Section>
+          <Timeline route={r.stops} myStop={data.stop || null} live={null} childName={child?.name || ""} />
+        </BusDisclosure>
       )}
     </div>
   );
@@ -227,10 +220,10 @@ function Timeline({ route, myStop, live, childName }: { route: { name: string; t
   const items: Item[] = [];
   if (live && !morning && live.school.name) items.push({ kind: "school", name: live.school.name, passed: true });
   src.forEach((s, i) => {
-    if (live && live.bus && i === nextIdx) items.push({ kind: "bus" });
+
     items.push({ kind: "stop", name: s.name, time: s.time, passed: s.done, next: i === nextIdx, mine: s.name === myStop });
   });
-  if (live && live.bus && nextIdx === -1) items.push({ kind: "bus" });
+
   if (live && morning && live.school.name) items.push({ kind: "school", name: live.school.name, passed: false });
 
   const travelled = (it: Item | undefined) => !!it && (it.kind === "bus" || ((it.kind === "stop" || it.kind === "school") && it.passed));

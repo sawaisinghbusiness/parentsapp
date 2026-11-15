@@ -121,7 +121,8 @@ export function SideMenu({ active, layerRef, onClose, onSwitchChild }: { active:
                 href={href}
                 onClick={close}
                 aria-current={on ? "page" : undefined}
-                className={clsx("mx-2 flex min-h-[48px] items-center gap-3.5 rounded-xl px-3 text-[15.5px] active:bg-ink-100", on ? "bg-ink-100 font-semibold text-ink-900" : "font-medium text-ink-800")}
+                // The open screen: only a thin light outline, no background at all (user, 2026-11-15).
+                className={clsx("mx-2 flex min-h-[48px] items-center gap-3.5 rounded-xl border px-3 text-[15.5px]", on ? "border-ink-200 font-semibold text-ink-900" : "border-transparent font-medium text-ink-800")}
               >
                 <Icon className="h-[21px] w-[21px] shrink-0 text-ink-900" strokeWidth={1.8} aria-hidden />
                 {L(text)}

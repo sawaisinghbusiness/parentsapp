@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { BellRing, TriangleAlert } from "lucide-react";
 import { useL } from "@/lib/i18n";
-import { ALERT_MIN, DELAY_WHY, metresTo, minutesFor, type LiveBus } from "@/lib/bus";
+import { ALERT_MIN, DELAY_WHY, isBusLocationFresh, metresTo, minutesFor, type LiveBus } from "@/lib/bus";
 import { BusMap, type MapStop } from "@/components/BusMap";
-import { Button, CARD, SUPPORT } from "@/components/kit";
-import { Status } from "@/components/ui";
+import { Button } from "@/components/kit";
+import "./bus-status.css";
 
 /** The bus counts as "not sending" after this long without a new place (same as LiveBus). */
 export const QUIET_MS = 2 * 60_000;
@@ -40,7 +40,8 @@ export function LiveSheet({ live, childName, myTime }: { live: LiveBus; childNam
   const mine = live.stops.find((s) => s.name === live.myStop) || null;
   const m = live.myStop && mine && !mine.done ? metresTo(live, live.myStop) : null;
   const mins = m !== null ? minutesFor(m) : null;
-  const quiet = !live.bus || !live.at || Date.now() - Date.parse(live.at) > QUIET_MS;
+  const quiet = !isBusLocationFresh(live);
+
   const [, redraw] = useState(0);
   useEffect(() => {
     const t = setInterval(() => redraw((x) => x + 1), 5_000);
@@ -51,22 +52,22 @@ export function LiveSheet({ live, childName, myTime }: { live: LiveBus; childNam
   const [near, setNear] = useState(false);
   const warned = useRef(false);
   useEffect(() => {
-    if (mins === null || mins > ALERT_MIN || warned.current || !morning) return;
+    if (quiet || live.unavailable || live.demo || live.child.done || mins === null || mins > ALERT_MIN || warned.current || !morning) return;
     warned.current = true;
     setNear(true);
     navigator.vibrate?.([200, 100, 200]);
     const title = L({ hi: `बस ${mins} मिनट में आ रही है`, en: `Bus in ${mins} min` });
     const body = L({ hi: `${live.myStop} पर ${first} को तैयार रखें।`, en: `Have ${first} ready at ${live.myStop}.` });
     notify(title, body);
-  }, [mins]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mins, quiet, live.unavailable, live.demo, live.child.done]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Driver ticked the child: on the bus / got off.
   const told = useRef(live.child.done);
   useEffect(() => {
-    if (!live.child.done || told.current) return;
+    if (live.unavailable || live.demo || !live.child.done || told.current) return;
     told.current = true;
     notify(morning ? L({ hi: `${first} बस में चढ़ गया`, en: `${first} got on the bus` }) : L({ hi: `${first} बस से उतर गया`, en: `${first} got off the bus` }), live.myStop || "");
-  }, [live.child.done]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [live.child.done, live.unavailable, live.demo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stops: MapStop[] = live.stops
     .filter((s) => s.lat !== null && s.lng !== null)
@@ -74,104 +75,28 @@ export function LiveSheet({ live, childName, myTime }: { live: LiveBus; childNam
   const school: MapStop[] = live.school.lat !== null && live.school.lng !== null ? [{ name: live.school.name, lat: live.school.lat, lng: live.school.lng, state: "school" }] : [];
   const line = morning ? [...stops, ...school] : [...school, ...stops];
   const leftStops = live.stops.filter((s) => !s.done).findIndex((s) => s.name === live.myStop);
-  const doneCount = live.stops.filter((s) => s.done).length;
 
-  const fresh = !live.bus || !live.at ? (
-    <Status tone="wait">{L({ hi: "बस की जगह अभी नहीं आई", en: "Waiting for the bus's place" })}</Status>
-  ) : quiet ? (
-    <Status tone="wait">{L({ hi: `पुरानी जगह · ${agoText(live.at, L)}`, en: `Old place · ${agoText(live.at, L)}` })}</Status>
-  ) : (
-    <Status tone="ok">{L({ hi: "चल रही है", en: "Moving" })}</Status>
-  );
-
+  const statusTitle = live.child.done
+    ? morning ? L({hi:`${first} बस में है`,en:`${first} is on the bus`}) : L({hi:`${first} बस से उतर गया`,en:`${first} has been dropped off`})
+    : live.absent ? L({hi:"आज बस का इंतज़ार नहीं है",en:"No pickup expected today"})
+    : mine?.done ? L({hi:"आपका स्टॉप निकल चुका है",en:"Your stop has been passed"})
+    : leftStops === 0 ? L({hi:"अगला स्टॉप आपका है",en:"Your stop is next"})
+    : leftStops > 0 ? L({hi:`आपके स्टॉप से ${leftStops} स्टॉप दूर`,en:`${leftStops} ${leftStops===1?"stop":"stops"} before yours`})
+    : L({hi:"ट्रिप शुरू हो गई है",en:"The trip has started"});
   return (
-    <div className="space-y-3">
-      <section className={CARD}>
-        <BusMap stops={line} bus={live.bus} className="h-[240px] overflow-hidden" label={L({ hi: "बस का नक्शा", en: "Bus map" })} />
-
-        <div className="border-t border-[#DCE4ED] px-4 pb-4 pt-4">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            {fresh}
-            {live.bus && live.at && !quiet && <span className={SUPPORT}>{L({ hi: `अपडेट ${agoText(live.at, L)}`, en: `Updated ${agoText(live.at, L)}` })}</span>}
-          </div>
-          {!live.bus || !live.at ? (
-            <p className={`mt-1 ${SUPPORT}`}>{L({ hi: "ट्रिप शुरू हो गई है।", en: "The trip has started." })}</p>
-          ) : null}
-
-          {live.child.done ? (
-            <div className="mt-3">
-              <p className="text-[20px] font-semibold leading-7 text-ink-900">{morning ? L({ hi: `${first} बस में है`, en: `${first} is on the bus` }) : L({ hi: `${first} बस से उतर गया`, en: `${first} got off the bus` })}</p>
-              <p className={`mt-1 ${SUPPORT}`}>
-                {live.myStop}
-                {live.child.at ? ` · ${timeText(live.child.at)}` : ""}
-              </p>
-            </div>
-          ) : (
-            <div className="mt-3 flex items-end gap-4">
-              <div className="min-w-0 flex-1">
-                <p className="text-[20px] font-semibold leading-7 text-ink-900">
-                  {leftStops === 0
-                    ? L({ hi: `अगला स्टॉप आपका है`, en: "Your stop is next" })
-                    : leftStops > 0
-                      ? L({ hi: `आपके स्टॉप से ${leftStops} स्टॉप दूर`, en: leftStops === 1 ? "1 stop before yours" : `${leftStops} stops before yours` })
-                      : L({ hi: "आपके स्टॉप तक", en: "To your stop" })}
-                </p>
-                <p className={`mt-1 ${SUPPORT}`}>
-                  {live.myStop}
-                  {myTime ? ` · ${L({ hi: "तय समय", en: "scheduled" })} ${clock(myTime)}` : ""}
-                </p>
-              </div>
-              {mins !== null && (
-                <p className="shrink-0 text-right">
-                  <span className="block text-[14px] leading-5 text-ink-500">{L({ hi: "लगभग", en: "about" })}</span>
-                  <span className="tnum text-[28px] font-semibold leading-9 text-ink-900">{mins}</span>
-                  <span className="ml-1 text-[16px] leading-6 text-ink-500">{L({ hi: "मिनट", en: "min" })}</span>
-                </p>
-              )}
-            </div>
-          )}
-
-          {live.stops.length > 0 && (
-            <div className="mt-4">
-              <div className="flex gap-1" aria-hidden>
-                {live.stops.map((s, i) => (
-                  <span key={`${s.name}-${i}`} className={`h-1.5 flex-1 rounded-full ${s.done ? "bg-[#0D2A5E]" : "bg-[#E6ECF3]"}`} />
-                ))}
-              </div>
-              <p className={`mt-2 ${SUPPORT}`}>{L({ hi: `${live.stops.length} में से ${doneCount} स्टॉप निकल गए`, en: `${doneCount} of ${live.stops.length} stops passed` })}</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {live.delay && (
-        <div role="status" className={`${CARD} flex gap-3 px-4 py-4`}>
-          <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-ink-500" strokeWidth={1.75} aria-hidden />
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[16px] font-medium leading-6 text-ink-900">{L({ hi: "बस देर से आएगी", en: "The bus is running late" })}</p>
-              <Status tone="wait">{L({ hi: "देरी", en: "Late" })}</Status>
-            </div>
-            <p className={`mt-1 ${SUPPORT}`}>
-              {(() => {
-                const why = DELAY_WHY[live.delay.reason] || DELAY_WHY.other;
-                const late = live.delay.minutes >= 30 ? L({ hi: "30 मिनट से ज़्यादा", en: "more than 30 minutes" }) : L({ hi: `करीब ${live.delay.minutes} मिनट`, en: `about ${live.delay.minutes} minutes` });
-                return L({ hi: `${why.hi} बस ${late} देर से पहुँचेगी।`, en: `${why.en}, the bus will be ${late} late.` });
-              })()}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {near && mins !== null && (
-        <div role="alert" className="flex items-center gap-3 rounded-2xl bg-[#0D2A5E] px-4 py-3 text-[16px] font-medium leading-6 text-white">
-          <BellRing className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden />
-          {L({ hi: `बस ${mins} मिनट में ${live.myStop} पहुँच रही है`, en: `The bus reaches ${live.myStop} in ${mins} min` })}
-        </div>
-      )}
-
-      <AlertSwitch />
-    </div>
+    <section className="parent-bus-status parent-bus-tracking">
+      <div className="parent-bus-personal"><div className="tracking-stop"><div><h2>{statusTitle}</h2><p>{live.myStop || L({hi:"स्टॉप अभी नहीं जुड़ा",en:"Stop not assigned"})}</p></div>{!live.child.done&&!quiet&&mins!==null&&<strong className="tracking-eta">{mins}<small>{L({hi:"मिनट लगभग",en:"min approx."})}</small></strong>}</div>
+        {live.child.done&&<p className="parent-bus-recorded">{L({hi:"ड्राइवर की एंट्री",en:"Recorded by the driver"})}{live.child.at?` · ${timeText(live.child.at)}`:""}</p>}
+        {!live.child.done&&mine?.done&&<p className="parent-bus-exception">{L({hi:"बच्चे की एंट्री अभी नहीं हुई। बस स्टाफ़ से जाँच करें।",en:"Your child's entry is missing. Please check with the bus crew."})}</p>}
+        {live.demo&&<p className="parent-bus-demo">{L({hi:"डेमो · नमूना ट्रिप, असली लोकेशन नहीं",en:"Demo · sample trip, not a live location"})}</p>}
+      </div>
+      <BusMap stops={line} path={live.pathRoad?live.path:null} bus={live.bus} className="h-[220px] overflow-hidden" label={L({hi:"बस की आख़िरी मिली लोकेशन",en:"Last received bus location"})}/>
+      <div className="tracking-update" role="status"><span className={quiet?"is-quiet":"is-current"}/><p>{live.unavailable?L({hi:"कनेक्शन नहीं मिला · पिछली जानकारी",en:"Connection lost · last received information"}):!live.bus||!live.at?L({hi:"बस की लोकेशन का इंतज़ार",en:"Waiting for the bus location"}):quiet?L({hi:`पिछली लोकेशन · ${agoText(live.at,L)}`,en:`Last location · ${agoText(live.at,L)}`}):L({hi:`लोकेशन अपडेट · ${agoText(live.at,L)}`,en:`Location updated · ${agoText(live.at,L)}`})}</p></div>
+      {!live.child.done&&!quiet&&mins!==null&&<p className="tracking-estimate-note">{L({hi:"आने का समय दूरी पर आधारित अनुमान है। ट्रैफ़िक शामिल नहीं है।",en:"Arrival is estimated from distance, without live traffic."})}</p>}
+      {quiet&&<p className="tracking-estimate-note">{L({hi:"नई लोकेशन मिलने तक आने का अनुमान नहीं दिखेगा।",en:"Arrival estimates resume after a fresh location update."})}</p>}
+      {live.delay&&<div className="parent-bus-delay" role="status"><TriangleAlert size={18} aria-hidden/><div><strong>{L({hi:`ड्राइवर ने ${live.delay.minutes>=30?"30+":live.delay.minutes} मिनट देरी बताई`,en:`Driver reports ${live.delay.minutes>=30?"30+":live.delay.minutes} min delay`})}</strong><p>{L(DELAY_WHY[live.delay.reason]||DELAY_WHY.other)}</p></div></div>}
+      {!live.demo&&<AlertSwitch/>}
+    </section>
   );
 }
 

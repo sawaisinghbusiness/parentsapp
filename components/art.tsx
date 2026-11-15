@@ -81,6 +81,14 @@ export const SCENE_PHOTOS: Record<string, string> = {
   stage: "/img/events/annual.webp",
   diya: "/img/events/diwali.webp",
   march: "/img/events/march.webp",
+  exam: "/img/events/exam.webp",
+  ptm: "/img/events/ptm.webp",
+  result: "/img/events/result.webp",
+  session: "/img/events/new-session.webp",
+  plant: "/img/events/plantation.webp",
+  hindi: "/img/events/hindi-diwas.webp",
+  children: "/img/events/childrens-day.webp",
+  school: "/img/events/school-event.webp",
 };
 
 /** Subject photos for result tiles; a subject without one gets its short name on grey. */

@@ -20,6 +20,7 @@ import { useApi } from "@/lib/api";
 import { useL, useT } from "@/lib/i18n";
 import { initials } from "@/lib/format";
 import { useMenu } from "@/lib/menu";
+import { BusHomeStatus } from "@/components/BusHomeStatus";
 import { ChildSheet } from "@/components/ChildSheet";
 
 const NAVY = "#0D2A5E";
@@ -218,6 +219,7 @@ export default function HomePage() {
           ))}
         </div>
 
+        {child?.bus && <BusHomeStatus key={child.id} studentId={child.id} name={child.name} />}
         {data && <TodaySummary data={data} />}
 
         {/* ── Latest Notices ── */}

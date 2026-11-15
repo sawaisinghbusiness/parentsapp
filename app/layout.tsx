@@ -3,6 +3,7 @@ import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/noto-sans-devanagari";
 import "./globals.css";
 import "./action-palette.css";
+import "./status-badges.css";
 import { LangProvider } from "@/lib/i18n";
 import { AppLock } from "@/components/AppLock";
 import { APP_LOCK } from "@/lib/appLock";

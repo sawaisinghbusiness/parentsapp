@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import type * as Leaflet from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "./bus-map.css";
 import { LocateFixed } from "lucide-react";
+import { animateReceivedPoint } from "@/lib/receivedMotion";
 import type { LatLng } from "@/lib/bus";
 
 /** Where the map starts before the route or the bus is known. */
@@ -21,7 +23,7 @@ export interface MapStop {
  * it moves; once the map is dragged it stays put until "back to the bus" is tapped.
  * Leaflet is loaded in the browser only (it needs `window`).
  */
-export function BusMap({ stops, bus, className, label }: { stops: MapStop[]; bus: LatLng | null; className?: string; label: string }) {
+export function BusMap({ stops, path, bus, className, label }: { stops: MapStop[]; path?: [number,number][] | null; bus: LatLng | null; className?: string; label: string }) {
   const box = useRef<HTMLDivElement>(null);
   const L = useRef<typeof Leaflet | null>(null);
   const map = useRef<Leaflet.Map | null>(null);
@@ -63,7 +65,7 @@ export function BusMap({ stops, bus, className, label }: { stops: MapStop[]; bus
     if (!ready || !mod || !m || !layer.current) return;
     layer.current.clearLayers();
     const pts = stops.map((s) => [s.lat, s.lng] as [number, number]);
-    if (pts.length > 1) mod.polyline(pts, { color: "#1446A0", weight: 5, opacity: 0.55, lineJoin: "round" }).addTo(layer.current);
+    if (path && path.length > 1) mod.polyline(path, { color: "#3F6652", weight: 4, opacity: 0.8, lineJoin: "round" }).addTo(layer.current);
     for (const s of stops) {
       mod.marker([s.lat, s.lng], {
         icon: mod.divIcon({ className: "", html: `<span class="map-stop map-stop-${s.state}"></span>`, iconSize: [18, 18], iconAnchor: [9, 9] }),
@@ -78,7 +80,7 @@ export function BusMap({ stops, bus, className, label }: { stops: MapStop[]; bus
       m.fitBounds(mod.latLngBounds(all), { padding: [36, 36], maxZoom: 16 });
       fitted.current = true;
     }
-  }, [ready, stops]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ready, stops, path]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The bus.
   useEffect(() => {
@@ -92,14 +94,17 @@ export function BusMap({ stops, bus, className, label }: { stops: MapStop[]; bus
     }
     if (!busMarker.current) {
       busMarker.current = mod
-        .marker([bus.lat, bus.lng], { icon: mod.divIcon({ className: "", html: '<span class="map-bus"></span>', iconSize: [30, 30], iconAnchor: [15, 15] }), zIndexOffset: 1000, keyboard: false })
+        .marker([bus.lat, bus.lng], { icon: mod.divIcon({ className: "", html: '<span class="bus-position-marker"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="16" rx="3"/><path d="M5 11h14M8 3v8m8-8v8M7 19v2m10-2v2"/><path d="M8 15h1m6 0h1"/></svg></span>', iconSize: [38, 38], iconAnchor: [19, 19] }), zIndexOffset: 1000, keyboard: false })
         .addTo(m);
-    } else busMarker.current.setLatLng([bus.lat, bus.lng]);
+    }
+    const marker=busMarker.current;const old=marker.getLatLng();
+    const cancel=animateReceivedPoint({lat:old.lat,lng:old.lng},bus,point=>marker.setLatLng([point.lat,point.lng]),{duration:1000,road:path||[],reduced:window.matchMedia("(prefers-reduced-motion: reduce)").matches});
     if (!fitted.current) {
       // No saved stops to frame: go straight to the bus.
       m.setView([bus.lat, bus.lng], 16);
       fitted.current = true;
-    } else if (follow) m.panTo([bus.lat, bus.lng], { animate: true, duration: 0.8 });
+    } else if (follow) m.panTo([bus.lat, bus.lng], { animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches, duration: 0.8 });
+    return cancel;
   }, [ready, bus?.lat, bus?.lng, follow]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

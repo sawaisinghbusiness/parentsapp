@@ -13,6 +13,11 @@ export interface LiveStop {
 }
 export interface LiveBus {
   running: boolean;
+  tripId?: string;
+  path?: [number,number][] | null;
+  pathRoad?: boolean;
+  demo?: boolean;
+  unavailable?: boolean;
   kind: "morning" | "afternoon";
   /** When the bus last sent its place; null when it hasn't sent one for a while. */
   at: string | null;
@@ -61,7 +66,7 @@ export function metresTo(live: LiveBus, stop: string) {
   let at: LatLng = live.bus;
   let sum = 0;
   for (const s of left.slice(0, idx + 1)) {
-    if (s.lat === null || s.lng === null) continue;
+    if (s.lat === null || s.lng === null) return null;
     sum += metres(at, { lat: s.lat, lng: s.lng });
     at = { lat: s.lat, lng: s.lng };
   }
@@ -70,3 +75,9 @@ export function metresTo(live: LiveBus, stop: string) {
 
 /** Alert the parent when the bus is this many minutes from their stop. */
 export const ALERT_MIN = 3;
+
+/** A received point is not proof of motion; arrival estimates require a recent valid update. */
+export function isBusLocationFresh(live: LiveBus, now=Date.now()) {
+  const at=live.at?Date.parse(live.at):NaN;
+  return !!live.running && !live.unavailable && !!live.bus && Number.isFinite(live.bus.lat) && Number.isFinite(live.bus.lng) && Math.abs(live.bus.lat)<=90 && Math.abs(live.bus.lng)<=180 && Number.isFinite(at) && now-at>=-30000 && now-at<=120000;
+}

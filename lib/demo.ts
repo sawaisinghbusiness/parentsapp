@@ -256,25 +256,11 @@ const LIVE_STOPS = [
   { name: "Ambedkar Circle", time: "07:18", lat: 25.7512, lng: 71.4061 },
 ];
 const LIVE_SCHOOL = { name: "Mother Teresa Nobles Academy", lat: 25.7563, lng: 71.4002 };
-const LIVE_LOOP_MS = 8 * 60_000;
-
-/** A pretend morning run that loops every 8 minutes, so the live map always has a moving bus. */
+/** Deliberate sample snapshot: no looping animation or fake live movement. */
 function busLive(kid: Kid) {
-  const idle = { running: false, kind: "morning", at: null, bus: null, stops: [], school: LIVE_SCHOOL, myStop: kid.busStop, child: { done: false, at: null } };
-  if (!kid.bus) return idle;
-  const pts = [{ lat: 25.7489, lng: 71.3858 }, ...LIVE_STOPS, LIVE_SCHOOL];
-  const legs = pts.slice(1).map((p, i) => metres(pts[i], p));
-  const total = legs.reduce((a, b) => a + b, 0);
-  const now = Date.now();
-  let left = ((now % LIVE_LOOP_MS) / LIVE_LOOP_MS) * total;
-  let i = 0;
-  while (i < legs.length - 1 && left > legs[i]) left -= legs[i++];
-  const f = Math.min(1, left / legs[i]);
-  const bus = { lat: pts[i].lat + (pts[i + 1].lat - pts[i].lat) * f, lng: pts[i].lng + (pts[i + 1].lng - pts[i].lng) * f };
-  // Leg i runs from pts[i] to pts[i+1]; stops 0..i-1 (pts 1..i) are behind the bus.
-  const stops = LIVE_STOPS.map((st, k) => ({ ...st, done: k < i }));
-  const mine = stops.find((x) => x.name === kid.busStop);
-  return { running: true, kind: "morning", at: new Date(now - 4000).toISOString(), bus, stops, school: LIVE_SCHOOL, myStop: kid.busStop, child: { done: !!mine?.done, at: mine?.done ? new Date(now - 60_000).toISOString() : null } };
+  const idle={running:false,demo:true,kind:"morning",at:null,bus:null,stops:[],school:LIVE_SCHOOL,myStop:kid.busStop,child:{done:false,at:null}};
+  if(!kid.bus)return idle;
+  return {...idle,running:true,tripId:"demo-morning",at:new Date().toISOString(),bus:{lat:25.7432,lng:71.3965},stops:LIVE_STOPS.map((stop,i)=>({...stop,done:i===0}))};
 }
 
 function busFor(kid: Kid) {
