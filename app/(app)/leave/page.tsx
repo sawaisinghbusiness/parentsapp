@@ -86,7 +86,7 @@ export default function LeavePage() {
           <Quiet>{L(M.noPast)}</Quiet>
           <Link
             href="/leave/apply/"
-            className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#0D2A5E] px-5 text-[16px] font-semibold text-white transition-colors active:bg-[#0A2149]"
+            className="action-primary mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#0D2A5E] px-5 text-[16px] font-semibold text-white transition-colors active:bg-[#0A2149]"
           >
             {L({ hi: "छुट्टी की अर्ज़ी भेजें", en: "Apply for leave" })}
           </Link>

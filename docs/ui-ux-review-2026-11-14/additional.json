@@ -1,0 +1,66 @@
+[
+  {
+    "name": "login-actual",
+    "route": "/login/",
+    "url": "http://localhost:3100/login",
+    "text": "हिंदी\nMT\n\nMother Teresa Nobles Academy\n\nNehru Nagar, Barmer\n\nSign in\n\nUse the mobile number you gave the school at admission.\n\nMobile number\n+91\nSend code on WhatsApp\n\nThe 6-digit code arrives in a few seconds.\n\nNeed help? School office:\n\n94600 62543",
+    "width": 390,
+    "scrollWidth": 390
+  },
+  {
+    "name": "chat-valid",
+    "route": "/teachers/chat/?id=t-neha",
+    "url": "http://localhost:3100/teachers/chat?id=t-neha",
+    "text": "NS\n\nNeha Sharma\n\nClass teacher · English\n\nYesterday\n\nNamaste ma'am, Laxman was unwell yesterday. Which pages should he finish at home?\n\n12:57 pm\n\nNamaste. Please do pages 14 and 15 of the English book. Hope he feels better.\n\n1:57 pm\n\nToday\n\nCan we meet once about his reading?\n\n11:57 am\n\nMeeting time\n\n17\nTue, November · 11:30 AM\nIn school · 15 min\nOkay\nAnother time\nMessage",
+    "width": 390,
+    "scrollWidth": 390
+  },
+  {
+    "name": "bus-assigned",
+    "route": "/bus/",
+    "url": "http://localhost:3100/bus",
+    "text": "",
+    "width": 390,
+    "scrollWidth": 390
+  },
+  {
+    "name": "leave-history",
+    "route": "/leave/",
+    "url": "http://localhost:3100/leave",
+    "text": "Leave\nSeptember 2026\n\nFri, 18 Sept – Sat, 19 Sept\n\nApproved\n\nFamily function\n2 days\n\nCousin's wedding in Balotra.\n\nby Rakesh Bishnoi\n\nMon, 7 Sept\n\nApproved\n\nSick\nHalf day\n\nStomach ache in the morning.\n\nby Rakesh Bishnoi\n\nWed, 2 Sept\n\nNot approved\n\nCasual\nFull day\n\nGoing to the village for a puja.\n\nby Rakesh Bishnoi\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390
+  },
+  {
+    "name": "home-hi-360",
+    "route": "/",
+    "url": "http://localhost:3100/",
+    "text": "MA\nMother Teresa Nobles Academy\nBarmer\n2\nनमस्ते,\nPG\nPriya Garg\nकक्षा 5th - B • रोल नं. 17\nआज\n·\nउपस्थित\nट्रांसपोर्ट\nहोमवर्क\nफ़ीस\nरिज़ल्ट\nआज की जानकारी\nअभी देय फ़ीस\nअभी कोई फ़ीस देय नहीं\n₹0\nआज का होमवर्क\nडायरी में काम देखें\n4\nपरीक्षा का रिज़ल्ट\nHalf Yearly Exam\nताज़ा सूचनाएँ\nसब देखें\nदशहरा अवकाश\nस्कूल की सूचना • 13 नव॰ 2026\nआने वाले कार्यक्रम\nसब देखें\n21\nनव॰\nSports Day\nशनिवार\nहोम\nकैलेंडर\nपढ़ाई\nफ़ीस\nप्रोफ़ाइल",
+    "width": 360,
+    "scrollWidth": 360
+  },
+  {
+    "name": "fees-hi-360",
+    "route": "/fees/",
+    "url": "http://localhost:3100/fees",
+    "text": "फ़ीस\nPG\nMT\nफ़ीस बिल · Quarter 3\nPriya Garg · 5th - B\n35 दिन\nसे लेट\nट्यूशन फ़ीस\n₹5,500\nबस शुल्क\n₹3,000\nकंप्यूटर शुल्क\n₹250\nछूट\n− ₹250\nलेट फ़ाइन\n₹0\nकुल भरना है\n₹8,500\n\nआख़िरी तारीख 10 अक्टूबर 2026 · उसके बाद लेट फ़ाइन\n\nआगे के बिल\nQuarter 4\nआख़िरी तारीख 10 जनवरी 2027\n₹9,500\nपिछले बिल\nQuarter 2\nजमा 6 जुलाई · रसीद 00671\n₹11,000\nQuarter 1\nजमा 7 अप्रैल · रसीद 00398\n₹14,500\nQuarter 3\n₹8,500\nअभी भरें\nहोम\nकैलेंडर\nपढ़ाई\nफ़ीस\nप्रोफ़ाइल",
+    "width": 360,
+    "scrollWidth": 360
+  },
+  {
+    "name": "calendar-hi-360",
+    "route": "/calendar/",
+    "url": "http://localhost:3100/calendar",
+    "text": "EN\nहि\n2\nPG\nहाज़िरी\nटाइम टेबल\nअप्रैल\n2026\nमई\n2026\nजून\n2026\nजुल॰\n2026\nअग॰\n2026\nसित॰\n2026\nअक्टू॰\n2026\nनव॰\n2026\nदिस॰\n2026\nजन॰\n2027\nफ़र॰\n2027\nमार्च\n2027\nनवंबर 2026\nर\nसो\nमं\nबु\nगु\nशु\nश\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\nउपस्थित\n10\nअनुपस्थित\n1\nछुट्टी / आधा दिन\n1\nस्कूल बंद\nSports Day\nशनि, 21 नव॰ · 7 दिन में\nहोम\nकैलेंडर\nपढ़ाई\nफ़ीस\nप्रोफ़ाइल",
+    "width": 360,
+    "scrollWidth": 360
+  },
+  {
+    "name": "home-wide",
+    "route": "/",
+    "url": "http://localhost:3100/",
+    "text": "MA\nMother Teresa Nobles Academy\nBarmer\n2\nGood Afternoon,\nPG\nPriya Garg\nClass 5th - B • Roll No. 17\nToday\n·\nPresent\nTransport\nHomework\nFees\nResults\nToday at school\nFees due now\nNo payment due now\n₹0\nToday's homework\nView assignments in the diary\n4\nExam results\nHalf Yearly Exam\nLatest Notices\nView All\nदशहरा अवकाश\nSchool Announcement • Nov 13, 2026\nUpcoming Events\nView All\n21\nNov\nSports Day\nSaturday\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 1440,
+    "scrollWidth": 1425
+  }
+]

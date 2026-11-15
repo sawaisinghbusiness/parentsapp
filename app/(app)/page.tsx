@@ -125,7 +125,7 @@ export default function HomePage() {
       {/* School photograph fades into the cool Home background. */}
       <header className="relative h-[calc(210px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#25282A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={fx.img} src={school?.heroUrl || "/img/school-hero-morning.jpg"} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
+        <img ref={fx.img} src={school?.heroUrl || "/img/school-hero-morning.webp"} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(18,22,24,.52) 0%, rgba(18,22,24,.36) 45%, rgba(18,22,24,.12) 75%, rgba(18,22,24,0) 100%)" }} />
         <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(18,22,24,.28) 0%, rgba(18,22,24,0) 100%)" }} />
         {/* Darkens as the page scrolls, so the cards stand out over the building. */}
@@ -205,10 +205,10 @@ export default function HomePage() {
         {/* ── Four tiles: the school's illustrations, each arriving in its own way (see home.css) ── */}
         <div className="grid grid-cols-4 gap-2 border-b pb-5" style={{ borderColor: LINE }}>
           {[
-            { href: "/bus/", art: "/img/tiles/bus.png", h: "h-[32px]", fx: "bus", t: L({ hi: "ट्रांसपोर्ट", en: "Transport" }) },
-            { href: "/homework/", art: "/img/tiles/homework.png", h: "h-[42px]", fx: "rise", t: L({ hi: "होमवर्क", en: "Homework" }) },
-            { href: "/fees/", art: "/img/tiles/fees.png", h: "h-[42px]", fx: "tilt", t: L({ hi: "फ़ीस", en: "Fees" }) },
-            { href: "/exam/?tab=result", art: "/img/tiles/results.png", h: "h-[42px]", fx: "cheer", t: L({ hi: "रिज़ल्ट", en: "Results" }) },
+            { href: "/bus/", art: "/img/tiles/bus.webp", h: "h-[32px]", fx: "bus", t: L({ hi: "ट्रांसपोर्ट", en: "Transport" }) },
+            { href: "/homework/", art: "/img/tiles/homework.webp", h: "h-[42px]", fx: "rise", t: L({ hi: "होमवर्क", en: "Homework" }) },
+            { href: "/fees/", art: "/img/tiles/fees.webp", h: "h-[42px]", fx: "tilt", t: L({ hi: "फ़ीस", en: "Fees" }) },
+            { href: "/exam/?tab=result", art: "/img/tiles/results.webp", h: "h-[42px]", fx: "cheer", t: L({ hi: "रिज़ल्ट", en: "Results" }) },
           ].map(({ href, art, h, fx, t }, i) => (
             <Link key={href} href={href} className="home-tile flex h-[68px] flex-col items-center justify-between overflow-hidden rounded-[10px] border px-0.5 pt-1.5 active:opacity-80" style={{ animationDelay: `${i * 80}ms` }}>
               <span className="text-[11.5px] font-bold leading-[1.15]">{t}</span>

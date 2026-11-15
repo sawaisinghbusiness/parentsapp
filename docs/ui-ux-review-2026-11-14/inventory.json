@@ -1,0 +1,594 @@
+[
+  {
+    "name": "home",
+    "route": "/",
+    "url": "http://localhost:3100/",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "MA\nMother Teresa Nobles Academy\nBarmer\n2\nGood Afternoon,\nLG\nLaxman Garg\nClass Nursery - A • Roll No. 01\nToday\n·\nPresent\nTransport\nHomework\nFees\nResults\nToday at school\nFees due now\nView details & pay\n₹10,500\nToday's homework\nView assignments in the diary\n3\nExam results\nHalf Yearly Exam\nLatest Notices\nView All\nदशहरा अवकाश\nSchool Announcement • Nov 13, 2026\nUpcoming Events\nView All\n21\nNov\nSports Day\nSaturday\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Today at school",
+        "size": "18px",
+        "font": "\"Plus Jakarta Sans Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Latest Notices",
+        "size": "18px",
+        "font": "\"Plus Jakarta Sans Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Upcoming Events",
+        "size": "18px",
+        "font": "\"Plus Jakarta Sans Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "calendar",
+    "route": "/calendar/",
+    "url": "http://localhost:3100/calendar",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "EN\nहि\n2\nLG\nAttendance\nTime Table\nApr\n2026\nMay\n2026\nJun\n2026\nJul\n2026\nAug\n2026\nSep\n2026\nOct\n2026\nNov\n2026\nDec\n2026\nJan\n2027\nFeb\n2027\nMar\n2027\nNovember 2026\nS\nM\nT\nW\nT\nF\nS\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\nPresent\n10\nAbsent\n1\nLeave / half\n1\nHoliday\nSports Day\nSat, 21 Nov · In 7 days\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "",
+        "size": "28px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "November 2026",
+        "size": "16px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "timetable",
+    "route": "/calendar/?tab=timetable",
+    "url": "http://localhost:3100/calendar?tab=timetable",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "EN\nहि\n2\nLG\nAttendance\nTime Table\nMon\n9\nTue\n10\nWed\n11\nThu\n12\nFri\n13\nSat\n14\n8:00\nGamesMahesh Choudhary\n8:40\nEnglishNeha Sharma\n9:20\nHindiKamla Devi\n10:00\nMathsNeha Sharma\n10:40\nInterval\n11:00\nEVSKamla Devi\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "",
+        "size": "28px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "study",
+    "route": "/study/",
+    "url": "http://localhost:3100/study",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Timer\nPomodoro\nSubject\nHindi\nMaths\nEVS\nDrawing\nRhymes\nGames\nEnglish\nHindi\n25:00\nReady to start\n15\n25\n45\n60\nStart studying\nThis week\nToday 0 min\nS\nM\nT\nW\nT\nF\nS\n\nStart the timer, and each day's study shows here.\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Subject",
+        "size": "12.5px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "This week",
+        "size": "15px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "fees",
+    "route": "/fees/",
+    "url": "http://localhost:3100/fees",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Fees\nLG\nMT\nFee bill · Quarter 2, Quarter 3\nLaxman Garg · Nursery - A\n127 days\nlate\nTuition\n₹9,000\nExam fee\n₹1,000\nLate fine\n₹500\nTotal to pay\n₹10,500\n\nLast date was 10 Jul 2026, fine added\n\nComing bills\nQuarter 4\nLast date 10 Jan 2027\n₹5,500\nPaid bills\nQuarter 1\nPaid 8 Apr · Receipt 00412\n₹8,500\nQuarter 2, Quarter 3\n₹10,500\nPay now\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Fees",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Coming bills",
+        "size": "14px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Paid bills",
+        "size": "14px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "fee-detail",
+    "route": "/fees/detail/?i=0",
+    "url": "http://localhost:3100/fees/detail?i=0",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Fee Detail\nLG\nLast date 10 Apr 2026\nPaid\n\nQuarter 1\n\nTuition\n₹4,500\nAnnual charges\n₹4,000\nTotal paid\n₹8,500\nReceipts\nReceipt no.\nMTNA/2026-27/00412\nDate\n8 Apr 2026\nMode\nCash\nAmount\n₹8,500\nShare\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Fee Detail",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Receipts",
+        "size": "13px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "pay",
+    "route": "/fees/pay/?i=0",
+    "url": "http://localhost:3100/fees/pay?i=0",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Payment\nLG\nHow much\nDue now\nincl. late fine\n₹10,500\nFull session\nincl. late fine\n₹16,000\nAnother amount\nPay with\n₹\nAny UPI app\nPe\nPhonePe\nG\nGoogle Pay\nPt\nPaytm\n\nTo: Mother Teresa Nobles Academy · mtnabarmer@sbi\n\nIf no app opens, copy this UPI ID and pay from your app:\n\nCopy\nPay Now\n₹10,500\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Payment",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "homework",
+    "route": "/homework/",
+    "url": "http://localhost:3100/homework",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Homework\nLG\nThis week\nHindi\nSat, 14 Nov\nPending\n\nअ से अः तक दो बार लिखें\n\nDue tomorrow\n\nMaths\nSat, 14 Nov\nPending\n\n1 से 50 तक गिनती लिखें\n\nकॉपी में साफ़-साफ़ लिखें।\n\nDue tomorrow\n\nEnglish\nFri, 13 Nov\nChecked\n\nWrite A to Z in capital letters\n\nDrawing\nThu, 12 Nov\nPending\n\nDraw and colour a mango\n\nUse crayons.\n\nDue tomorrow\n\nEVS\nMon, 9 Nov\nChecked\n\nName 5 fruits and 5 vegetables\n\nPaste pictures if you can.\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Homework",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "This week",
+        "size": "13px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "exam",
+    "route": "/exam/",
+    "url": "http://localhost:3100/exam",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Exam\nLG\nSchedule\nResult\n\nUnit Test 2 · 28 Nov – 2 Dec\n\nEnglish · Lessons 6–10, grammar\n\nTotal 50\nPass 17\nSat, 28 Nov\n8:00–10:30\n\nHindi · पाठ 7–12\n\nTotal 50\nPass 17\nMon, 30 Nov\n8:00–10:30\n\nMaths · Chapters 6–9\n\nTotal 50\nPass 17\nTue, 1 Dec\n8:00–10:30\n\nEVS · Chapters 6–10\n\nTotal 50\nPass 17\nWed, 2 Dec\n8:00–10:00\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Exam",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "results",
+    "route": "/exam/?tab=result",
+    "url": "http://localhost:3100/exam?tab=result",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Exam\nLG\nSchedule\nResult\n\nHalf Yearly Exam · marks out of 100\n\n0\n25\n50\n75\n100\n93\nEng\n88\nHin\n97\nMat\n87\nEVS\nEnglish\nHindi\nMaths\nEVS\nOverall Results\nHalf Yearly Exam\n365 / 400\n91%\nUnit Test 1\n174 / 200\n87%\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Exam",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Overall Results",
+        "size": "17px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "result-detail",
+    "route": "/exam/detail/?id=half-yearly",
+    "url": "http://localhost:3100/exam/detail?id=half-yearly",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Result\nLG\nHalf Yearly Exam\n365/400\nTotal\n91.3%\nPercent\nA1\nGrade\n2nd\nof 24\n\nResult: Passed\n\nEnglish\n93/100A1\n\nTheory 74/80 · Internal 19/20\n\nHindi\n88/100A2\n\nTheory 70/80 · Internal 18/20\n\nMaths\n97/100A1\n\nTheory 77/80 · Internal 20/20\n\nEVS\n87/100A2\n\nTheory 69/80 · Internal 18/20\n\nClass teacher's remark\nVery cheerful in class. Practise writing letters neatly.\n\nAttendance\n118 / 128\nHow grades work\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Result",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Half Yearly Exam",
+        "size": "15px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "report-card",
+    "route": "/report-card/",
+    "url": "http://localhost:3100/report-card",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Report Card\nLG\nChoose exam\nHalf Yearly Exam\nUnit Test 1\nMTNA\nMTNA\nMOTHER TERESA NOBLES ACADEMY\n\nNEHRU NAGAR, BARMER, RAJASTHAN – 344001\n\nAffiliated to C.B.S.E., New Delhi  ·  Affiliation No. 1730512  ·  School Code 10458\n\nPhone: 94600 62543 · E-mail: office@mtnabarmer.in\n\nREPORT CARD\n\nHALF YEARLY EXAM  —  SESSION 2026-27\n\nName of Student\nLAXMAN GARG\nRoll No.\n01\nClass & Section\nNURSERY - A\nS.R. No.\nSR-2024-1001\nDate of Birth\n11.09.2022\nFather's Name\nMR. JAGDISH PRASAD GARG\nMother's Name\nMRS. SUGAN KANWAR\nSCHOLASTIC AREAS\nMaximum marks in each subject: 100\nS.No.\tSubject\tTheory\n(80)\tInternal\n(20)\tTotal\n(100)\tGrade\n1\tENGLISH\t74\t19\t93\tA1\n2\tHINDI\t70\t18\t88\tA2\n3\tMATHS\t77\t20\t97\tA1\n4\tEVS\t69\t18\t87\tA2\nGRAND TOTAL\n365 / 400\nPERCENTAGE\n91.30%\nOVERALL GRADE\nA1\nRANK IN CLASS\n2\nATTENDANCE\n118 / 128\nResult:\nPASS\nClass Teacher\n \nExam In-charge\n \nPrincipal\n(Signature with seal)\nGRADING SCALE (8-POINT, IN % OF MARKS)\nGrade\tA1\tA2\tB1\tB2\tC1\tC2\tD\tE\nMarks %\t91–100\t81–90\t71–80\t61–70\t51–60\t41–50\t33–40\tBelow 33\n\nAB = Absent. A pupil needs at least 33% marks in each subject. Attendance is days present out of school days marked this session.\n\nATTENDANCE\nWorking Days\tDays Present\tPercentage\n128\t118\t92.2%\nCLASS TEACHER'S REMARKS\nVery cheerful in class. Practise writing letters neatly.\n \n \nINSTRUCTIONS TO PARENTS\nPlease go through the report card and discuss it with your ward.\nThe parent-teacher meeting will be held on the date given by the school.\nPlease tell the school office about any change of address or mobile number.\nPARENT'S SIGNATURE\n \nPlace: BARMER\nDate: 14.11.2026\nClass Teacher\n \nExam In-charge\n \nPrincipal\n(Signature with seal)\n\nTap to see the back\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Mother Teresa Nobles Academy",
+        "size": "31px",
+        "font": "Georgia, \"Times New Roman\", serif"
+      },
+      {
+        "text": "Report Card",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "MOTHER TERESA NOBLES ACADEMY",
+        "size": "31px",
+        "font": "Georgia, \"Times New Roman\", serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "profile",
+    "route": "/profile/",
+    "url": "http://localhost:3100/profile",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Profile\nLG\nLaxman Garg\nClass Nursery - A · Roll 01\nSR-2024-1001 · Mother Teresa Nobles Academy\nCHILD'S DETAILS\nDate of birth\n11 Sept 2022\nFather\nJagdish Prasad Garg\nMother\nSugan Kanwar\nMobile\n95888 94289\nAddress\nSindhari Road, Near Bus Stand, Barmer\nAsk school to update\nSETTINGS\nSwitch child\nLaxman\nID card\nLanguage\nEnglish\nHELP\nCall school office\n94600 62543\nAsk School Sahayak\nLog out\n\n+91 95888 94289\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Profile",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "CHILD'S DETAILS",
+        "size": "12.5px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "SETTINGS",
+        "size": "12.5px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "HELP",
+        "size": "12.5px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "teachers",
+    "route": "/teachers/",
+    "url": "http://localhost:3100/teachers",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Ask Teacher\nLG\nClass teacher\nNS\nNeha Sharma\n11:54 am\nEnglish\nMeeting time\n1\nSubject teachers\nRC\nRakesh Choudhary\nThu\nMathematics\nGood work in the class test today.\nKD\nKamla Devi\nHindi\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Ask Teacher",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Class teacher",
+        "size": "13.5px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Subject teachers",
+        "size": "13.5px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "chat",
+    "route": "/teachers/chat/?id=t1",
+    "url": "http://localhost:3100/teachers/chat?id=t1",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Something went wrong. Please try again.\n\nTry again\nMessage",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [],
+    "brokenImages": []
+  },
+  {
+    "name": "notice",
+    "route": "/notice/",
+    "url": "http://localhost:3100/notice",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Notice\nFri, 13 Nov\nदशहरा अवकाश\nप्रिय अभिभावक, विद्यालय 20 से 22 अक्टूबर तक दशहरा अवकाश के कारण बंद रहेगा। 23 अक्टूबर से कक्षाएँ सामान्य रूप से लगेंगी।\nRead more\nTue, 10 Nov\nअभिभावक–शिक्षक बैठक\nLaxman की अर्धवार्षिक परीक्षा की कॉपियाँ दिखाने के लिए शनिवार सुबह 9 से 11 बजे तक अभिभावक–शिक्षक बैठक होगी। कृपया अवश्य पधारें।\nRead more\nThu, 5 Nov\nफ़ीस की याद\nदूसरी किस्त की आख़िरी तारीख निकल चुकी है। लेट फ़ाइन से बचने के लिए फ़ीस जल्द जमा करें। अब आप ऐप से UPI द्वारा भी फ़ीस भर सकते हैं।\nRead more\nFri, 30 Oct\nAnnual Sports Day\nSports Day will be held on 14 November. Children should come in house T-shirts. Parents are welcome.\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Notice",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "events",
+    "route": "/events/",
+    "url": "http://localhost:3100/events",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Events\n\nSports Day\n\n21 Nov 2026\n\nUpcoming\n\nDussehra Mela\n\n26 Nov 2026\n\nUpcoming\n\nTeachers' Day\n\n5 Sept 2026\n\nIndependence Day\n\n15 Aug 2026\n\nAnnual Function\n\n12 Dec 2025\n\nDiwali Celebration\n\n30 Oct 2025\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Events",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "album",
+    "route": "/events/album/?id=teachers",
+    "url": "http://localhost:3100/events/album?id=teachers",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Photos\nTeachers' Day\n\n5 Sept 2026\n2 photos\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Photos",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Teachers' Day",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "bus",
+    "route": "/bus/",
+    "url": "http://localhost:3100/bus",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "School Bus\nLG\n\nYour child does not take the school bus. To start the bus, please talk to the school office.\n\nCall the office\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "School Bus",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "leave",
+    "route": "/leave/",
+    "url": "http://localhost:3100/leave",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Leave\n\nNo applications sent yet.\n\nApply for leave\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Leave",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "leave-apply",
+    "route": "/leave/apply/",
+    "url": "http://localhost:3100/leave/apply",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Apply Leave\nLG\nType\nSick\nFamily function\nCasual\nOther\nFrom\nTo\nFull day\nHalf day\nReason for leave\n0/300\n\nThe class teacher will see this and reply here. Up to 30 days at a time. For longer, please meet the school office.\n\nApply\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Apply Leave",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "meetings",
+    "route": "/meetings/",
+    "url": "http://localhost:3100/meetings",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Meetings\nLG\nUpcoming\nPast\n\nSomething went wrong. Please try again.\n\nTry again\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Meetings",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "meeting-detail",
+    "route": "/meetings/detail/?id=demo",
+    "url": "http://localhost:3100/meetings/detail?id=demo",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Meeting\nLG\n\nSomething went wrong. Please try again.\n\nTry again\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Meeting",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "id-card",
+    "route": "/id-card/",
+    "url": "http://localhost:3100/id-card",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "ID Card\nLG\nMTNA\nMother Teresa Nobles Academy\nNehru Nagar, Barmer\nLG\nLaxman Garg\nClass Nursery – A\nAdm. no.\nADM-5001\nRoll no.\n01\nFather\nJagdish Prasad Garg\nD.O.B.\n11 Sept 2022\nMobile\n95888 94289\nSession 2026-27\nPrincipal\nPh. 94600 62543\n\nIf found, please return to\n\nMTNA\nMother Teresa Nobles Academy\nNehru Nagar, Barmer\nPh. 94600 62543\nIn emergency, call\nJagdish Prasad Garg\n95888 94289\nAddress\nSindhari Road, Near Bus Stand, Barmer\nTransport\nOwn\nThis card belongs to the school and cannot be transferred.\nCarry it every day and show it when asked.\nTell the school office at once if it is lost.\nSession 2026-27\n\nFront · tap to see the back\n\nThe printed card is the official one. If anything is wrong, please tell the school office.\n\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "ID Card",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "search",
+    "route": "/search/",
+    "url": "http://localhost:3100/search",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "Search\nAsk School Sahayak\nToday's homework?\nHow much fee is due?\nWhen is the next exam?\nWhere is the bus?\nPopular\nFees\nAttendance\nHomework\nTimetable\nNew for you\nSports Day\nSat, 21 Nov · Event\nDussehra Mela\nThu, 26 Nov · Event\nदशहरा अवकाश\nFri, 13 Nov · Notice\nअभिभावक–शिक्षक बैठक\nTue, 10 Nov · Notice\nHome\nCalendar\nStudy\nFees\nProfile",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Search",
+        "size": "18px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "Popular",
+        "size": "15px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      },
+      {
+        "text": "New for you",
+        "size": "15px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "assistant",
+    "route": "/assistant/",
+    "url": "http://localhost:3100/assistant",
+    "title": "Mother Teresa Nobles Academy · Parents",
+    "text": "School Sahayak\n\nHello, Laxman!\n\nWhat would you like to know?\n\nHow much fee is due?\nAttendance this month?\nToday's homework?\nWhen is the next exam?\nQuestion",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [],
+    "brokenImages": []
+  },
+  {
+    "name": "login",
+    "route": "/login/",
+    "url": "http://localhost:3100/onboarding",
+    "title": "School Parent",
+    "text": "Skip\nSCHOOL BUS\nKnow when your child reaches school\n\nAttendance is marked in class and reaches your phone the same morning.\n\nNext",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Know when your child reaches school",
+        "size": "24px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  },
+  {
+    "name": "onboarding",
+    "route": "/onboarding/",
+    "url": "http://localhost:3100/onboarding",
+    "title": "School Parent",
+    "text": "Skip\nSCHOOL BUS\nKnow when your child reaches school\n\nAttendance is marked in class and reaches your phone the same morning.\n\nNext",
+    "width": 390,
+    "scrollWidth": 390,
+    "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif",
+    "headings": [
+      {
+        "text": "Know when your child reaches school",
+        "size": "24px",
+        "font": "\"Inter Variable\", \"Noto Sans Devanagari Variable\", system-ui, sans-serif"
+      }
+    ],
+    "brokenImages": []
+  }
+]

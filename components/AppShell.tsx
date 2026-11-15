@@ -13,6 +13,7 @@ import { ChildSheet } from "./ChildSheet";
 import { TopActions } from "./TopActions";
 import { SideMenu } from "./SideMenu";
 import { PullRefresh } from "./PullRefresh";
+import { ActionPalette } from "@/lib/actionPalette";
 import { MenuContext } from "@/lib/menu";
 import { markBack, motionClass, usePageMotion } from "@/lib/pageMotion";
 import { useSideMenuMotion } from "@/lib/useSideMenuMotion";
@@ -109,8 +110,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
+    <ActionPalette.Provider value={!path.startsWith("/assistant/")}>
     <MenuContext.Provider value={{ openMenu }}>
-    <div className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isStudy && "study-page", isHome ? "bg-[#F7F9FC]" : own || big ? "bg-[#F7F9FC]" : "bg-[#F7F9FC]")}>
+    <div data-action-theme={!path.startsWith("/assistant/") ? "evergreen" : undefined} className={clsx("relative mx-auto flex min-h-[100dvh] max-w-[560px] flex-col", isStudy && "study-page", isHome ? "bg-[#F7F9FC]" : own || big ? "bg-[#F7F9FC]" : "bg-[#F7F9FC]")}>
       {big && page && (
         <header className="pt-safe px-4">
           <div className="-ml-2.5 flex items-center gap-1 pb-1 pt-4">
@@ -194,5 +196,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <PullRefresh off={!!page?.bare || menu} />
     </div>
     </MenuContext.Provider>
+    </ActionPalette.Provider>
   );
 }

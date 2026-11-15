@@ -180,7 +180,7 @@ export default function FeesPage() {
         {/* One line: the picture, what it is, and the amount on the right. */}
         <div className="flex items-center gap-3 px-4 py-3" style={band}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/img/fee-receipt.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
+          <img src="/img/fee-receipt.webp" alt="" className="h-11 w-11 shrink-0 object-contain" />
           {/* Always "Total due"; when nothing is left it simply reads ₹0 (the user removed the "All paid" words). */}
           <p className={clsx("min-w-0 flex-1 text-[16px] font-medium leading-6", left > 0 ? "text-[#A32F35]" : "text-ink-700")}>{L({ hi: "कुल बाकी", en: "Total due" })}</p>
           <p className={clsx("tnum shrink-0 text-[28px] font-semibold leading-9 tracking-tight", left > 0 ? "text-[#A32F35]" : "text-ink-900")}>{rupees(left)}</p>
@@ -284,7 +284,7 @@ export default function FeesPage() {
                       href={`${PAY}?i=${k}`}
                       className={clsx(
                         "flex h-11 flex-1 items-center justify-center rounded-xl text-[16px] font-semibold leading-6",
-                        k === firstUnpaid ? "bg-[#0D2A5E] text-white active:bg-[#0A2149]" : "border border-[#0D2A5E] bg-white text-[#0D2A5E] active:bg-[#EAF0F6]"
+                        k === firstUnpaid ? "action-primary bg-[#0D2A5E] text-white active:bg-[#0A2149]" : "border border-[#0D2A5E] bg-white text-[#0D2A5E] active:bg-[#EAF0F6]"
                       )}
                     >
                       {L({ hi: `${rupees(toPay(i))} भरें`, en: `Pay ${rupees(toPay(i))}` })}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useActionPalette } from "@/lib/actionPalette";
 import { createPortal } from "react-dom";
 import clsx from "clsx";
 import { Phone, RotateCw, WifiOff, X } from "lucide-react";
@@ -139,6 +140,7 @@ export function CallOffice({ phone, className }: { phone?: string; className?: s
 
 /** Bottom sheet with a grab handle. Closes on the dim area, the X and Escape. */
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const actionPalette = useActionPalette();
   const L = useL();
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -152,7 +154,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   }, [onClose]);
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={title}>
+    <div data-action-theme={actionPalette ? "evergreen" : undefined} className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={title}>
       <button className="absolute inset-0 animate-fadeIn bg-night-950/45" onClick={onClose} aria-label={L({ hi: "बंद करें", en: "Close" })} />
       <div className="pb-safe relative max-h-[92dvh] w-full max-w-[560px] animate-slide-up overflow-y-auto rounded-t-[22px] bg-white">
         <div className="sticky top-0 z-10 bg-white px-4 pt-2">

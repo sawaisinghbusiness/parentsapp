@@ -213,7 +213,7 @@ export default function TeacherChatPage() {
             placeholder={L({ hi: "संदेश लिखें", en: "Write a message" })}
             className="max-h-32 min-h-[46px] flex-1 resize-none rounded-xl border border-ink-200 bg-white px-3.5 py-[11px] text-[16px] leading-snug text-ink-900 outline-none placeholder:text-ink-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
           />
-          <button type="submit" disabled={busy || !text.trim() || !data} aria-label={L({ hi: "भेजें", en: "Send" })} className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl bg-brand-700 text-white transition-opacity disabled:opacity-40">
+          <button type="submit" disabled={busy || !text.trim() || !data} aria-label={L({ hi: "भेजें", en: "Send" })} className="action-primary grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl bg-brand-700 text-white transition-opacity disabled:opacity-40">
             <SendHorizontal className="h-5 w-5" aria-hidden />
           </button>
         </form>
@@ -257,7 +257,7 @@ function MeetCard({ m, today, busy, onAnswer }: { m: ChatMessage; today: string;
       </div>
       {x.status === "waiting" && !past ? (
         <div className="grid grid-cols-2 gap-2 border-t border-ink-100 p-3">
-          <button disabled={busy} onClick={() => onAnswer("yes")} className="h-10 rounded-xl bg-brand-700 text-[14.5px] font-semibold text-white disabled:opacity-50">
+          <button disabled={busy} onClick={() => onAnswer("yes")} className="action-primary h-10 rounded-xl bg-brand-700 text-[14.5px] font-semibold text-white disabled:opacity-50">
             {L({ hi: "ठीक है", en: "Okay" })}
           </button>
           <button disabled={busy} onClick={() => onAnswer("other")} className="h-10 rounded-xl border border-ink-200 bg-white text-[14.5px] font-semibold text-ink-800 disabled:opacity-50">

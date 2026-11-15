@@ -104,7 +104,7 @@ export default function ReportCardPage() {
           </select>
           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-500" aria-hidden />
         </label>
-        <button onClick={share} className="grid h-12 w-12 shrink-0 place-items-center rounded-[10px] border border-ink-200 text-ink-900 active:bg-ink-50" aria-label={L({ hi: "शेयर करें", en: "Share" })}>
+        <button onClick={share} className="action-primary grid h-12 w-12 shrink-0 place-items-center rounded-[10px] border border-ink-200 text-ink-900 active:bg-ink-50" aria-label={L({ hi: "शेयर करें", en: "Share" })}>
           <Share2 className="h-5 w-5" aria-hidden />
         </button>
         <button onClick={() => window.print()} className="grid h-12 w-12 shrink-0 place-items-center rounded-[10px] bg-brand-600 text-white active:bg-brand-700" aria-label={L({ hi: "PDF डाउनलोड करें", en: "Download PDF" })}>

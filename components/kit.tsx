@@ -139,14 +139,14 @@ export function Tabs<K extends string>({ value, onChange, options, label }: { va
   );
 }
 
-/** Navy primary button (48px), or the outlined secondary. */
+/** Operational primary action (48px), or the outlined secondary; route palette controls its fill. */
 export function Button({ kind = "primary", className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { kind?: "primary" | "line" }) {
   return (
     <button
       {...p}
       className={clsx(
         "inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-5 text-[16px] font-semibold transition-colors disabled:opacity-50",
-        kind === "primary" ? "bg-[#0D2A5E] text-white active:bg-[#0A2149]" : "border border-[#C9D4E1] bg-white text-[#0D2A5E] active:bg-[#F1F5F9]",
+        kind === "primary" ? "action-primary bg-[#0D2A5E] text-white active:bg-[#0A2149]" : "border border-[#C9D4E1] bg-white text-[#0D2A5E] active:bg-[#F1F5F9]",
         className
       )}
     />

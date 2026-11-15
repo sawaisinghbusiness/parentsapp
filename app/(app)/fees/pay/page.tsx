@@ -143,7 +143,7 @@ function PayFlow({ info }: { info: PayInfo }) {
    */
   const card = "overflow-hidden rounded-[10px] border border-[#DCE4ED] bg-white";
   const h2 = "text-[20px] font-semibold leading-7 text-ink-900";
-  const button = "flex h-12 w-full items-center justify-center rounded-xl bg-[#0D2A5E] text-[16px] font-semibold leading-6 text-white active:bg-[#0A2149] disabled:opacity-50";
+  const button = "action-primary flex h-12 w-full items-center justify-center rounded-xl bg-[#0D2A5E] text-[16px] font-semibold leading-6 text-white active:bg-[#0A2149] disabled:opacity-50";
   const band = { background: "linear-gradient(160deg,#F4F7FF 0%,#DCE5FF 100%)" };
 
   // The top of the slip, on both steps, drawn like the Fees summary: the picture, what it is, the amount
@@ -152,7 +152,7 @@ function PayFlow({ info }: { info: PayInfo }) {
     <section className={card}>
       <div className="flex items-center gap-3 px-4 py-3" style={band}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/img/fee-receipt.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
+        <img src="/img/fee-receipt.webp" alt="" className="h-11 w-11 shrink-0 object-contain" />
         <p className="min-w-0 flex-1 truncate text-[16px] font-medium leading-6 text-ink-700">{label}</p>
         <p className="tnum shrink-0 text-[28px] font-semibold leading-9 tracking-tight text-ink-900">{amountOk ? rupees(amount) : "₹ 0"}</p>
       </div>
