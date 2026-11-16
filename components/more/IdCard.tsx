@@ -103,7 +103,7 @@ function Front({ c, school }: { c: IdCardData["child"]; school: CardSchool }) {
       <div className="-mt-[7.6mm] flex justify-center">
         {c.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={c.photoUrl} alt="" className="h-[24mm] w-[19.5mm] rounded-[1.5mm] border-[0.8mm] border-white object-cover shadow-[0_0.3mm_1mm_rgba(0,0,0,0.25)]" />
+          <img src={c.photoUrl} alt="" className="h-[24mm] w-[19.5mm] rounded-[1.5mm] border-[0.8mm] border-white object-cover object-[50%_22%] shadow-[0_0.3mm_1mm_rgba(0,0,0,0.25)]" />
         ) : (
           <span className="flex h-[24mm] w-[19.5mm] items-center justify-center rounded-[1.5mm] border-[0.8mm] border-white text-[15pt] font-bold shadow-[0_0.3mm_1mm_rgba(0,0,0,0.25)]" style={{ background: TINT, color: BAND }}>
             {initials(c.name)}
