@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
+import { useDialog } from "@/lib/useDialog";
 import { BookOpen, CalendarDays, CheckCircle2, FileText, ImagePlus, Loader2, X } from "lucide-react";
 import { api, ApiError, useApi } from "@/lib/api";
 import { prepareHomeworkFile } from "@/lib/homeworkFile";
@@ -183,15 +184,15 @@ function Item({ h, today, studentId }: { h: Homework; today: string; studentId: 
 
       {/* Done at home: sent to the teacher with photos / a PDF and a note, or the button to send it. */}
       {sent ? (
-        <div className="mt-3 rounded-xl border border-[#CFE3D6] bg-[#F1F8F3] p-3">
+        <div className="hw-submission mt-4 border-t border-ink-100 pt-4">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-[18px] w-[18px] shrink-0 text-[#21613F]" aria-hidden />
-            <p className="min-w-0 flex-1 text-[14px] font-semibold text-[#21613F]">{L({ hi: "टीचर को भेज दिया", en: "Sent to the teacher" })}</p>
+            <p className="min-w-0 flex-1 text-[14px] font-semibold text-ink-900">{L({ hi: "टीचर को भेज दिया", en: "Sent to the teacher" })}</p>
             <span className="tnum shrink-0 text-[12px] text-ink-500">{sentWhen(sent.sentAt, lang)}</span>
           </div>
           {sent.note && <p className="mt-1.5 whitespace-pre-line break-words text-[14px] text-ink-700">{sent.note}</p>}
           {sent.files.length > 0 && <Files files={sent.files} onView={setViewing} />}
-          <button className="link mt-1 -mb-2 text-[13px]" onClick={() => setSending(true)}>
+          <button className="mt-2 inline-flex min-h-[44px] items-center text-[13px] font-semibold text-ink-800 underline underline-offset-4" onClick={() => setSending(true)}>
             {L({ hi: "बदलकर फिर भेजें", en: "Change and send again" })}
           </button>
         </div>
@@ -215,34 +216,23 @@ const sentWhen = (iso: string, lang: string) => {
 function Files({ files, onView, onRemove }: { files: HwFile[]; onView: (f: HwFile) => void; onRemove?: (f: HwFile) => void }) {
   const L = useL();
   return (
-    <div className="mt-2 flex flex-wrap gap-2">
-      {files.map((f) => (
-        <span key={f.url} className="relative">
-          {f.kind === "image" ? (
-            <button type="button" onClick={() => onView(f)} aria-label={`${L({ hi: "फ़ोटो देखें", en: "View photo" })}: ${f.name}`} className="block h-20 w-20 overflow-hidden rounded-xl border border-ink-100 bg-ink-50">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={f.url} alt="" loading="lazy" className="h-full w-full object-cover" />
-            </button>
-          ) : (
-            <button type="button" onClick={() => onView(f)} className="flex min-h-[44px] max-w-[220px] items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 text-[13.5px] font-medium">
-              <FileText className="h-4 w-4 shrink-0 text-rose-700" aria-hidden />
-              <span className="truncate">{f.name}</span>
-            </button>
-          )}
-          {onRemove && (
-            <button type="button" onClick={() => onRemove(f)} aria-label={`${L({ hi: "हटाएँ", en: "Remove" })}: ${f.name}`} className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-ink-900 text-white">
-              <X className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          )}
-        </span>
-      ))}
-    </div>
+    <ul className="mt-3 divide-y divide-ink-100 rounded-xl border border-ink-200 bg-white">
+      {files.map(f=><li key={f.url} className="flex min-w-0 items-center gap-2 px-3 py-2">
+        <button type="button" onClick={()=>onView(f)} className="flex min-h-[48px] min-w-0 flex-1 items-center gap-3 text-left">
+          {f.kind==='image'?<img src={f.url} alt="" className="h-12 w-12 shrink-0 rounded-md object-cover"/>:<span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-ink-50"><FileText className="h-5 w-5 text-ink-700" aria-hidden/></span>}
+          <span className="min-w-0 flex-1"><span className="block break-words text-[14px] font-semibold text-ink-900">{f.name}</span><span className="mt-0.5 block text-[12px] text-ink-500">{f.kind==='pdf'?'PDF':L({hi:'फ़ोटो',en:'Photo'})} · {L({hi:'देखने के लिए खोलें',en:'Open to view'})}</span></span>
+        </button>
+        {onRemove&&<button type="button" onClick={()=>onRemove(f)} aria-label={L({hi:'हटाएँ',en:'Remove'})+': '+f.name} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-ink-600"><X className="h-[18px] w-[18px]" aria-hidden/></button>}
+      </li>)}
+    </ul>
   );
 }
 
 /** A photo opens full screen here; a PDF opens in the phone's own PDF viewer (new tab). */
 function Viewer({ file, onClose }: { file: HwFile; onClose: () => void }) {
   const L = useL();
+  const panel = useRef<HTMLDivElement>(null);
+  useDialog(file.kind === "image",panel,onClose);
   useEffect(() => {
     if (file.kind === "pdf") {
       window.open(file.url, "_blank", "noopener");
@@ -251,7 +241,7 @@ function Viewer({ file, onClose }: { file: HwFile; onClose: () => void }) {
   }, [file, onClose]);
   if (file.kind === "pdf") return null;
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-black/95" role="dialog" aria-modal="true" aria-label={file.name}>
+    <div ref={panel} tabIndex={-1} className="fixed inset-0 z-[60] flex flex-col bg-black/95 outline-none" role="dialog" aria-modal="true" aria-label={file.name}>
       <div className="pt-safe flex items-center justify-between px-2 py-1 text-white">
         <p className="min-w-0 truncate px-2 text-[14px]">{file.name}</p>
         <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full active:bg-white/10" aria-label={L({ hi: "बंद करें", en: "Close" })}>
@@ -323,31 +313,32 @@ function SendSheet({ h, studentId, sent, onClose, onSent }: { h: Homework; stude
   }
 
   return (
-    <Sheet title={L({ hi: "होमवर्क टीचर को भेजें", en: "Send homework to teacher" })} onClose={() => !busy && onClose()}>
-      <div className="space-y-4">
-        <div>
+    <Sheet title={L({ hi: "होमवर्क टीचर को भेजें", en: "Send homework to teacher" })} onClose={() => !busy && !uploading && onClose()}>
+      <div className="space-y-5">
+        <div className="border-b border-ink-100 pb-4">
           <p className="text-[13px] text-ink-500">{h.subject}</p>
           <p className="text-[15.5px] font-bold leading-snug">{h.title}</p>
         </div>
 
         <section>
-          <h3 className="text-[14px] font-semibold">{L({ hi: "फ़ोटो या PDF", en: "Photos or PDF" })}</h3>
+          <h3 className="text-[14px] font-semibold">{L({ hi: "पूरा किया हुआ काम", en: "Your completed work" })}</h3>
           <p className="text-[12.5px] text-ink-500">{L({ hi: "कॉपी के पन्नों की फ़ोटो लें या PDF चुनें (5 तक)।", en: "Take photos of the copy's pages or choose a PDF (up to 5)." })}</p>
           {files.length > 0 && <Files files={files} onView={setViewing} onRemove={(f) => setFiles((x) => x.filter((y) => y.url !== f.url))} />}
           <input ref={pick} type="file" accept="image/*,application/pdf" multiple className="sr-only" onChange={(e) => { void add(e.target.files); e.target.value = ""; }} />
           {files.length < 5 && (
-            <button type="button" className="btn-line mt-2 w-full" onClick={() => pick.current?.click()} disabled={uploading > 0}>
+            <button type="button" className="btn-line mt-3 min-h-[52px] w-full" onClick={() => pick.current?.click()} disabled={busy || uploading > 0}>
               {uploading > 0 ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ImagePlus className="h-4 w-4" aria-hidden />}
-              {uploading > 0 ? L({ hi: "भेज रहे हैं…", en: "Uploading…" }) : L({ hi: "फ़ोटो या PDF जोड़ें", en: "Add photo or PDF" })}
+              {uploading > 0 ? L({ hi: "भेज रहे हैं…", en: "Uploading attachment…" }) : L({ hi: "फ़ोटो या PDF जोड़ें", en: "Add photo or PDF" })}
             </button>
           )}
         </section>
 
         <label className="block">
-          <span className="text-[14px] font-semibold">{L({ hi: "टीचर के लिए नोट", en: "Note for the teacher" })}</span>
+          <span className="text-[14px] font-semibold">{L({ hi: "टीचर के लिए नोट", en: "Note for the teacher (optional)" })}</span>
           <textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 500))} rows={3} placeholder={L({ hi: "जैसे: सवाल 1 से 10 कर लिए, 11 समझ नहीं आया।", en: "E.g. Did questions 1 to 10, did not understand 11." })} className="textarea-box mt-1" />
         </label>
 
+        <p className="text-[12.5px] leading-relaxed text-ink-500">{L({hi:"भेजने के बाद टीचर इसे देख और जाँच सकते हैं।",en:"Sending shares your work with the teacher. Their review appears separately."})}</p>
         {error && <p className="text-[13.5px] font-medium text-rose-700" role="alert">{error}</p>}
         <button type="button" className="btn-primary w-full" onClick={send} disabled={busy || uploading > 0}>
           {busy ? L({ hi: "भेज रहे हैं…", en: "Sending…" }) : L({ hi: "टीचर को भेजें", en: "Send to teacher" })}
