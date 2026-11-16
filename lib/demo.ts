@@ -57,6 +57,8 @@ const childPublic = ({ dob, ...c }: Kid) => c;
 
 interface Store {
   phone: string;
+  /** Homework sent as done: homework id → { note, files, sentAt }. */
+  hwSent?: Record<string, any>;
   leave: Record<string, any[]>;
   claims: Record<string, any[]>;
   requests: Record<string, any[]>;
@@ -179,11 +181,12 @@ const HW: Record<string, [number, string, string, string, number | null, HwStatu
   ],
 };
 
-function homework(kid: Kid) {
+function homework(kid: Kid, sent: Record<string, any> = {}) {
   const t = today();
   const items = HW[kid.id].map(([ago, subject, title, details, due, status], i) => {
     const on = schoolDay(addDays(t, -ago));
-    return { id: `${kid.id}-hw-${i}`, subject, title, details, assignedOn: on, dueDate: due === null ? null : addDays(on, due), status };
+    const id = `${kid.id}-hw-${i}`;
+    return { id, subject, title, details, assignedOn: on, dueDate: due === null ? null : addDays(on, due), status, submission: sent[id] || null };
   });
   return { setupNeeded: false, today: t, items, nextBefore: null };
 }
@@ -568,7 +571,25 @@ export async function demoApi(path: string, method: string, body: any): Promise<
         return { success: true, claim };
       }
       case "/homework":
-        return homework(kid);
+        return homework(kid, s.hwSent);
+      case "/homework/files": {
+        // Kept in this browser only: the file itself stands in for its address.
+        const kind = String(body?.dataUrl || "").startsWith("data:application/pdf") ? "pdf" : "image";
+        return { url: body?.dataUrl, name: body?.name || (kind === "pdf" ? "Homework.pdf" : "Photo"), kind };
+      }
+      case "/homework/submit": {
+        const note = String(body?.note || "").trim().slice(0, 500);
+        const files = Array.isArray(body?.files) ? body.files.slice(0, 5) : [];
+        if (!note && !files.length) throw new DemoError(400, "Add a photo, a PDF or a note.");
+        const submission = { note, files, sentAt: new Date().toISOString() };
+        (s.hwSent ||= {})[String(body?.homework)] = submission;
+        try {
+          save(s);
+        } catch {
+          /* big files may not fit in this browser's storage; the screen still shows them */
+        }
+        return { success: true, submission };
+      }
       case "/timetable":
         return timetable(kid);
       case "/notices": {

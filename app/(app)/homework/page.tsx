@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
-import { BookOpen, CalendarDays, FileText } from "lucide-react";
-import { api, useApi } from "@/lib/api";
+import { BookOpen, CalendarDays, CheckCircle2, FileText, ImagePlus, Loader2, X } from "lucide-react";
+import { api, ApiError, useApi } from "@/lib/api";
+import { prepareHomeworkFile } from "@/lib/homeworkFile";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
 import { dayMonth, weekdayDate } from "@/lib/format";
 import { S } from "@/lib/text/study";
-import { Empty, ErrorCard, ListSkeleton, Status, type Tone } from "@/components/ui";
+import { Empty, ErrorCard, ListSkeleton, Sheet, Status, type Tone } from "@/components/ui";
 
 type HwStatus = "pending" | "checked" | "not_submitted";
 interface Homework {
@@ -21,7 +22,15 @@ interface Homework {
   /** What the teacher marked; servers without homework checking send none. */
   status?: HwStatus | null;
   /** Photos or PDFs the teacher attached (2026-10-26); older servers send none. */
-  files?: { url: string; name: string; kind: "image" | "pdf" }[];
+  files?: HwFile[];
+  /** What the family sent back as done (2026-11-16); older servers send none. */
+  submission?: Sent | null;
+}
+type HwFile = { url: string; name: string; kind: "image" | "pdf" };
+interface Sent {
+  note: string;
+  files: HwFile[];
+  sentAt: string;
 }
 interface Page {
   setupNeeded: boolean;
@@ -107,7 +116,7 @@ function List({ studentId }: { studentId: string }) {
           <h2 className="mlabel">{L(g.label)}</h2>
           <ul className="space-y-2">
             {g.items.map((h) => (
-              <Item key={h.id} h={h} today={data.today} />
+              <Item key={h.id} h={h} today={data.today} studentId={studentId} />
             ))}
           </ul>
         </section>
@@ -126,12 +135,15 @@ function List({ studentId }: { studentId: string }) {
 
 const LONG = 160;
 
-function Item({ h, today }: { h: Homework; today: string }) {
+function Item({ h, today, studentId }: { h: Homework; today: string; studentId: string }) {
   const L = useL();
   const { lang } = useT();
   const [open, setOpen] = useState(false);
   const long = h.details.length > LONG || h.details.split("\n").length > 3;
   const st = h.status ? STATUS[h.status] : null;
+  const [sent, setSent] = useState<Sent | null>(h.submission || null);
+  const [sending, setSending] = useState(false);
+  const [viewing, setViewing] = useState<HwFile | null>(null);
 
   let due: { text: string; soon: boolean } | null = null;
   if (h.dueDate && h.status !== "checked") {
@@ -166,23 +178,182 @@ function Item({ h, today }: { h: Homework; today: string }) {
           )}
         </>
       )}
-      {h.files && h.files.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {h.files.map((f) =>
-            f.kind === "image" ? (
-              <a key={f.url} href={f.url} target="_blank" rel="noreferrer" aria-label={`${L({ hi: "फ़ोटो खोलें", en: "Open photo" })}: ${f.name}`} className="block h-20 w-20 overflow-hidden rounded-xl border border-ink-100 bg-ink-50">
-                <img src={f.url} alt="" loading="lazy" className="h-full w-full object-contain" />
-              </a>
-            ) : (
-              <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="flex min-h-[44px] max-w-full items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 text-[13.5px] font-medium">
-                <FileText className="h-4 w-4 shrink-0 text-rose-700" aria-hidden />
-                <span className="truncate">{f.name}</span>
-              </a>
-            )
-          )}
-        </div>
-      )}
+      {h.files && h.files.length > 0 && <Files files={h.files} onView={setViewing} />}
       {due && <p className={clsx("mt-1 text-[13px]", due.soon ? "font-medium text-[#78552D]" : "text-ink-500")}>{due.text}</p>}
+
+      {/* Done at home: sent to the teacher with photos / a PDF and a note, or the button to send it. */}
+      {sent ? (
+        <div className="mt-3 rounded-xl border border-[#CFE3D6] bg-[#F1F8F3] p-3">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-[18px] w-[18px] shrink-0 text-[#21613F]" aria-hidden />
+            <p className="min-w-0 flex-1 text-[14px] font-semibold text-[#21613F]">{L({ hi: "टीचर को भेज दिया", en: "Sent to the teacher" })}</p>
+            <span className="tnum shrink-0 text-[12px] text-ink-500">{sentWhen(sent.sentAt, lang)}</span>
+          </div>
+          {sent.note && <p className="mt-1.5 whitespace-pre-line break-words text-[14px] text-ink-700">{sent.note}</p>}
+          {sent.files.length > 0 && <Files files={sent.files} onView={setViewing} />}
+          <button className="link mt-1 -mb-2 text-[13px]" onClick={() => setSending(true)}>
+            {L({ hi: "बदलकर फिर भेजें", en: "Change and send again" })}
+          </button>
+        </div>
+      ) : (
+        <button className="btn-line mt-3 w-full" onClick={() => setSending(true)}>
+          <CheckCircle2 className="h-4 w-4" aria-hidden /> {L({ hi: "पूरा हुआ, टीचर को भेजें", en: "Done, send to teacher" })}
+        </button>
+      )}
+      {sending && <SendSheet h={h} studentId={studentId} sent={sent} onClose={() => setSending(false)} onSent={(x) => { setSent(x); setSending(false); }} />}
+      {viewing && <Viewer file={viewing} onClose={() => setViewing(null)} />}
     </li>
+  );
+}
+
+const sentWhen = (iso: string, lang: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleString(lang === "hi" ? "hi-IN" : "en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+};
+
+/** Photos as small pictures, PDFs as named chips; tapping one opens it. */
+function Files({ files, onView, onRemove }: { files: HwFile[]; onView: (f: HwFile) => void; onRemove?: (f: HwFile) => void }) {
+  const L = useL();
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {files.map((f) => (
+        <span key={f.url} className="relative">
+          {f.kind === "image" ? (
+            <button type="button" onClick={() => onView(f)} aria-label={`${L({ hi: "फ़ोटो देखें", en: "View photo" })}: ${f.name}`} className="block h-20 w-20 overflow-hidden rounded-xl border border-ink-100 bg-ink-50">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={f.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+            </button>
+          ) : (
+            <button type="button" onClick={() => onView(f)} className="flex min-h-[44px] max-w-[220px] items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 text-[13.5px] font-medium">
+              <FileText className="h-4 w-4 shrink-0 text-rose-700" aria-hidden />
+              <span className="truncate">{f.name}</span>
+            </button>
+          )}
+          {onRemove && (
+            <button type="button" onClick={() => onRemove(f)} aria-label={`${L({ hi: "हटाएँ", en: "Remove" })}: ${f.name}`} className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-ink-900 text-white">
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** A photo opens full screen here; a PDF opens in the phone's own PDF viewer (new tab). */
+function Viewer({ file, onClose }: { file: HwFile; onClose: () => void }) {
+  const L = useL();
+  useEffect(() => {
+    if (file.kind === "pdf") {
+      window.open(file.url, "_blank", "noopener");
+      onClose();
+    }
+  }, [file, onClose]);
+  if (file.kind === "pdf") return null;
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col bg-black/95" role="dialog" aria-modal="true" aria-label={file.name}>
+      <div className="pt-safe flex items-center justify-between px-2 py-1 text-white">
+        <p className="min-w-0 truncate px-2 text-[14px]">{file.name}</p>
+        <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full active:bg-white/10" aria-label={L({ hi: "बंद करें", en: "Close" })}>
+          <X className="h-6 w-6" aria-hidden />
+        </button>
+      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={file.url} alt={file.name} className="min-h-0 flex-1 object-contain p-2" />
+    </div>
+  );
+}
+
+/**
+ * "Done": up to five photos or PDFs of the work and a note, sent to the teacher. Each file is sent to the
+ * school as soon as it is picked (photos made smaller first), so Send is quick.
+ */
+function SendSheet({ h, studentId, sent, onClose, onSent }: { h: Homework; studentId: string; sent: Sent | null; onClose: () => void; onSent: (s: Sent) => void }) {
+  const L = useL();
+  const pick = useRef<HTMLInputElement>(null);
+  const [files, setFiles] = useState<HwFile[]>(sent?.files || []);
+  const [uploading, setUploading] = useState(0);
+  const [note, setNote] = useState(sent?.note || "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [viewing, setViewing] = useState<HwFile | null>(null);
+
+  async function add(list: FileList | null) {
+    if (!list?.length) return;
+    setError("");
+    const room = 5 - files.length;
+    const chosen = Array.from(list).slice(0, Math.max(0, room));
+    if (list.length > room) setError(L({ hi: "ज़्यादा से ज़्यादा 5 फ़ाइलें भेज सकते हैं।", en: "You can send up to 5 files." }));
+    for (const f of chosen) {
+      setUploading((n) => n + 1);
+      try {
+        const ready = await prepareHomeworkFile(f);
+        const up = await api<any>("/homework/files", { body: { student: studentId, dataUrl: ready.dataUrl, name: ready.name }, timeoutMs: 60_000 });
+        const file: HwFile = up?.url ? up : up?.data;
+        if (file?.url) setFiles((x) => [...x, file]);
+      } catch (e) {
+        const m = e instanceof Error ? e.message : "";
+        setError(
+          m === "big-pdf"
+            ? L({ hi: "यह PDF 3.5 MB से बड़ी है। छोटी PDF या फ़ोटो भेजें।", en: "This PDF is over 3.5 MB. Send a smaller PDF or photos." })
+            : m === "type"
+              ? L({ hi: "सिर्फ़ फ़ोटो या PDF भेज सकते हैं।", en: "Only photos or PDFs can be sent." })
+              : e instanceof ApiError && e.message && e.status !== 0
+                ? e.message
+                : L({ hi: "फ़ाइल नहीं जा पाई। फिर कोशिश करें।", en: "The file could not be sent. Try again." })
+        );
+      } finally {
+        setUploading((n) => n - 1);
+      }
+    }
+  }
+
+  async function send() {
+    if (!files.length && !note.trim()) return setError(L({ hi: "फ़ोटो, PDF या नोट जोड़ें।", en: "Add a photo, a PDF or a note." }));
+    setBusy(true);
+    setError("");
+    try {
+      const r = await api<{ submission: Sent }>("/homework/submit", { body: { student: studentId, homework: h.id, note: note.trim(), files } });
+      onSent(r.submission);
+    } catch (e) {
+      setError(e instanceof ApiError && e.message && e.status !== 0 ? e.message : L({ hi: "भेजा नहीं जा सका। फिर कोशिश करें।", en: "Could not send. Try again." }));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Sheet title={L({ hi: "होमवर्क टीचर को भेजें", en: "Send homework to teacher" })} onClose={() => !busy && onClose()}>
+      <div className="space-y-4">
+        <div>
+          <p className="text-[13px] text-ink-500">{h.subject}</p>
+          <p className="text-[15.5px] font-bold leading-snug">{h.title}</p>
+        </div>
+
+        <section>
+          <h3 className="text-[14px] font-semibold">{L({ hi: "फ़ोटो या PDF", en: "Photos or PDF" })}</h3>
+          <p className="text-[12.5px] text-ink-500">{L({ hi: "कॉपी के पन्नों की फ़ोटो लें या PDF चुनें (5 तक)।", en: "Take photos of the copy's pages or choose a PDF (up to 5)." })}</p>
+          {files.length > 0 && <Files files={files} onView={setViewing} onRemove={(f) => setFiles((x) => x.filter((y) => y.url !== f.url))} />}
+          <input ref={pick} type="file" accept="image/*,application/pdf" multiple className="sr-only" onChange={(e) => { void add(e.target.files); e.target.value = ""; }} />
+          {files.length < 5 && (
+            <button type="button" className="btn-line mt-2 w-full" onClick={() => pick.current?.click()} disabled={uploading > 0}>
+              {uploading > 0 ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ImagePlus className="h-4 w-4" aria-hidden />}
+              {uploading > 0 ? L({ hi: "भेज रहे हैं…", en: "Uploading…" }) : L({ hi: "फ़ोटो या PDF जोड़ें", en: "Add photo or PDF" })}
+            </button>
+          )}
+        </section>
+
+        <label className="block">
+          <span className="text-[14px] font-semibold">{L({ hi: "टीचर के लिए नोट", en: "Note for the teacher" })}</span>
+          <textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 500))} rows={3} placeholder={L({ hi: "जैसे: सवाल 1 से 10 कर लिए, 11 समझ नहीं आया।", en: "E.g. Did questions 1 to 10, did not understand 11." })} className="textarea-box mt-1" />
+        </label>
+
+        {error && <p className="text-[13.5px] font-medium text-rose-700" role="alert">{error}</p>}
+        <button type="button" className="btn-primary w-full" onClick={send} disabled={busy || uploading > 0}>
+          {busy ? L({ hi: "भेज रहे हैं…", en: "Sending…" }) : L({ hi: "टीचर को भेजें", en: "Send to teacher" })}
+        </button>
+      </div>
+      {viewing && <Viewer file={viewing} onClose={() => setViewing(null)} />}
+    </Sheet>
   );
 }

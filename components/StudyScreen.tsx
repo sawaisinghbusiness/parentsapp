@@ -49,10 +49,9 @@ interface Running {
   left: number;
 }
 
-/** Three lengths (user, 2026-11-16): 15 on the left, 45 on the right, and the middle one is the chosen length
- *  when it is neither (25 by default; set with − / + or the ruler). */
-const SIDES = [15, 45];
-const MIDDLE = 25;
+/** Three lengths (user, 2026-11-16): the chosen length is always in the middle, with the next shorter and
+ *  the next longer common length on either side (from this ladder). Tapping a side one moves it to the middle. */
+const LADDER = [5, 10, 15, 20, 25, 30, 45, 60, 90, 120, 150, 180];
 const POMO = { focus: 25, rest: 5, rounds: 4 };
 const FALLBACK = ["Maths", "English", "Hindi", "Science", "Social Science"];
 const key = (child: string, what: "log" | "run") => `pa:study:${what}:${child}`;
@@ -285,9 +284,9 @@ export function StudyScreen() {
     }
     wasScrubbing.current = scrub.active;
   }, [scrub.active]);
-  const middle = useRef(MIDDLE);
-  if (!SIDES.includes(minutes)) middle.current = minutes;
-  const durationChoices = [SIDES[0], middle.current, SIDES[1]];
+  const shorter = [...LADDER].reverse().find((m) => m < minutes) ?? null;
+  const longer = LADDER.find((m) => m > minutes) ?? null;
+  const durationChoices: (number | null)[] = [shorter, minutes, longer];
   const round = run?.round || 1;
   const cycleSeconds = (POMO.focus + POMO.rest) * 60;
   const cycleElapsed = run?.mode === "pomodoro" ? (run.phase === "break" ? POMO.focus * 60 : 0) + Math.max(0, run.total - left) : 0;
@@ -394,11 +393,15 @@ export function StudyScreen() {
                       <DurationRuler position={closing ? minutes : scrub.position} />
                     </div>
                   )}
-                  {durationChoices.map((m, index) => (
+                  {durationChoices.map((m, index) =>
+                    m === null ? (
+                      <span key={index} aria-hidden />
+                    ) : (
                     <button key={index} type="button" onKeyDown={minutes === m ? scrub.keyboard : undefined} onClick={() => { if (!scrub.consumeClick()) setMinutes(m); }} aria-pressed={minutes === m} aria-label={`${m} ${L({ hi: "मिनट", en: "minutes" })}`} className={clsx("tnum relative h-[34px] rounded-lg text-[13.5px] transition-colors duration-300", minutes === m && "touch-none select-none cursor-ew-resize", (scrub.active || closing) && "opacity-0", closing && "study-chip-back", minutes === m ? "font-semibold text-[#BE4D25]" : "font-medium text-ink-500")}>
-                      <span key={minutes === m ? `on-${m}` : `off-${index}`} className={clsx("inline-block", minutes === m && "study-tick")}>{m}</span>
+                      <span key={minutes === m ? `on-${m}` : `off-${index}-${m}`} className={clsx("inline-block", minutes === m && "study-tick")}>{m}</span>
                     </button>
-                  ))}
+                    )
+                  )}
                 </div>
                 <button type="button" onClick={() => setMinutes((m) => (m < 5 ? 5 : Math.min(180, m + 5)))} aria-label={L({ hi: "5 मिनट ज़्यादा", en: "5 minutes more" })} className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
                   <Plus className="h-4 w-4" aria-hidden />
