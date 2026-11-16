@@ -49,7 +49,10 @@ interface Running {
   left: number;
 }
 
-const PRESETS = [15, 25, 45, 60];
+/** Three lengths (user, 2026-11-16): 15 on the left, 45 on the right, and the middle one is the chosen length
+ *  when it is neither (25 by default; set with − / + or the ruler). */
+const SIDES = [15, 45];
+const MIDDLE = 25;
 const POMO = { focus: 25, rest: 5, rounds: 4 };
 const FALLBACK = ["Maths", "English", "Hindi", "Science", "Social Science"];
 const key = (child: string, what: "log" | "run") => `pa:study:${what}:${child}`;
@@ -282,7 +285,9 @@ export function StudyScreen() {
     }
     wasScrubbing.current = scrub.active;
   }, [scrub.active]);
-  const durationChoices = PRESETS.includes(minutes) ? PRESETS : [15, minutes, 45, 60];
+  const middle = useRef(MIDDLE);
+  if (!SIDES.includes(minutes)) middle.current = minutes;
+  const durationChoices = [SIDES[0], middle.current, SIDES[1]];
   const round = run?.round || 1;
   const cycleSeconds = (POMO.focus + POMO.rest) * 60;
   const cycleElapsed = run?.mode === "pomodoro" ? (run.phase === "break" ? POMO.focus * 60 : 0) + Math.max(0, run.total - left) : 0;
@@ -372,19 +377,19 @@ export function StudyScreen() {
                 <button type="button" onClick={() => setMinutes((m) => (m > 5 ? m - 5 : 1))} aria-label={L({ hi: "5 मिनट कम", en: "5 minutes less" })} className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] border border-[#E4DDD3] bg-white text-ink-800 active:bg-[#F0ECE5]">
                   <Minus className="h-4 w-4" aria-hidden />
                 </button>
-                <div {...scrub.bindings} data-swipe="duration" data-duration-presets="true" className="relative grid flex-1 grid-cols-4 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]">
+                <div {...scrub.bindings} data-swipe="duration" data-duration-presets="true" className="relative grid flex-1 grid-cols-3 gap-1 rounded-[10px] bg-[#F0ECE5] p-[3px]">
                   {/* The white highlight under the chosen length; it slides when the length changes. */}
                   {!scrub.active && (
                     <span key={closing ? "open" : "rest"}
                       aria-hidden
                       className={clsx("pointer-events-none absolute bottom-[3px] top-[3px] rounded-lg bg-white shadow-sm", closing && "study-pill-open")}
-                      style={{ left: "3px", width: "calc((100% - 6px - 12px) / 4)", "--x": `translateX(calc(${Math.max(0, durationChoices.indexOf(minutes))} * (100% + 4px)))`, transform: "var(--x)", transition: "transform .42s cubic-bezier(.2,.8,.2,1)" } as React.CSSProperties}
+                      style={{ left: "3px", width: "calc((100% - 6px - 8px) / 3)", "--x": `translateX(calc(${Math.max(0, durationChoices.indexOf(minutes))} * (100% + 4px)))`, transform: "var(--x)", transition: "transform .42s cubic-bezier(.2,.8,.2,1)" } as React.CSSProperties}
                     />
                   )}
                   {(scrub.active || closing) && (
                     <div
                       className={clsx("pointer-events-none absolute inset-x-0 bottom-0 z-10", closing && "study-ruler-fold")}
-                      style={{ transformOrigin: `${(Math.max(0, durationChoices.indexOf(minutes)) + 0.5) * 25}% 50%`, "--dx": `${(Math.max(0, durationChoices.indexOf(minutes)) + 0.5) * 25 - 50}%` } as React.CSSProperties}
+                      style={{ transformOrigin: `${((Math.max(0, durationChoices.indexOf(minutes)) + 0.5) * 100) / 3}% 50%`, "--dx": `${((Math.max(0, durationChoices.indexOf(minutes)) + 0.5) * 100) / 3 - 50}%` } as React.CSSProperties}
                     >
                       <DurationRuler position={closing ? minutes : scrub.position} />
                     </div>
