@@ -123,7 +123,21 @@ function Attendance({ studentId }: { studentId: string }) {
           </button>
         </div>
 
-        {!shown ? (
+        {/* The month's and the session's share of school days present, in one quiet line (audit 2026-11-16: loaded but never shown). */}
+        {shown && (shown.totals.percent != null || shown.session.percent != null) && (
+          <p className="tnum mt-1 text-center text-[13.5px] text-ink-600">
+            {shown.totals.percent != null && L({ hi: `इस महीने ${shown.totals.percent}%`, en: `This month ${shown.totals.percent}%` })}
+            {shown.totals.percent != null && shown.session.percent != null && " · "}
+            {shown.session.percent != null && L({ hi: `पूरे सत्र ${shown.session.percent}%`, en: `Session ${shown.session.percent}%` })}
+          </p>
+        )}
+
+        {/* A month that failed to load says so with a retry, rather than staying grey. */}
+        {!shown && error && error.status !== 401 ? (
+          <div className="mt-3">
+            <ErrorCard offline={error.status === 0} onRetry={reload} />
+          </div>
+        ) : !shown ? (
           <Skeleton className="mt-3 h-[330px] w-full rounded-[14px]" />
         ) : (
           <div key={shown.month} className="study-in">

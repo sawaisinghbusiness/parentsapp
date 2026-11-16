@@ -22,6 +22,7 @@ import { initials } from "@/lib/format";
 import { useMenu } from "@/lib/menu";
 import { BusHomeStatus } from "@/components/BusHomeStatus";
 import { ChildSheet } from "@/components/ChildSheet";
+import { unseenCount } from "@/lib/noticeSeen";
 
 const NAVY = "#0D2A5E";
 const INK = "#242628";
@@ -96,13 +97,18 @@ export default function HomePage() {
   const town = school?.address?.split(",").map((s) => s.trim()).filter(Boolean).pop() || "";
   const [hour, setHour] = useState(9);
   useEffect(() => setHour(new Date().getHours()), []);
-  const greet = hour < 12 ? L({ hi: "सुप्रभात,", en: "Good Morning," }) : hour < 17 ? L({ hi: "नमस्ते,", en: "Good Afternoon," }) : L({ hi: "शुभ संध्या,", en: "Good Evening," });
+  // No dangling comma: the parent's name isn't sent, so the greeting stands on its own (audit 2026-11-16).
+  const greet = hour < 12 ? L({ hi: "सुप्रभात", en: "Good Morning" }) : hour < 17 ? L({ hi: "नमस्ते", en: "Good Afternoon" }) : L({ hi: "शुभ संध्या", en: "Good Evening" });
 
   // Only school data is shown, including genuine empty states.
   const notice = data?.notice;
   const ev = data ? data.events?.[0] || null : undefined;
-  const unread = data?.noticeCount ?? 0;
+  const unread = unseenCount(child?.id, data?.noticeCount ?? 0, notice?.date);
   const failed = error && error.status !== 401 && !data ? error : null;
+  // One message per failure: the "saved copy" strip only when a saved copy is on screen and the phone is offline.
+  const offlineStrip = !failed && me && (stale || homeStale) && (!error || error.status === 0);
+  // Without an uploaded school photo, the St. Paul building (its name is on the sign) is only used for St. Paul.
+  const hero = school?.heroUrl || (/st\.?\s*paul/i.test(school?.name || "") ? "/img/school-hero-morning.webp" : null);
 
   const childCard = (
     <>
@@ -126,7 +132,11 @@ export default function HomePage() {
       {/* School photograph fades into the cool Home background. */}
       <header className="relative h-[calc(210px+env(safe-area-inset-top,0px))] overflow-hidden bg-[#25282A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={fx.img} src={school?.heroUrl || "/img/school-hero-morning.webp"} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
+        {hero ? (
+          <img ref={fx.img} src={hero} alt="" className="absolute inset-0 h-full w-full object-cover object-[72%_60%] will-change-transform" />
+        ) : (
+          <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(120% 90% at 85% 10%, #3D5A8A 0%, #1B3260 45%, #0D2A5E 100%)" }} />
+        )}
         <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(18,22,24,.52) 0%, rgba(18,22,24,.36) 45%, rgba(18,22,24,.12) 75%, rgba(18,22,24,0) 100%)" }} />
         <div className="absolute inset-x-0 top-0 h-[130px]" style={{ background: "linear-gradient(180deg, rgba(18,22,24,.28) 0%, rgba(18,22,24,0) 100%)" }} />
         {/* Darkens as the page scrolls, so the cards stand out over the building. */}
@@ -185,7 +195,7 @@ export default function HomePage() {
           </Link>
         )}
 
-        {(stale || homeStale) && me && (
+        {offlineStrip && (
           <p className="flex items-center gap-2 rounded-[10px] px-3.5 py-2.5 text-[13px]" style={{ background: TILE, color: MUTED }}>
             <WifiOff className="h-4 w-4 shrink-0" aria-hidden />
             {L({ hi: "इंटरनेट नहीं है, पिछली बार की जानकारी दिख रही है।", en: "You're offline. Showing what was saved last time." })}

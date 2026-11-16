@@ -130,26 +130,10 @@ export default function FeesPage() {
   const { session, instalments } = data;
   const rows = instalments.map((i, k) => ({ i, k, st: insState(i) }));
   const unpaid = rows.filter((r) => r.st !== "paid");
-  const overdue = unpaid.filter((r) => r.i.overdue);
-  // The bill is what is late if anything is, else the next instalment; the rest wait below it.
-  const owing = overdue.length ? overdue : unpaid.slice(0, 1);
-  const later = unpaid.filter((r) => !owing.includes(r));
   const paid = rows.filter((r) => r.st === "paid").reverse();
   const toPay = (i: Instalment) => i.outstanding + (i.overdue ? i.fine : 0);
-  const owe = owing.reduce((s, { i }) => s + toPay(i), 0);
-  const first = owing[0];
-
-  // Fee heads of everything on the bill, added up by head.
-  const heads = new Map<string, { label: string; amount: number }>();
-  let already = 0;
-  let fine = 0;
-  for (const { i } of owing) {
-    if (i.heads?.length) for (const h of i.heads) heads.set(h.key, { label: headName(h), amount: (heads.get(h.key)?.amount || 0) + h.amount });
-    else heads.set(i.name, { label: `${i.name} ${L({ hi: "फ़ीस", en: "fee" })}`, amount: i.amount });
-    already += i.paid;
-    if (i.overdue) fine += i.fine;
-  }
-  const days = first ? daysTo(first.i.due) : 0;
+  // UPI payments sent but not yet checked by the school: the amounts below don't count them yet.
+  const pendingSent = data.claims.filter((c) => c.status === "pending").reduce((s, c) => s + c.amount, 0);
 
   /*
    * The page's measures (2026-11-14; every number is on the 4/8 grid):
@@ -182,9 +166,16 @@ export default function FeesPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/img/fee-receipt.webp" alt="" className="h-11 w-11 shrink-0 object-contain" />
           {/* Always "Total due"; when nothing is left it simply reads ₹0 (the user removed the "All paid" words). */}
-          <p className={clsx("min-w-0 flex-1 text-[16px] font-medium leading-6", left > 0 ? "text-[#A32F35]" : "text-ink-700")}>{L({ hi: "कुल बाकी", en: "Total due" })}</p>
+          {/* The whole session's balance, named so it isn't mistaken for Home's "Fees due now" (audit 2026-11-16). */}
+          <p className={clsx("min-w-0 flex-1 text-[16px] font-medium leading-6", left > 0 ? "text-[#A32F35]" : "text-ink-700")}>{L({ hi: "सत्र का कुल बाकी", en: "Session balance" })}</p>
           <p className={clsx("tnum shrink-0 text-[28px] font-semibold leading-9 tracking-tight", left > 0 ? "text-[#A32F35]" : "text-ink-900")}>{rupees(left)}</p>
         </div>
+        {data.options.dueNow > 0 && data.options.dueNow !== left && (
+          <p className="tnum px-4 pt-3 text-[14px] font-medium leading-5 text-ink-900">{L({ hi: `अभी देय: ${rupees(data.options.dueNow)}`, en: `Due now: ${rupees(data.options.dueNow)}` })}</p>
+        )}
+        {pendingSent > 0 && (
+          <p className="tnum px-4 pt-2 text-[14px] leading-5 text-marigold-700">{L({ hi: `${rupees(pendingSent)} भेजे गए, स्कूल जाँच रहा है। दोबारा न भरें।`, en: `${rupees(pendingSent)} sent, being checked by the school. Don't pay it again.` })}</p>
+        )}
         <p className="tnum px-4 pb-2 pt-3 text-[14px] leading-5 text-ink-600">
           {L({ hi: `${rupees(session.total)} में से ${rupees(session.paid)} जमा`, en: `${rupees(session.paid)} of ${rupees(session.total)} paid` })}
         </p>
@@ -201,7 +192,7 @@ export default function FeesPage() {
                   <span className={money}>{rupees(c.amount)}</span>
                   <Status tone={CLAIM_TONE[c.status]}>{L(c.status === "pending" ? F.claimPending : c.status === "verified" ? F.claimVerified : F.claimRejected)}</Status>
                 </div>
-                <p className={clsx(support, "mt-1")}>
+                <p className={clsx(support, "mt-1")} data-allow-copy>
                   UTR {c.utr} · {dayMonth(c.paidOn, lang)}
                 </p>
                 {c.status === "rejected" && c.rejectReason && <p className="mt-2 text-[14px] leading-5 text-ink-700">{c.rejectReason}</p>}

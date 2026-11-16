@@ -932,6 +932,8 @@ html.app-lock{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:p
 html.app-lock body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html.app-lock :is(input,textarea,select,[contenteditable="true"]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 html.app-lock img{-webkit-user-drag:none}
+html.app-lock[data-zoom="1"]{touch-action:auto}
+html.app-lock [data-allow-copy]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 
 /* Phone controls retain quiet artwork inside reachable hit areas. */
 .study [role=tab]{min-height:44px}

@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { ChevronDown, Download, Repeat2, Share2 } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
+import { useAllowZoom } from "@/lib/allowZoom";
 import { useL } from "@/lib/i18n";
 import { num } from "@/lib/format";
 import type { Report, SheetSchool } from "@/lib/exam";
@@ -23,8 +24,9 @@ export default function ReportCardPage() {
   const L = useL();
   const [exam, setExam] = useState("");
   const [flipped, setFlipped] = useState(false);
-  const [touched, setTouched] = useState(false);
   const [copied, setCopied] = useState(false);
+  // The A4 sheet is drawn small to fit; the parent can pinch to read it (audit 2026-11-16).
+  useAllowZoom();
   const { data, error, reload } = useApi<Report>(child ? `/report-card?student=${child.id}${exam ? `&exam=${encodeURIComponent(exam)}` : ""}` : null);
 
   // Fit the A4 sheet to the screen's width.
@@ -117,7 +119,6 @@ export default function ReportCardPage() {
         <button
           className="flip block w-full"
           onClick={() => {
-            setTouched(true);
             setFlipped((f) => !f);
           }}
           aria-pressed={flipped}

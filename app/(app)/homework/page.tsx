@@ -196,7 +196,7 @@ function Item({ h, today, studentId }: { h: Homework; today: string; studentId: 
             {L({ hi: "बदलकर फिर भेजें", en: "Change and send again" })}
           </button>
         </div>
-      ) : (
+      ) : h.status === "checked" ? null : (
         <button className="btn-line mt-3 w-full" onClick={() => setSending(true)}>
           <CheckCircle2 className="h-4 w-4" aria-hidden /> {L({ hi: "पूरा हुआ, टीचर को भेजें", en: "Done, send to teacher" })}
         </button>
@@ -218,7 +218,7 @@ function Files({ files, onView, onRemove }: { files: HwFile[]; onView: (f: HwFil
   return (
     <ul className="mt-3 divide-y divide-ink-100 rounded-xl border border-ink-200 bg-white">
       {files.map(f=><li key={f.url} className="flex min-w-0 items-center gap-2 px-3 py-2">
-        <button type="button" onClick={()=>onView(f)} className="flex min-h-[48px] min-w-0 flex-1 items-center gap-3 text-left">
+        <button type="button" onClick={()=>f.kind==='pdf'?window.open(f.url,'_blank','noopener'):onView(f)} className="flex min-h-[48px] min-w-0 flex-1 items-center gap-3 text-left">
           {f.kind==='image'?<img src={f.url} alt="" className="h-12 w-12 shrink-0 rounded-md object-cover"/>:<span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-ink-50"><FileText className="h-5 w-5 text-ink-700" aria-hidden/></span>}
           <span className="min-w-0 flex-1"><span className="block break-words text-[14px] font-semibold text-ink-900">{f.name}</span><span className="mt-0.5 block text-[12px] text-ink-500">{f.kind==='pdf'?'PDF':L({hi:'फ़ोटो',en:'Photo'})} · {L({hi:'देखने के लिए खोलें',en:'Open to view'})}</span></span>
         </button>

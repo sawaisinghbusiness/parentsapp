@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Download, Play, X } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useL, useT } from "@/lib/i18n";
+import { useAllowZoom } from "@/lib/allowZoom";
 import { fullDate } from "@/lib/format";
 import { savePhoto, type Album } from "@/lib/events";
 import { EventPicture } from "@/components/art";
@@ -84,6 +85,8 @@ function Viewer({ album, index, onIndex, onClose, name }: { album: Album; index:
   const p = album.photos[index];
   const dialog=useRef<HTMLDivElement>(null);
   useDialog(true,dialog,onClose);
+  // A photo can be pinched to look closer while the viewer is open (audit 2026-11-16).
+  useAllowZoom();
   const last = album.photos.length - 1;
 
   useEffect(() => {
@@ -123,7 +126,7 @@ function Viewer({ album, index, onIndex, onClose, name }: { album: Album; index:
         ) : (
           <div className="relative w-full max-w-[540px]">
             <EventPicture url={p.video ? null : p.url} scene={p.scene} alt={`${album.title} ${index + 1}`} />
-            {p.video && <p className="mt-3 text-center text-[14px] text-white/70">{L({ hi: "वीडियो जल्द यहीं चलेंगे।", en: "Videos will play here soon." })}</p>}
+            {p.video && <p className="mt-3 text-center text-[14px] text-white/70">{L({ hi: "यह वीडियो अभी उपलब्ध नहीं है।", en: "This video isn't available yet." })}</p>}
           </div>
         )}
         {index > 0 && (

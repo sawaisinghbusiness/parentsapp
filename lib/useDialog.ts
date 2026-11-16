@@ -23,7 +23,7 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement>, onClose: (
     const top = () => [...openDialogs].sort((a, b) => {
       const layer = (node: HTMLElement) => Number(getComputedStyle(node.parentElement!).zIndex) || 0;
       return layer(a) - layer(b);
-    }).at(-1) === element;
+    }).slice(-1)[0] === element;
     const focusable = () => Array.from(element.querySelectorAll<HTMLElement>(
       'button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])'
     )).filter(node => node.getClientRects().length && !node.closest('[inert],[aria-hidden="true"]'));
@@ -37,7 +37,7 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement>, onClose: (
       } else if (event.key === "Tab") {
         const items = focusable();
         const first = items[0];
-        const last = items.at(-1);
+        const last = items[items.length - 1];
         if (!first) { event.preventDefault(); element.focus(); }
         else if (event.shiftKey && (document.activeElement === first || document.activeElement === element)) {
           event.preventDefault(); last?.focus();

@@ -66,7 +66,7 @@ export function LiveSheet({ live, childName, myTime }: { live: LiveBus; childNam
   useEffect(() => {
     if (live.unavailable || live.demo || !live.child.done || told.current) return;
     told.current = true;
-    notify(morning ? L({ hi: `${first} बस में चढ़ गया`, en: `${first} got on the bus` }) : L({ hi: `${first} बस से उतर गया`, en: `${first} got off the bus` }), live.myStop || "");
+    notify(morning ? L({ hi: `${first} बस में बैठ चुके हैं`, en: `${first} got on the bus` }) : L({ hi: `${first} बस से उतर चुके हैं`, en: `${first} got off the bus` }), live.myStop || "");
   }, [live.child.done, live.unavailable, live.demo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stops: MapStop[] = live.stops
@@ -77,7 +77,7 @@ export function LiveSheet({ live, childName, myTime }: { live: LiveBus; childNam
   const leftStops = live.stops.filter((s) => !s.done).findIndex((s) => s.name === live.myStop);
 
   const statusTitle = live.child.done
-    ? morning ? L({hi:`${first} बस में है`,en:`${first} is on the bus`}) : L({hi:`${first} बस से उतर गया`,en:`${first} has been dropped off`})
+    ? morning ? L({hi:`${first} बस में है`,en:`${first} is on the bus`}) : L({hi:`${first} बस से उतर चुके हैं`,en:`${first} has been dropped off`})
     : live.absent ? L({hi:"आज बस का इंतज़ार नहीं है",en:"No pickup expected today"})
     : mine?.done ? L({hi:"आपका स्टॉप निकल चुका है",en:"Your stop has been passed"})
     : leftStops === 0 ? L({hi:"अगला स्टॉप आपका है",en:"Your stop is next"})
@@ -94,6 +94,8 @@ export function LiveSheet({ live, childName, myTime }: { live: LiveBus; childNam
       <div className="tracking-update" role="status"><span className={quiet?"is-quiet":"is-current"}/><p>{live.unavailable?L({hi:"कनेक्शन नहीं मिला · पिछली जानकारी",en:"Connection lost · last received information"}):!live.bus||!live.at?L({hi:"बस की लोकेशन का इंतज़ार",en:"Waiting for the bus location"}):quiet?L({hi:`पिछली लोकेशन · ${agoText(live.at,L)}`,en:`Last location · ${agoText(live.at,L)}`}):L({hi:`लोकेशन अपडेट · ${agoText(live.at,L)}`,en:`Location updated · ${agoText(live.at,L)}`})}</p></div>
       {!live.child.done&&!quiet&&mins!==null&&<p className="tracking-estimate-note">{L({hi:"आने का समय दूरी पर आधारित अनुमान है। ट्रैफ़िक शामिल नहीं है।",en:"Arrival is estimated from distance, without live traffic."})}</p>}
       {quiet&&<p className="tracking-estimate-note">{L({hi:"नई लोकेशन मिलने तक आने का अनुमान नहीं दिखेगा।",en:"Arrival estimates resume after a fresh location update."})}</p>}
+      {/* Three minutes out: said on screen too, not only as a phone notification (audit 2026-11-16). */}
+      {near&&!live.child.done&&!mine?.done&&<div className="parent-bus-delay" role="alert"><BellRing size={18} aria-hidden/><div><strong>{L({hi:"बस आपके स्टॉप के पास है",en:"The bus is almost at your stop"})}</strong><p>{L({hi:`${first} को ${live.myStop||"स्टॉप"} पर तैयार रखें।`,en:`Have ${first} ready at ${live.myStop||"the stop"}.`})}</p></div></div>}
       {live.delay&&<div className="parent-bus-delay" role="status"><TriangleAlert size={18} aria-hidden/><div><strong>{L({hi:`ड्राइवर ने ${live.delay.minutes>=30?"30+":live.delay.minutes} मिनट देरी बताई`,en:`Driver reports ${live.delay.minutes>=30?"30+":live.delay.minutes} min delay`})}</strong><p>{L(DELAY_WHY[live.delay.reason]||DELAY_WHY.other)}</p></div></div>}
       {!live.demo&&<AlertSwitch/>}
     </section>
@@ -107,7 +109,8 @@ function AlertSwitch() {
   useEffect(() => setPerm(typeof Notification === "undefined" ? "none" : Notification.permission), []);
   if (perm !== "default") return null;
   return (
-    <Button kind="line" onClick={() => Notification.requestPermission().then(setPerm)} className="w-full">
+    // Older browsers answer through a callback and return nothing; both ways land in setPerm.
+    <Button kind="line" onClick={() => { const p = Notification.requestPermission(setPerm) as Promise<NotificationPermission> | undefined; p?.then?.(setPerm); }} className="w-full">
       <BellRing className="h-5 w-5" strokeWidth={1.75} aria-hidden />
       {L({ hi: "बस आने पर फ़ोन पर अलर्ट चालू करें", en: "Turn on bus alerts on this phone" })}
     </Button>

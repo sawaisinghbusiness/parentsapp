@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { LiveBus } from "@/lib/bus";
+import { useFilledLive } from "@/lib/liveFill";
 
 const POLL_MS = 10_000;
 
@@ -17,5 +18,6 @@ export function useLiveBus(studentId: string | null) {
     const visible=()=>{if(document.visibilityState==="visible")void tick()};document.addEventListener("visibilitychange",visible);
     return()=>{stopped=true;clearInterval(timer);document.removeEventListener("visibilitychange",visible)};
   },[studentId]);
-  return snapshot?.studentId===studentId?snapshot.live:null;
+  // Stops without a saved place get one on the phone, so minutes, alerts and pins work (lib/liveFill.ts).
+  return useFilledLive(snapshot?.studentId===studentId?snapshot.live:null);
 }

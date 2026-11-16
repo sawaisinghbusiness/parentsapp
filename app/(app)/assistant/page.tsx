@@ -1,7 +1,5 @@
 "use client";
 
-import "@fontsource-variable/plus-jakarta-sans";
-import "@fontsource-variable/noto-sans-devanagari";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
@@ -10,9 +8,10 @@ import { api } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
 import { Thinking, Thought, TypeOut } from "@/components/SahayakThinking";
+import { SahayakOwl } from "@/components/SahayakOwl";
 
 /** `thought` and `fresh` stay on the phone: the server only gets role and content. */
-type Turn = { role: "user" | "assistant"; content: string; thought?: { secs: number }; fresh?: boolean };
+type Turn = { role: "user" | "assistant"; content: string; thought?: { secs: number; steps: Bi[] }; fresh?: boolean };
 type Question = { text: Bi; icon: LucideIcon };
 
 /** The first four are the big buttons on the opening screen; "+" lists them all. */
@@ -26,11 +25,26 @@ const QUESTIONS: Question[] = [
   { text: { hi: "नई सूचनाएँ?", en: "Any new notices?" }, icon: Megaphone },
 ];
 
+/** What the "thinking" lines say, from the question's topic. They move on a timer (see SahayakThinking). */
+function stepsFor(question: string, name: string): Bi[] {
+  const q = question.toLowerCase();
+  const n = { hi: name || "बच्चे", en: name || "your child" };
+  const write = { hi: "जवाब लिख रहा हूँ", en: "Writing the answer" };
+  if (/fee|फ़ीस|फीस|बकाया|baki|paisa|पैसे/.test(q)) return [{ hi: `${n.hi} की फ़ीस देख रहा हूँ`, en: `Checking ${n.en}'s fees` }, { hi: "जमा और बाकी रकम मिला रहा हूँ", en: "Matching paid and due amounts" }, write];
+  if (/attend|ha[sz]i?ri|हाज़िरी|हाजिरी|absent|present|गैरहाज़िर/.test(q)) return [{ hi: `${n.hi} की हाज़िरी देख रहा हूँ`, en: `Checking ${n.en}'s attendance` }, { hi: "दिन गिन रहा हूँ", en: "Counting the days" }, write];
+  if (/home ?work|होमवर्क|गृहकार्य/.test(q)) return [{ hi: `${n.hi} की क्लास का होमवर्क देख रहा हूँ`, en: `Checking ${n.en}'s class homework` }, { hi: "विषय के हिसाब से छाँट रहा हूँ", en: "Sorting by subject" }, write];
+  if (/exam|test|result|marks|pariksha|paper|परीक्षा|एग्ज़ाम|एग्जाम|रिज़ल्ट|नंबर/.test(q)) return [{ hi: "एग्ज़ाम की जानकारी देख रहा हूँ", en: "Checking exams" }, { hi: `${n.hi} के नंबर देख रहा हूँ`, en: `Checking ${n.en}'s marks` }, write];
+  if (/bus|van|transport|बस|वैन/.test(q)) return [{ hi: "बस की जानकारी देख रहा हूँ", en: "Checking the bus" }, { hi: "रूट और स्टॉप देख रहा हूँ", en: "Checking route and stop" }, write];
+  if (/time ?table|period|टाइम टेबल|पीरियड/.test(q)) return [{ hi: "टाइम टेबल देख रहा हूँ", en: "Checking the timetable" }, { hi: "आज के पीरियड छाँट रहा हूँ", en: "Picking today's periods" }, write];
+  if (/notice|event|holiday|program|function|chh?utti|suchna|सूचना|छुट्टी|कार्यक्रम|प्रोग्राम/.test(q)) return [{ hi: "सूचनाएँ और कार्यक्रम देख रहा हूँ", en: "Checking notices and events" }, { hi: "तारीखें मिला रहा हूँ", en: "Matching the dates" }, write];
+  return [{ hi: "सवाल समझ रहा हूँ", en: "Reading the question" }, { hi: `${n.hi} की जानकारी देख रहा हूँ`, en: `Checking ${n.en}'s details` }, write];
+}
+
 /** The browser's own speech-to-text (Chrome on Android has it); absent elsewhere, so the mic hides. */
 const speechApi = () => (typeof window === "undefined" ? null : (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null);
 
 /**
- * AI Assistant: the parent asks about their child in their own words; the backend answers from
+ * School Sahayak: the parent asks about their child in their own words; the backend answers from
  * that child's data only. Opens on the orb and four big questions (the user's reference, 2026-10-22).
  */
 export default function AssistantPage() {
@@ -40,6 +54,7 @@ export default function AssistantPage() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [steps, setSteps] = useState<Bi[]>([]);
   const [fail, setFail] = useState("");
   const [list, setList] = useState(false);
   const [listening, setListening] = useState(false);
@@ -92,21 +107,39 @@ export default function AssistantPage() {
     };
   }, []);
 
+  // iPhone Safari has no virtualKeyboard API: lift the bar by the keyboard's height from the visual viewport,
+  // so it sits on the keyboard instead of behind it (audit 2026-11-16).
+  const [lift, setLift] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv || (navigator as any).virtualKeyboard) return;
+    const fit = () => setLift(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    fit();
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    return () => {
+      vv.removeEventListener("resize", fit);
+      vv.removeEventListener("scroll", fit);
+    };
+  }, []);
+
   async function ask(q: string) {
     const msg = q.trim();
     if (!msg || busy || !child) return;
     const next: Turn[] = [...turns.map((t) => ({ ...t, fresh: false })), { role: "user", content: msg }];
+    const thinking = stepsFor(msg, first);
     const started = Date.now();
     setTurns(next);
     setText("");
     setFail("");
     setList(false);
+    setSteps(thinking);
     setBusy(true);
     try {
       const messages = next.map(({ role, content }) => ({ role, content }));
       const r = await api<{ reply: string }>("/assistant", { timeoutMs: 45_000, body: { student: child.id, messages } });
       const secs = Math.max(1, Math.round((Date.now() - started) / 1000));
-      setTurns([...next, { role: "assistant", content: r.reply, thought: { secs }, fresh: true }]);
+      setTurns([...next, { role: "assistant", content: r.reply, thought: { secs, steps: thinking }, fresh: true }]);
     } catch (e: any) {
       // The question goes back in the box so it can be sent again.
       setTurns(turns);
@@ -146,35 +179,47 @@ export default function AssistantPage() {
   const empty = turns.length === 0;
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col overflow-x-clip bg-[#F7F9FC] text-[#242628]" style={{ fontFamily: "'Plus Jakarta Sans Variable','Noto Sans Devanagari Variable',system-ui,sans-serif" }}>
+    <div className="sahayak-bg relative flex min-h-[100dvh] flex-col overflow-x-clip text-[#2A2350]">
+      {/* Soft round shapes behind everything, as in the reference. */}
+      <span aria-hidden className="pointer-events-none absolute -left-24 top-[420px] h-64 w-64 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff_0%,#E9DDFF_55%,#D9C8FF_100%)] opacity-70" />
+      <span aria-hidden className="pointer-events-none absolute -right-16 top-24 h-48 w-48 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff_0%,#FBDDF2_55%,#F5C6E8_100%)] opacity-70" />
+
       {/* Stays at the top while the chat scrolls (overflow-x-clip above, not hidden, so sticky works). */}
-      <header className="pt-safe sticky top-0 z-20 border-b border-[#DCE4ED] bg-white">
+      <header className="pt-safe sticky top-0 z-20 bg-[#eef0ff]">
         <div className="flex h-14 items-center gap-2.5 px-2">
-          <Link href="/" className="grid h-11 w-11 shrink-0 place-items-center rounded-full active:bg-[#EAF0F6]" aria-label={L({ hi: "वापस", en: "Back" })}>
+          <Link href="/" className="grid h-11 w-11 shrink-0 place-items-center rounded-full active:bg-white/60" aria-label={L({ hi: "वापस", en: "Back" })}>
             <ChevronLeft className="h-6 w-6" aria-hidden />
           </Link>
-          <div className="min-w-0">
-            <p className="text-[17px] font-semibold leading-tight">{L({ hi: "एआई असिस्टेंट", en: "AI Assistant" })}</p>
-            <p className="truncate text-[12.5px] text-[#666A6E]">{child ? L({ hi: `${child.name} · कक्षा ${child.classSec}`, en: `${child.name} · Class ${child.classSec}` }) : ""}</p>
-          </div>
+          {empty ? (
+            <p className="flex-1 pr-11 text-center text-[15px] font-semibold text-[#5A5380]">{L({ hi: "स्कूल सहायक", en: "School Sahayak" })}</p>
+          ) : (
+            <>
+              <SahayakOwl size={36} crop mood={busy ? "think" : undefined} />
+              <div className="min-w-0">
+                <p className="text-[16px] font-semibold leading-tight">{L({ hi: "स्कूल सहायक", en: "School Sahayak" })}</p>
+                <p className="truncate text-[12.5px] text-[#6B6492]">{first && L({ hi: `${first} के बारे में`, en: `About ${first}` })}</p>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
       {empty ? (
-        <div className="relative flex flex-1 flex-col px-5 pb-40 pt-6">
-          <h1 className="text-[20px] font-semibold leading-7">{L({ hi: "आज क्या जानना है?", en: "What would you like to know?" })}</h1>
-          <p className="mt-1.5 text-[14px] leading-[21px] text-[#666A6E]">
-            {L({
-              hi: `${first || "बच्चे"} की फ़ीस, हाज़िरी, होमवर्क, परीक्षा, बस और सूचनाओं के बारे में पूछें। जवाब स्कूल के रिकॉर्ड से आता है।`,
-              en: `Ask about ${first || "your child"}'s fees, attendance, homework, exams, bus and notices. Answers come from the school's records.`,
-            })}
-          </p>
-          <h2 className="mb-2 mt-6 text-[13px] font-semibold text-[#666A6E]">{L({ hi: "ये पूछ सकते हैं", en: "You can ask" })}</h2>
-          <div className="overflow-hidden rounded-[14px] border border-[#DCE4ED] bg-white">
-            {QUESTIONS.map(({ text: q, icon: Icon }) => (
-              <button key={q.en} type="button" disabled={!child} onClick={() => ask(L(q))} className="flex min-h-[52px] w-full items-center gap-3 border-t border-[#DCE4ED] px-4 text-left text-[15px] font-medium first:border-t-0 active:bg-[#EAF0F6] disabled:opacity-50">
-                <Icon className="h-5 w-5 shrink-0 text-[#0D2A5E]" strokeWidth={1.7} aria-hidden />
-                <span className="min-w-0 flex-1">{L(q)}</span>
+        <div className="relative flex flex-1 flex-col px-4 pb-40">
+          <div className="mt-4 text-center">
+            {/* The parent is greeted, not the child; the child is who the questions are about (audit 2026-11-16). */}
+            <p className="text-[26px] font-semibold leading-tight">{L({ hi: "नमस्ते!", en: "Hello!" })}</p>
+            {first && <p className="mt-1 text-[14px] font-medium text-[#6B6492]">{L({ hi: `${first} के बारे में पूछें`, en: `Asking about ${first}` })}</p>}
+            <p className="mt-1 text-[21px] font-medium leading-snug text-[#3E3670]">{L({ hi: "आज क्या जानना है?", en: "What would you like to know?" })}</p>
+          </div>
+          <div className="flex flex-1 flex-col items-center justify-center gap-5 py-6">
+            <SahayakOwl size={170} intro alive mood={listening ? "listen" : undefined} />
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            {QUESTIONS.slice(0, 4).map(({ text: q, icon: Icon }) => (
+              <button key={q.en} type="button" disabled={!child} onClick={() => ask(L(q))} className="flex min-h-[48px] items-center gap-2 rounded-[14px] border border-[#E3DCFA] bg-white/85 px-3 py-2 text-left text-[14px] font-medium leading-tight active:bg-white disabled:opacity-50">
+                <Icon className="h-[18px] w-[18px] shrink-0 text-[#6A45E0]" strokeWidth={2} aria-hidden />
+                {L(q)}
               </button>
             ))}
           </div>
@@ -183,35 +228,35 @@ export default function AssistantPage() {
         <div className="relative flex flex-1 flex-col gap-3 px-4 pb-[calc(11rem_+_env(keyboard-inset-height,0px))] pt-2" aria-live="polite">
           {turns.map((t, i) =>
             t.role === "user" ? (
-              <p key={i} className="max-w-[78%] self-end whitespace-pre-wrap break-words rounded-[14px] rounded-br-md bg-[#0D2A5E] px-3.5 py-2.5 text-[15px] leading-snug text-white">
+              <p key={i} className="max-w-[78%] self-end whitespace-pre-wrap break-words rounded-[18px] rounded-br-md bg-[#6A45E0] px-3.5 py-2.5 text-[15px] leading-snug text-white">
                 {t.content}
               </p>
             ) : (
               <div key={i} className="flex max-w-[86%] flex-col gap-1 self-start">
-                {t.thought && <Thought secs={t.thought.secs} />}
-                <p className="whitespace-pre-wrap break-words rounded-[14px] rounded-bl-md border border-[#DCE4ED] bg-white px-3.5 py-2.5 text-[15px] leading-relaxed">
+                {t.thought && <Thought secs={t.thought.secs} steps={t.thought.steps} />}
+                <p className="whitespace-pre-wrap break-words rounded-[18px] rounded-bl-md border border-[#E8E2FB] bg-white/90 px-3.5 py-2.5 text-[15px] leading-relaxed">
                   {t.fresh ? <TypeOut text={t.content} onGrow={() => end.current?.scrollIntoView({ block: "end" })} /> : t.content}
                 </p>
               </div>
             )
           )}
-          {busy && <Thinking />}
+          {busy && <Thinking steps={steps} />}
           <div ref={end} />
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-[env(keyboard-inset-height,0px)] z-20 mx-auto max-w-[560px] bg-[#F7F9FC] px-4 pb-[calc(1rem_+_env(safe-area-inset-bottom,0px))] pt-2">
+      <div style={lift ? { bottom: lift } : undefined} className="fixed inset-x-0 bottom-[env(keyboard-inset-height,0px)] z-20 mx-auto max-w-[560px] px-4 pb-[calc(1.25rem_+_env(safe-area-inset-bottom,0px))] pt-2">
         {list && (
-          <div className="mb-2.5 overflow-hidden rounded-[14px] border border-[#DCE4ED] bg-white shadow-[0_8px_24px_rgba(13,42,94,.10)]" role="menu">
+          <div className="sahayak-glass mb-2.5 overflow-hidden rounded-2xl" role="menu">
             <div className="flex items-center justify-between px-4 pb-1 pt-3">
-              <p className="text-[13px] font-semibold text-[#666A6E]">{L({ hi: "ये पूछ सकते हैं", en: "You can ask" })}</p>
-              <button type="button" onClick={() => setList(false)} className="grid h-9 w-9 place-items-center rounded-full active:bg-[#EAF0F6]" aria-label={L({ hi: "बंद करें", en: "Close" })}>
+              <p className="text-[13px] font-semibold text-[#6B6492]">{L({ hi: "ये पूछ सकते हैं", en: "You can ask" })}</p>
+              <button type="button" onClick={() => setList(false)} className="grid h-9 w-9 place-items-center rounded-full active:bg-[#F1ECFF]" aria-label={L({ hi: "बंद करें", en: "Close" })}>
                 <X className="h-4 w-4" aria-hidden />
               </button>
             </div>
             {QUESTIONS.map(({ text: q, icon: Icon }) => (
-              <button key={q.en} type="button" role="menuitem" disabled={busy || !child} onClick={() => ask(L(q))} className="flex min-h-[48px] w-full items-center gap-3 border-t border-[#DCE4ED] px-4 text-left text-[15px] active:bg-[#EAF0F6] disabled:opacity-50">
-                <Icon className="h-[18px] w-[18px] shrink-0 text-[#0D2A5E]" aria-hidden />
+              <button key={q.en} type="button" role="menuitem" disabled={busy || !child} onClick={() => ask(L(q))} className="flex min-h-[48px] w-full items-center gap-3 border-t border-[#F1ECFF] px-4 text-left text-[15px] active:bg-[#F7F4FF] disabled:opacity-50">
+                <Icon className="h-[18px] w-[18px] shrink-0 text-[#6A45E0]" aria-hidden />
                 {L(q)}
               </button>
             ))}
@@ -220,7 +265,7 @@ export default function AssistantPage() {
         {!empty && !list && (
           <div className="no-scrollbar -mx-4 -mt-2 mb-0.5 flex gap-2 overflow-x-auto px-4 pb-3 pt-2">
             {QUESTIONS.map((q) => (
-              <button key={q.text.en} type="button" disabled={busy || !child} onClick={() => ask(L(q.text))} className="h-10 shrink-0 rounded-[12px] border border-[#DCE4ED] bg-white px-3 text-[14px] font-medium active:bg-[#EAF0F6] disabled:opacity-50">
+              <button key={q.text.en} type="button" disabled={busy || !child} onClick={() => ask(L(q.text))} className="sahayak-glass h-10 shrink-0 rounded-xl px-3 text-[14px] font-medium active:bg-white disabled:opacity-50">
                 {L(q.text)}
               </button>
             ))}
@@ -232,13 +277,13 @@ export default function AssistantPage() {
           </p>
         )}
         <form
-          className="flex items-center gap-2 rounded-[14px] border border-[#7D8998] bg-white py-1.5 pl-2 pr-2 focus-within:border-[#0D2A5E] focus-within:ring-2 focus-within:ring-[#0D2A5E]/15"
+          className="sahayak-glass flex items-center gap-2 rounded-[30px] py-2 pl-2 pr-2"
           onSubmit={(e) => {
             e.preventDefault();
             ask(text);
           }}
         >
-          <button type="button" onClick={() => setList((v) => !v)} aria-expanded={list} aria-label={L({ hi: "सवालों की सूची", en: "List of questions" })} className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-[#EAF0F6] text-[#0D2A5E] active:bg-[#DCE4ED]">
+          <button type="button" onClick={() => setList((v) => !v)} aria-expanded={list} aria-label={L({ hi: "सवालों की सूची", en: "List of questions" })} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F1ECFF] text-[#6A45E0] active:bg-[#E6DEFF]">
             <Plus className={clsx("h-[18px] w-[18px] transition-transform duration-200", list && "rotate-45")} strokeWidth={2.2} aria-hidden />
           </button>
           <label htmlFor="ask" className="sr-only">
@@ -251,14 +296,14 @@ export default function AssistantPage() {
             autoComplete="off"
             onChange={(e) => setText(e.target.value)}
             placeholder={listening ? L({ hi: "सुन रहे हैं… बोलिए", en: "Listening… speak now" }) : L({ hi: "कुछ भी पूछें…", en: "Ask anything…" })}
-            className="h-11 min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-[#666A6E] focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="h-11 min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-[#8A84A8] focus-visible:ring-0 focus-visible:ring-offset-0"
           />
           {text.trim() || !canSpeak ? (
-            <button type="submit" disabled={busy || !text.trim() || !child} aria-label={L({ hi: "भेजें", en: "Send" })} className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[#0D2A5E] text-white transition-opacity disabled:opacity-40">
+            <button type="submit" disabled={busy || !text.trim() || !child} aria-label={L({ hi: "भेजें", en: "Send" })} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#6A45E0] text-white transition-opacity disabled:opacity-40">
               <SendHorizontal className="h-5 w-5" aria-hidden />
             </button>
           ) : (
-            <button type="button" onClick={listen} disabled={busy || !child} aria-pressed={listening} aria-label={listening ? L({ hi: "सुनना बंद करें", en: "Stop listening" }) : L({ hi: "बोलकर पूछें", en: "Ask by speaking" })} className={clsx("grid h-11 w-11 shrink-0 place-items-center rounded-[12px] text-white transition-colors disabled:opacity-40", listening ? "bg-[#A32F35]" : "bg-[#0D2A5E]")}>
+            <button type="button" onClick={listen} disabled={busy || !child} aria-pressed={listening} aria-label={listening ? L({ hi: "सुनना बंद करें", en: "Stop listening" }) : L({ hi: "बोलकर पूछें", en: "Ask by speaking" })} className={clsx("grid h-11 w-11 shrink-0 place-items-center rounded-full text-white transition-colors disabled:opacity-40", listening ? "animate-pulse bg-rose-500" : "bg-[#6A45E0]")}>
               <Mic className="h-5 w-5" aria-hidden />
             </button>
           )}

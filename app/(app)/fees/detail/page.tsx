@@ -103,7 +103,7 @@ export default function FeeDetailPage() {
               <dl className="kv tnum">
                 <div>
                   <dt>{L({ hi: "रसीद नंबर", en: "Receipt no." })}</dt>
-                  <dd>{r.receiptNo}</dd>
+                  <dd data-allow-copy>{r.receiptNo}</dd>
                 </div>
                 <div>
                   <dt>{L({ hi: "तारीख", en: "Date" })}</dt>

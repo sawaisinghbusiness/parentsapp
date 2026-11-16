@@ -7,6 +7,7 @@ import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { weekdayDate } from "@/lib/format";
 import { M } from "@/lib/text/more";
+import { markNoticesSeen } from "@/lib/noticeSeen";
 import { Empty, ErrorCard, ListSkeleton } from "@/components/ui";
 import { Button, Group, Section } from "@/components/kit";
 import "@/components/study.css";
@@ -56,6 +57,12 @@ export default function NoticePage() {
       setBusy(false);
     }
   }
+
+  // Opening the list counts as reading: the Home bell stops showing these as new.
+  const newest = data?.notices.reduce((m, n) => (n.date > m ? n.date : m), "");
+  useEffect(() => {
+    if (child && newest) markNoticesSeen(child.id, newest);
+  }, [child, newest]);
 
   if (!data) {
     if (error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;

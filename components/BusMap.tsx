@@ -5,6 +5,7 @@ import type * as Leaflet from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./bus-map.css";
 import { LocateFixed } from "lucide-react";
+import { useL } from "@/lib/i18n";
 import { animateReceivedPoint } from "@/lib/receivedMotion";
 import type { LatLng } from "@/lib/bus";
 
@@ -24,6 +25,7 @@ export interface MapStop {
  * Leaflet is loaded in the browser only (it needs `window`).
  */
 export function BusMap({ stops, path, bus, className, label }: { stops: MapStop[]; path?: [number,number][] | null; bus: LatLng | null; className?: string; label: string }) {
+  const say = useL();
   const box = useRef<HTMLDivElement>(null);
   const L = useRef<typeof Leaflet | null>(null);
   const map = useRef<Leaflet.Map | null>(null);
@@ -116,7 +118,7 @@ export function BusMap({ stops, path, bus, className, label }: { stops: MapStop[
           className="absolute bottom-3 right-3 z-[500] flex min-h-[44px] items-center gap-1.5 rounded-xl bg-white px-3.5 text-[14px] font-semibold text-ink-900 shadow-[0_2px_10px_rgba(11,34,82,0.18)] active:bg-ink-50"
         >
           <LocateFixed className="h-[18px] w-[18px]" aria-hidden />
-          Bus
+          {say({ hi: "बस पर जाएँ", en: "Show bus" })}
         </button>
       )}
     </div>

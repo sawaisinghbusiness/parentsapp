@@ -107,10 +107,10 @@ export default function MeetingsPage() {
                   {askAnswer && (
                     <div className="flex gap-2 px-4 pb-4">
                       <Button className="flex-1" disabled={busy === m.id} onClick={() => answer(m, "yes")}>
-                        {L({ hi: "आऊँगा", en: "I'll come" })}
+                        {L({ hi: "हम आएँगे", en: "I'll come" })}
                       </Button>
                       <Button kind="line" className="flex-1" disabled={busy === m.id} onClick={() => answer(m, "no")}>
-                        {L({ hi: "नहीं आ पाऊँगा", en: "Can't come" })}
+                        {L({ hi: "हम नहीं आ पाएँगे", en: "Can't come" })}
                       </Button>
                     </div>
                   )}

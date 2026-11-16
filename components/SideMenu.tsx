@@ -19,6 +19,7 @@ import {
   IndianRupee,
   LogOut,
   Megaphone,
+  Search,
   MessageCircle,
   Timer,
   UserRound,
@@ -26,7 +27,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useSahayakPreference } from "@/lib/sahayakPreference";
-import { api, clearCache, markSignedIn } from "@/lib/api";
+import { api, clearOnSignOut, markSignedIn } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT, type Bi } from "@/lib/i18n";
 import { Avatar, SchoolMark } from "./ui";
@@ -49,6 +50,7 @@ const SCHOOL: Item[] = [
   { href: "/bus/", text: { hi: "बस", en: "Bus" }, icon: Bus },
   { href: "/events/", text: { hi: "कार्यक्रम", en: "Events" }, icon: Images },
   { href: "/notice/", text: { hi: "सूचना", en: "Notice" }, icon: Megaphone },
+  { href: "/search/", text: { hi: "खोजें", en: "Search" }, icon: Search },
 ];
 const ACCOUNT: Item[] = [
   { href: "/id-card/", text: { hi: "आईडी कार्ड", en: "ID Card" }, icon: IdCard },
@@ -104,7 +106,7 @@ export function SideMenu({ active, layerRef, onClose, onSwitchChild }: { active:
   async function logout() {
     setLeaving(true);
     await api("/logout", { method: "POST" }).catch(() => null);
-    clearCache();
+    clearOnSignOut();
     markSignedIn(false);
     window.location.replace("/login/");
   }
@@ -114,7 +116,8 @@ export function SideMenu({ active, layerRef, onClose, onSwitchChild }: { active:
       {title && <p className="px-5 pb-1 pt-2 text-[12.5px] font-semibold text-ink-400">{L(title)}</p>}
       <ul>
         {items.map(({ href, text, icon: Icon }) => {
-          const on = path === href;
+          // usePathname() has no trailing slash ("/fees"); the items do ("/fees/").
+          const on = (path.endsWith("/") ? path : path + "/") === href;
           return (
             <li key={href}>
               <Link

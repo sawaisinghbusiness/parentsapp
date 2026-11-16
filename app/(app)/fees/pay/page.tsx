@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { ChevronDown, Clock, Info } from "lucide-react";
 import { api, ApiError, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
+import { useAllowZoom } from "@/lib/allowZoom";
 import { useL } from "@/lib/i18n";
 import { rupees } from "@/lib/format";
 import { type Fees } from "@/lib/fees";
@@ -59,6 +60,7 @@ export default function PayPage() {
         dueNow: data.options.dueNow,
         full: data.options.full,
         fineIncluded: data.fine > 0,
+        pending: data.claims.filter((c) => c.status === "pending").reduce((s, c) => s + c.amount, 0),
         suggest: suggest && suggest !== data.options.dueNow && suggest !== data.options.full && suggest <= data.options.full ? suggest : 0,
       }}
     />
@@ -77,6 +79,8 @@ interface PayInfo {
   fineIncluded: boolean;
   /** The instalment's own total, when it is neither "due now" nor "full". */
   suggest: number;
+  /** UPI payments already sent and not yet checked by the school (they don't lower the amounts yet). */
+  pending: number;
 }
 
 function PayFlow({ info }: { info: PayInfo }) {
@@ -89,6 +93,8 @@ function PayFlow({ info }: { info: PayInfo }) {
   const {markSaved}=useUnsavedChanges(step!=="sent" && (!!utr.trim()||!!other.trim()));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // The QR can be pinched to zoom while it is on screen (audit 2026-11-16).
+  useAllowZoom(step === "choose");
 
   const amount = choice === "due" ? info.dueNow : choice === "full" ? info.full : choice === "this" ? info.suggest : Math.floor(Number(other.replace(/\D/g, "")) || 0);
   const amountOk = amount >= 1 && amount <= info.full;
@@ -99,6 +105,7 @@ function PayFlow({ info }: { info: PayInfo }) {
     const clean = utr.replace(/[\s-]/g, "").toUpperCase();
     if (!amountOk) return setError(L(F.enterAmount));
     if (!/^[A-Z0-9]{10,22}$/.test(clean)) return setError(L(F.utr));
+    if (!paidOn) return setError(L({ hi: "पेमेंट की तारीख चुनें।", en: "Choose the date you paid." }));
     setBusy(true);
     try {
       await api("/fees/claim", { body: { student: info.studentId, amount, utr: clean, paidOn } });
@@ -121,7 +128,7 @@ function PayFlow({ info }: { info: PayInfo }) {
             {L({ hi: "जानकारी भेज दी गई, स्कूल की जाँच बाकी है", en: "Details sent. School verification pending" })}
           </p>
           <p className="tnum mt-2 text-[22px] font-extrabold">{rupees(amount)}</p>
-          <p className="tnum mt-0.5 break-all text-[13px] text-ink-500">UTR {utr.replace(/[\s-]/g, "").toUpperCase()}</p>
+          <p className="tnum mt-0.5 break-all text-[13px] text-ink-500" data-allow-copy>UTR {utr.replace(/[\s-]/g, "").toUpperCase()}</p>
         </div>
         <p className="text-ink-700">{L(F.thanks)}</p>
         <p className="text-[14px] font-medium text-ink-900">{L({ hi: "दोबारा पेमेंट न करें। जाँच पूरी होने तक बाकी रकम पहले जैसी दिख सकती है।", en: "Please do not pay again. The balance may look unchanged until the school finishes checking." })}</p>
@@ -214,12 +221,10 @@ function PayFlow({ info }: { info: PayInfo }) {
             {busy ? "…" : L(F.send)}
           </button>
           {/* Two quiet ways back, not second buttons: paying twice by mistake is the costly error here. */}
-          <div className="mt-1 flex items-center justify-between">
+          {/* One quiet way back (both old links did the same thing): the amount and the QR are on that step. */}
+          <div className="mt-1 flex items-center">
             <button type="button" onClick={() => setStep("choose")} className="flex h-11 items-center text-[14px] font-medium leading-5 text-[#0D2A5E]">
-              {L({ hi: "रकम बदलें", en: "Change amount" })}
-            </button>
-            <button type="button" onClick={() => setStep("choose")} className="flex h-11 items-center text-[14px] leading-5 text-ink-500">
-              {L({ hi: "QR फिर दिखाएँ", en: "Show QR again" })}
+              {L({ hi: "रकम बदलें / QR फिर दिखाएँ", en: "Change amount / show QR again" })}
             </button>
           </div>
         </section>
@@ -229,6 +234,13 @@ function PayFlow({ info }: { info: PayInfo }) {
   return (
     <div className="study space-y-6 pb-4 pt-1">
       {slip(L({ hi: "फ़ीस भुगतान", en: "Fee payment" }))}
+      {/* A payment already sent is still being checked: say so before the parent pays the same amount again. */}
+      {info.pending > 0 && (
+        <p className="tnum flex items-start gap-2 rounded-[10px] border border-[#E9D9BE] bg-[#FBF5EA] px-4 py-3 text-[14px] leading-5 text-marigold-700" role="status">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          {L({ hi: `${rupees(info.pending)} पहले ही भेजे जा चुके हैं, स्कूल जाँच रहा है। ऊपर की रकम में यह अभी नहीं घटा है, वही रकम दोबारा न भरें।`, en: `${rupees(info.pending)} already sent and being checked by the school. It isn't taken off the amounts here yet, so don't pay it again.` })}
+        </p>
+      )}
 
       <fieldset className="study-in">
         <legend className={h2}>{L({ hi: "कितनी रकम", en: "How much" })}</legend>

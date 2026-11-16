@@ -171,3 +171,18 @@ export function useApi<T>(path: string | null) {
   }, [path,error,data,load]);
   return { data, error, loading, stale, reload: load };
 }
+
+/**
+ * Sign-out on a shared phone (audit 2026-11-16): besides the saved answers, forget the chosen child,
+ * study sessions, fee screen choices, notice "seen" marks and the assistant's settings. The language
+ * stays, and so does the demo's own sample store.
+ */
+export function clearOnSignOut() {
+  clearCache();
+  try {
+    const keep = new Set(["pa:lang", "pa:demo-store", "pa:signed-in", "pa:demo-session"]);
+    for (const k of Object.keys(localStorage)) if (k.startsWith("pa:") && !keep.has(k)) localStorage.removeItem(k);
+  } catch {
+    /* ignore */
+  }
+}

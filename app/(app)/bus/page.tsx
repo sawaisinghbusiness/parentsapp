@@ -264,8 +264,8 @@ function Timeline({ route, myStop, live, childName }: { route: { name: string; t
                               {it.passed && live
                                 ? live.child.done
                                   ? morning
-                                    ? L({ hi: `आपका स्टॉप · ${first} चढ़ गया`, en: `Your stop · ${first} got on` })
-                                    : L({ hi: `आपका स्टॉप · ${first} उतर गया`, en: `Your stop · ${first} got off` })
+                                    ? L({ hi: `आपका स्टॉप · ${first} बस में बैठ चुके`, en: `Your stop · ${first} got on` })
+                                    : L({ hi: `आपका स्टॉप · ${first} उतर चुके`, en: `Your stop · ${first} got off` })
                                   : L({ hi: "आपका स्टॉप · निकल गई", en: "Your stop · passed" })
                                 : L({ hi: "आपका स्टॉप", en: "Your stop" })}
                             </span>

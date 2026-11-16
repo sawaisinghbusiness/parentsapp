@@ -25,13 +25,14 @@ export default function TeacherChatPage() {
   const { child } = useParent();
   const L = useL();
   const { lang } = useT();
-  const [teacherId, setTeacherId] = useState("");
+  const [teacherId, setTeacherId] = useState<string | null>(null);
   const [data, setData] = useState<Thread>();
   const [error, setError] = useState<ApiError | null>(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [fail, setFail] = useState("");
   const end = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
   const count = useRef(0);
   // While a message is on its way, a poll answer (made before it arrived) must not wipe it off the screen.
   const sending = useRef(false);
@@ -130,6 +131,16 @@ export default function TeacherChatPage() {
     }
   }
 
+  // The box grows with the message, up to its max height, then scrolls (audit 2026-11-16).
+  useEffect(() => {
+    const el = input.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight + 2, 128)}px`;
+  }, [text]);
+
+  // No teacher in the link, or this child has no such teacher: say so instead of loading for ever.
+  const missing = teacherId === "" || (!data && !!error && [400, 403, 404].includes(error.status));
   const t = data?.teacher;
   const role = t ? [t.classTeacher ? L({ hi: "क्लास टीचर", en: "Class teacher" }) : "", t.subjects.join(", ")].filter(Boolean).join(" · ") : "";
 
@@ -148,6 +159,8 @@ export default function TeacherChatPage() {
                 {role && <p className="truncate text-[12.5px] text-ink-500">{role}</p>}
               </div>
             </>
+          ) : missing ? (
+            <p className="truncate text-[16px] font-semibold text-ink-900">{L({ hi: "टीचर से बात", en: "Teacher chat" })}</p>
           ) : (
             <Skeleton className="h-9 w-40 rounded-lg" />
           )}
@@ -156,7 +169,12 @@ export default function TeacherChatPage() {
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3" aria-live="polite">
         {!data ? (
-          error ? (
+          missing ? (
+            <div className="mx-auto mt-12 max-w-[280px] text-center">
+              <p className="text-[15px] text-ink-700">{L({ hi: "यह बातचीत नहीं मिली।", en: "This conversation wasn't found." })}</p>
+              <Link href="/teachers/" className="mt-3 inline-flex min-h-[44px] items-center text-[14px] font-semibold text-brand-700">{L({ hi: "टीचर की सूची पर जाएँ", en: "Back to teachers" })}</Link>
+            </div>
+          ) : error ? (
             <ErrorCard offline={error.status === 0} onRetry={load} />
           ) : (
             <div className="space-y-3">
@@ -206,6 +224,7 @@ export default function TeacherChatPage() {
           </label>
           <textarea
             id="msg"
+            ref={input}
             rows={1}
             value={text}
             maxLength={1000}
@@ -229,7 +248,7 @@ function Bubble({ m, lang }: { m: ChatMessage; lang: Lang }) {
       <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.text}</p>
       <p className={`mt-0.5 flex items-center justify-end gap-1 text-[11px] ${mine ? "text-white/70" : "text-ink-400"}`}>
         {clockOf(m.at, lang)}
-        {mine && (m.pending ? <Clock3 className="h-3 w-3" aria-label="Sending" /> : <CheckCheck className="h-3.5 w-3.5" aria-hidden />)}
+        {mine && (m.pending ? <Clock3 className="h-3 w-3" aria-label={lang === "hi" ? "भेजा जा रहा है" : "Sending"} /> : <CheckCheck className="h-3.5 w-3.5" aria-hidden />)}
       </p>
     </div>
   );

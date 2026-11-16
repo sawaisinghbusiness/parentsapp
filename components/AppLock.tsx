@@ -13,11 +13,19 @@ export function AppLock() {
     const root = document.documentElement;
     root.classList.add("app-lock");
 
-    const typing = (t: EventTarget | null) => t instanceof HTMLElement && !!t.closest("input, textarea, select, [contenteditable='true']");
+    // Text boxes, and anything marked data-allow-copy (receipt numbers, UTR), can still be selected and copied.
+    const typing = (t: EventTarget | null) => {
+      const el = t instanceof Text ? t.parentElement : t;
+      return el instanceof HTMLElement && !!el.closest("input, textarea, select, [contenteditable='true'], [data-allow-copy]");
+    };
+    // A screen that allows zoom (useAllowZoom: report card, album photo, payment QR) sets data-zoom on <html>.
+    const zoomOk = () => root.dataset.zoom === "1";
     // iPhone ignores the viewport's no-zoom setting, so its pinch gesture is stopped here.
-    const gesture = (e: Event) => e.preventDefault();
+    const gesture = (e: Event) => {
+      if (!zoomOk()) e.preventDefault();
+    };
     const pinch = (e: TouchEvent) => {
-      if (e.touches.length > 1) e.preventDefault();
+      if (e.touches.length > 1 && !zoomOk()) e.preventDefault();
     };
     // Ctrl + wheel and Ctrl +/- zoom on a computer.
     const wheel = (e: WheelEvent) => {

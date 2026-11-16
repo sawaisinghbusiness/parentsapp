@@ -39,12 +39,15 @@ export default function ApplyLeavePage() {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
 
+  // Today is filled in once when the rules arrive; after that a cleared date stays cleared (audit 2026-11-16).
+  const [prefilled, setPrefilled] = useState(false);
   useEffect(() => {
-    if (data?.rules.today && !from) {
+    if (data?.rules.today && !prefilled) {
+      setPrefilled(true);
       setFrom(data.rules.today);
       setTo(data.rules.today);
     }
-  }, [data?.rules.today, from]);
+  }, [data?.rules.today, prefilled]);
 
   // Half day only makes sense for a single day.
   const oneDay = !!from && (!to || to === from);
@@ -55,8 +58,12 @@ export default function ApplyLeavePage() {
   async function send(e: React.FormEvent) {
     e.preventDefault();
     if (!child) return;
+    if (!from) return setProblem(L({ hi: "छुट्टी शुरू होने की तारीख चुनें।", en: "Choose the first day of leave." }));
     if (to && to < from) return setProblem(L(M.badDates));
+    const rules = data?.rules;
+    if (rules?.maxDays && spanDays(from, to || from) > rules.maxDays) return setProblem(L({ hi: `एक बार में ज़्यादा से ज़्यादा ${rules.maxDays} दिन की छुट्टी ले सकते हैं।`, en: `Leave can be at most ${rules.maxDays} days at a time.` }));
     if (reason.trim().length < 3) return setProblem(L(M.badReason));
+    if (rules?.reasonMax && reason.trim().length > rules.reasonMax) return setProblem(L({ hi: `कारण ${rules.reasonMax} अक्षरों से छोटा लिखें।`, en: `Keep the reason under ${rules.reasonMax} characters.` }));
     setBusy(true);
     setProblem("");
     try {

@@ -7,7 +7,7 @@ import { api, useApi } from "@/lib/api";
 import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { ampm, type MeetingDetail } from "@/lib/meetings";
-import { ErrorCard, Skeleton, Status } from "@/components/ui";
+import { Empty, ErrorCard, Skeleton, Status } from "@/components/ui";
 import { Button, CARD, Group, Section, SUPPORT, TITLE } from "@/components/kit";
 import "@/components/study.css";
 
@@ -22,8 +22,14 @@ export default function MeetingDetailPage() {
   const { child } = useParent();
   const L = useL();
   const { lang } = useT();
-  const [id, setId] = useState("");
+  const [id, setId] = useState<string | null>(null);
   useEffect(() => setId(new URLSearchParams(window.location.search).get("id") || ""), []);
+  // The clock moves on its own, so Join turns on 10 minutes before without reopening the page.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
   const { data, error, reload } = useApi<MeetingDetail>(child && id ? `/meetings/detail?student=${child.id}&id=${id}` : null);
   const [m, setM] = useState<MeetingDetail | null>(null);
   const [pick, setPick] = useState<string | null>(null);
@@ -33,17 +39,20 @@ export default function MeetingDetailPage() {
     if (data) setM(data);
   }, [data]);
 
+  // No id, or the school no longer has this meeting: say so instead of loading for ever.
+  if (id === "" || (!m && !!error && [400, 403, 404].includes(error.status))) return <Empty>{L({ hi: "यह मीटिंग नहीं मिली।", en: "This meeting wasn't found." })}</Empty>;
   if (!m) {
     if (error && error.status !== 401) return <ErrorCard offline={error.status === 0} onRetry={reload} />;
     return <Skeleton className="h-80 w-full rounded-2xl" />;
   }
 
   const day = new Date(m.date + "T00:00:00").toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { weekday: "short", day: "numeric", month: "short" });
-  const today = new Date().toISOString().slice(0, 10);
-  const over = m.date < today;
+  // India time, and the meeting is over once its end time has passed (not only on the next day).
+  const endsAt = new Date(`${m.date}T${m.end || m.start}:00+05:30`).getTime();
+  const over = now > endsAt;
   // The Join button opens 10 minutes before the start.
-  const startsAt = new Date(`${m.date}T${m.start}:00`).getTime();
-  const canJoin = !!m.onlineUrl && Date.now() >= startsAt - 10 * 60_000 && !over;
+  const startsAt = new Date(`${m.date}T${m.start}:00+05:30`).getTime();
+  const canJoin = !!m.onlineUrl && now >= startsAt - 10 * 60_000 && !over;
   const chosen = pick || m.slot;
 
   async function send(path: string, body: object) {
@@ -130,7 +139,7 @@ export default function MeetingDetailPage() {
 
       {/* A PTM with no time picked yet has nothing to show in the bar, so the bar is left out. */}
       {!over && !(m.kind === "ptm" && !m.slot && !(pick && pick !== m.slot)) && (
-        <div className="fixed inset-x-0 bottom-[66px] z-10 mx-auto max-w-[560px] border-t border-[#DCE4ED] bg-white px-4 pb-3 pt-3">
+        <div className="fixed inset-x-0 bottom-[calc(66px+env(safe-area-inset-bottom,0px))] z-10 mx-auto max-w-[560px] border-t border-[#DCE4ED] bg-white px-4 pb-3 pt-3">
           {m.kind === "ptm" ? (
             pick && pick !== m.slot ? (
               <Button className="w-full" disabled={busy} onClick={() => send("/meetings/slot", { time: pick })}>
@@ -163,7 +172,7 @@ export default function MeetingDetailPage() {
                   <>
                     <span aria-hidden>·</span>
                     <button disabled={busy} onClick={() => send("/meetings/answer", { answer: "no" })} className="-my-3 py-3 font-medium text-[#0D2A5E] underline">
-                      {L({ hi: "नहीं आ पाऊँगा", en: "Can't come" })}
+                      {L({ hi: "हम नहीं आ पाएँगे", en: "Can't come" })}
                     </button>
                   </>
                 )}
@@ -172,17 +181,17 @@ export default function MeetingDetailPage() {
           ) : !m.answer ? (
             <div className="flex gap-2">
               <Button className="flex-1" disabled={busy} onClick={() => send("/meetings/answer", { answer: "yes" })}>
-                {L({ hi: "आऊँगा", en: "I'll come" })}
+                {L({ hi: "हम आएँगे", en: "I'll come" })}
               </Button>
               <Button kind="line" className="flex-1" disabled={busy} onClick={() => send("/meetings/answer", { answer: "no" })}>
-                {L({ hi: "नहीं आ पाऊँगा", en: "Can't come" })}
+                {L({ hi: "हम नहीं आ पाएँगे", en: "Can't come" })}
               </Button>
             </div>
           ) : (
             <div className="flex min-h-[48px] items-center justify-between gap-3">
               {m.answer === "yes" ? <Status tone="ok">{L({ hi: "आ रहे हैं", en: "Coming" })}</Status> : <Status tone="mute">{L({ hi: "नहीं आ रहे", en: "Not coming" })}</Status>}
               <button disabled={busy} onClick={() => send("/meetings/answer", { answer: m.answer === "yes" ? "no" : "yes" })} className="min-h-[44px] text-right text-[14px] font-medium leading-5 text-[#0D2A5E] disabled:opacity-50">
-                {m.answer === "yes" ? L({ hi: "नहीं आ पाऊँगा? बदलें", en: "Can't come after all? Change" }) : L({ hi: "आ सकते हैं? बदलें", en: "Can come after all? Change" })}
+                {m.answer === "yes" ? L({ hi: "नहीं आ पाएँगे? बदलें", en: "Can't come after all? Change" }) : L({ hi: "आ सकते हैं? बदलें", en: "Can come after all? Change" })}
               </button>
             </div>
           )}

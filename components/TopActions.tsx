@@ -9,6 +9,7 @@ import { useParent } from "@/lib/parent";
 import { useL, useT } from "@/lib/i18n";
 import { Avatar, Skeleton } from "./ui";
 import { ProfilePeek } from "./ProfilePeek";
+import { unseenCount } from "@/lib/noticeSeen";
 
 /**
  * The right side of a tab screen's top bar, the same as on Home: language, search, notices (with
@@ -19,9 +20,9 @@ export function TopActions() {
   const { lang, setLang } = useT();
   const { me, child } = useParent();
   // Same request as Home, so it comes from the cache and only adds the notice count.
-  const { data } = useApi<{ noticeCount?: number }>(child ? `/home?student=${child.id}` : null);
+  const { data } = useApi<{ noticeCount?: number; notice?: { date: string } | null }>(child ? `/home?student=${child.id}` : null);
   const [peek, setPeek] = useState(false);
-  const unread = data?.noticeCount || 0;
+  const unread = unseenCount(child?.id, data?.noticeCount || 0, data?.notice?.date);
   const tint = Math.max(0, me?.children.findIndex((c) => c.id === child?.id) ?? 0);
 
   return (

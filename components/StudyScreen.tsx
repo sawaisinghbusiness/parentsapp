@@ -167,14 +167,19 @@ export function StudyScreen() {
   // A block has run out: record it, celebrate a finished study block, and in Pomodoro go on to the next part.
   useEffect(() => {
     if (!run?.endsAt || now < run.endsAt) return;
-    notifyCompletion();
+    // The next part starts when this one ended, not now: reopened after a long time, every phase that ran out
+    // meanwhile is caught up one by one, and only the one ending just now gets the alert and fireworks
+    // (audit 2026-11-16).
+    const fresh = now - run.endsAt < 5_000;
+    const from = (r: Omit<Running, "endsAt" | "left" | "total">, mins: number): Running => ({ ...block(r, mins), endsAt: run.endsAt! + mins * 60 * 1000 });
+    if (fresh) notifyCompletion();
     if (run.phase === "focus") {
       setDone(record(run.subject, run.total, run.mode));
-      setParty(true);
-      if (run.mode === "pomodoro" && run.round < POMO.rounds) setRunning(block({ ...run, phase: "break" }, POMO.rest));
+      if (fresh) setParty(true);
+      if (run.mode === "pomodoro" && run.round < POMO.rounds) setRunning(from({ ...run, phase: "break" }, POMO.rest));
       else setRunning(null);
     } else {
-      setRunning(block({ ...run, phase: "focus", round: run.round + 1 }, POMO.focus));
+      setRunning(from({ ...run, phase: "focus", round: run.round + 1 }, POMO.focus));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [now, run]);

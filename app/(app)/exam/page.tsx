@@ -19,23 +19,24 @@ type Tab = "schedule" | "result";
 export default function ExamPage() {
   const { child } = useParent();
   const L = useL();
-  const [tab, setTab] = useState<Tab>("schedule");
+  // Unknown until the link is read, so opening "?tab=result" doesn't first load the schedule (audit 2026-11-16).
+  const [tab, setTab] = useState<Tab | null>(null);
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("tab") === "result") setTab("result");
+    setTab(new URLSearchParams(window.location.search).get("tab") === "result" ? "result" : "schedule");
   }, []);
 
   return (
     <div className="study space-y-6 pb-4 pt-1">
       <Tabs
         label={L(M.exam)}
-        value={tab}
+        value={tab ?? "schedule"}
         onChange={setTab}
         options={[
           { key: "schedule", text: L({ hi: "टाइम टेबल", en: "Schedule" }) },
           { key: "result", text: L({ hi: "रिज़ल्ट", en: "Result" }) },
         ]}
       />
-      {!child ? <ListSkeleton /> : tab === "schedule" ? <Papers key={child.id} studentId={child.id} /> : <Results key={child.id} studentId={child.id} />}
+      {!child || !tab ? <ListSkeleton /> : tab === "schedule" ? <Papers key={child.id} studentId={child.id} /> : <Results key={child.id} studentId={child.id} />}
     </div>
   );
 }
