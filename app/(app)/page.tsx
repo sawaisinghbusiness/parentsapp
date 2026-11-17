@@ -108,7 +108,8 @@ export default function HomePage() {
   // One message per failure: the "saved copy" strip only when a saved copy is on screen and the phone is offline.
   const offlineStrip = !failed && me && (stale || homeStale) && (!error || error.status === 0);
   // Without an uploaded school photo, the St. Paul building (its name is on the sign) is only used for St. Paul.
-  const hero = school?.heroUrl || (/st\.?\s*paul/i.test(school?.name || "") ? "/img/school-hero-morning.webp" : null);
+  // The school's own photo from ERP Settings; until a school uploads one, every school shows this photo (user, 2026-11-17).
+  const hero = school?.heroUrl || "/img/school-hero-morning.webp";
 
   const childCard = (
     <>
