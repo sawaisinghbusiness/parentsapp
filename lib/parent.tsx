@@ -56,11 +56,13 @@ const PICK = "pa:child";
 
 /** The signed-in parent, their children, and which child the screens are showing. */
 export function ParentProvider({ children }: { children: React.ReactNode }) {
-  const { data: me, stale, loading, error, reload } = useApi<Me>("/me");
+  const { data: raw, stale, loading, error, reload } = useApi<Me>("/me");
+  // Only a real answer counts: one without the school or the children list is ignored (never crash on it).
+  const me = raw && Array.isArray(raw.children) && raw.school ? raw : undefined;
   // The browser tab carries the school's name from ERP Settings.
   useEffect(() => {
-    if (me?.school.name) document.title = `${me.school.name} · Parents`;
-  }, [me?.school.name]);
+    if (me?.school?.name) document.title = `${me.school.name} · Parents`;
+  }, [me?.school?.name]);
   const [picked, setPicked] = useState<string | null>(null);
   const [selectionReady, setSelectionReady] = useState(false);
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);

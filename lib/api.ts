@@ -42,8 +42,11 @@ export async function api<T>(path: string, init?: { method?: string; body?: unkn
   } finally {
     clearTimeout(timer);
   }
-  const data = await res.json().catch(() => ({}));
+  const data = await res.json().catch(() => undefined);
   if (!res.ok) throw new ApiError(res.status, (data as any)?.error || "");
+  // A "200 OK" that is not JSON (a sleeping server's page, a proxy error page) is not an answer: treat it as a
+  // failed request, so it is never shown or saved on the phone as if it were real data (that crashed the app).
+  if (data === undefined || data === null || typeof data !== "object") throw new ApiError(502, "");
   return data as T;
 }
 
@@ -53,7 +56,13 @@ const KEY = "pa:cache:";
 export function readCache<T>(path: string): T | undefined {
   try {
     const raw = localStorage.getItem(KEY + path);
-    return raw ? (JSON.parse(raw).v as T) : undefined;
+    const v = raw ? JSON.parse(raw).v : undefined;
+    // An empty saved copy is from a broken answer (see api()): drop it instead of showing it.
+    if (!v || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length)) {
+      if (raw) localStorage.removeItem(KEY + path);
+      return undefined;
+    }
+    return v as T;
   } catch {
     return undefined;
   }
