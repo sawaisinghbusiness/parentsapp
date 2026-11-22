@@ -179,14 +179,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Home only (user, 2026-11-22): a navy wave with a gold stripe fixed to the bottom of the screen, edge to
           edge, with the tab bar sitting on it as a white sheet with rounded top corners. Decoration only. */}
       {isHome && <HomeWave />}
-      <nav className={clsx("fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] bg-white pb-[env(safe-area-inset-bottom,0px)]", isHome ? "rounded-t-[26px] shadow-[0_-8px_24px_rgba(11,34,80,0.28)]" : "border-t border-[#DFE5EF]")} aria-label="Main">
+      <nav className={clsx("fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] bg-white pb-[env(safe-area-inset-bottom,0px)]", "rounded-t-[26px]", isHome ? "shadow-[0_-8px_24px_rgba(11,34,80,0.28)]" : "shadow-[0_-4px_18px_rgba(11,34,80,0.10)]")} aria-label="Main">
         <ul className="relative grid min-h-[64px] grid-cols-5">
           {TABS.map(({ href, text, icon: Icon }) => {
             const on = lit === href;
             return (
               <li key={href} className="relative">
                 {/* On Home the lit icon (filled navy) is enough: a line on the rounded top edge would sit on the wave. */}
-                {on && !isHome && <span className="absolute inset-x-1 top-[-1px] h-[3px] rounded-b bg-[#0D2A5E]" aria-hidden />}
+                {/* The rounded bar (user, 2026-11-22) on every screen: the lit icon, filled navy, shows the tab; no line on the curved top. */}
                 <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-full min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 py-2 text-[12px] transition-colors duration-300", on ? "font-bold text-[#0D2A5E]" : "font-medium text-[#5B6478]")}>
                   <Icon className="h-6 w-6" strokeWidth={on ? 2.2 : 1.7} fill={on ? "currentColor" : "none"} aria-hidden />
                   <span className="block w-full min-w-0 break-words text-center leading-snug">{L(text)}</span>
