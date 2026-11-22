@@ -151,7 +151,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
       )}
 
-      <main className={clsx("relative z-10 flex-1", !page?.bare && "pb-28", !isHome && !own && "space-y-3.5 px-4", !isHome && !own && (big ? "pt-3" : "pt-1"))}>
+      <main className={clsx("relative z-10 flex-1", !page?.bare && (isHome ? "pb-40" : "pb-28"), !isHome && !own && "space-y-3.5 px-4", !isHome && !own && (big ? "pt-3" : "pt-1"))}>
         {!isHome && !own && <ResourceStatus />}
         {error && error.status !== 401 ? (
           <div className={clsx(isHome && "px-4 pt-6")}>
@@ -174,7 +174,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {!page?.bare && (
       // Flat, five equal tabs (the user's design, 2026-11-13; it used to raise Study as a green disc):
       // white, a hairline on top, and a navy line over the lit tab, whose icon is filled navy.
-      <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] border-t border-[#DFE5EF] bg-white pb-[env(safe-area-inset-bottom,0px)]" aria-label="Main">
+      <>
+      {/* Home only (user, 2026-11-22): a navy wave with a gold stripe fixed to the bottom of the screen, edge to
+          edge, with the tab bar sitting on it as a white sheet with rounded top corners. Decoration only. */}
+      {isHome && (
+        <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 z-[19] mx-auto h-[calc(64px+56px+env(safe-area-inset-bottom,0px))] max-w-[560px]">
+          <svg viewBox="0 0 400 56" preserveAspectRatio="none" className="absolute inset-x-0 top-0 h-[56px] w-full">
+            <defs>
+              <linearGradient id="home-wave-gold" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#E8A93A" stopOpacity="0" />
+                <stop offset="0.3" stopColor="#E8A93A" />
+                <stop offset="1" stopColor="#F2C45A" />
+              </linearGradient>
+            </defs>
+            {/* navy: from the left, dipping a little, then rising to meet the gold on the right (no white corner) */}
+            <path d="M0 14 C 70 22, 130 36, 170 42 C 280 38, 345 26, 400 12 L400 56 L0 56 Z" fill="#0D2A5E" />
+            {/* gold stripe riding the navy's top edge from the middle up to the right edge */}
+            <path d="M170 40 C 250 38, 330 22, 400 2 L400 12 C 345 26, 280 38, 170 42 Z" fill="url(#home-wave-gold)" />
+          </svg>
+          <div className="absolute inset-x-0 bottom-0 top-[55px] bg-[#0D2A5E]" />
+        </div>
+      )}
+      <nav className={clsx("fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] bg-white pb-[env(safe-area-inset-bottom,0px)]", isHome ? "rounded-t-[24px] shadow-[0_-6px_18px_rgba(13,42,94,0.18)]" : "border-t border-[#DFE5EF]")} aria-label="Main">
         <ul className="relative grid min-h-[64px] grid-cols-5">
           {TABS.map(({ href, text, icon: Icon }) => {
             const on = lit === href;
@@ -190,6 +211,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </ul>
       </nav>
+      </>
       )}
 
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
