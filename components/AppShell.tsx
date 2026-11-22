@@ -1,7 +1,7 @@
 "use client";
 import { ResourceStatus } from "@/components/ResourceStatus";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
@@ -97,9 +97,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Design previews (/preview/meetings/ …) borrow the real screen's bar until they are approved.
   const page = PAGES[path] ?? PAGES[path.replace(/^\/preview\//, "/")];
   const isHome = path === "/";
-  // The tab just tapped: the line starts sliding at once, not when the new page has loaded.
-  const [tapTo, setTapTo] = useState<string | null>(null);
-  useEffect(() => setTapTo(null), [path]);
   const isStudy = path === "/study/";
   const big = !!page?.big;
   const own = !!page?.own;
@@ -182,16 +179,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Home only (user, 2026-11-22): a navy wave with a gold stripe fixed to the bottom of the screen, edge to
           edge, with the tab bar sitting on it as a white sheet with rounded top corners. Decoration only. */}
       {isHome && <HomeWave />}
-      <nav className={clsx("fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] overflow-hidden bg-white pb-[env(safe-area-inset-bottom,0px)]", "rounded-t-[26px]", isHome ? "shadow-[0_-8px_24px_rgba(11,34,80,0.28)]" : "shadow-[0_-4px_18px_rgba(11,34,80,0.10)]")} aria-label="Main">
-        {/* One navy line that slides to the lit tab (user, 2026-11-22), instead of a line that jumps from tab to
-            tab. The bar's rounded top clips it, so it follows the curve at the corners. */}
-        <TabLine index={TABS.findIndex((t) => t.href === (tapTo ?? lit))} count={TABS.length} />
+      <nav className={clsx("fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] bg-white pb-[env(safe-area-inset-bottom,0px)]", isHome ? "rounded-t-[26px] shadow-[0_-8px_24px_rgba(11,34,80,0.28)]" : "border-t border-[#DFE5EF]")} aria-label="Main">
         <ul className="relative grid min-h-[64px] grid-cols-5">
           {TABS.map(({ href, text, icon: Icon }) => {
             const on = lit === href;
             return (
               <li key={href} className="relative">
-                <Link href={href} onClick={() => setTapTo(href)} aria-current={on ? "page" : undefined} className={clsx("flex h-full min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 py-2 text-[12px] transition-colors duration-300", on ? "font-bold text-[#0D2A5E]" : "font-medium text-[#5B6478]")}>
+                {/* On Home the lit icon (filled navy) is enough: a line on the rounded top edge would sit on the wave. */}
+                {on && !isHome && <span className="absolute inset-x-1 top-[-1px] h-[3px] rounded-b bg-[#0D2A5E]" aria-hidden />}
+                <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-full min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 py-2 text-[12px] transition-colors duration-300", on ? "font-bold text-[#0D2A5E]" : "font-medium text-[#5B6478]")}>
                   <Icon className="h-6 w-6" strokeWidth={on ? 2.2 : 1.7} fill={on ? "currentColor" : "none"} aria-hidden />
                   <span className="block w-full min-w-0 break-words text-center leading-snug">{L(text)}</span>
                 </Link>
@@ -210,18 +206,5 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </div>
     </MenuContext.Provider>
     </ActionPalette.Provider>
-  );
-}
-
-/** The navy line over the lit tab. It slides (and stays put while a page loads), so switching tabs feels smooth. */
-function TabLine({ index, count }: { index: number; count: number }) {
-  return (
-    <span
-      aria-hidden
-      className="pointer-events-none absolute left-0 top-0 z-10 h-[3px] transition-[transform,opacity] duration-[450ms] ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none"
-      style={{ width: `${100 / count}%`, transform: `translateX(${Math.max(0, index) * 100}%)`, opacity: index < 0 ? 0 : 1 }}
-    >
-      <span className="mx-auto block h-full w-[62%] rounded-b-full bg-[#0D2A5E]" />
-    </span>
   );
 }
