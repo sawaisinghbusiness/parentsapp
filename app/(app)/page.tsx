@@ -281,6 +281,30 @@ export default function HomePage() {
 
       </div>
 
+      {/* Bottom of Home (user, 2026-11-22): the school's navy sweeping up to the right with a gold stripe,
+          running down behind the tab bar, like the approved design. Decoration only. */}
+      <div aria-hidden className="pointer-events-none relative -mb-28 mt-4 h-[190px] overflow-hidden">
+        <svg viewBox="0 0 400 190" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+          <defs>
+            <linearGradient id="home-wave-navy" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#1B3D7A" />
+              <stop offset="1" stopColor="#0D2A5E" />
+            </linearGradient>
+            <linearGradient id="home-wave-gold" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="#E8A93A" stopOpacity="0" />
+              <stop offset="0.35" stopColor="#E8A93A" />
+              <stop offset="1" stopColor="#F2C45A" />
+            </linearGradient>
+          </defs>
+          {/* navy body: low on the left, rising to the right */}
+          <path d="M0 120 C 90 104, 200 70, 400 18 L400 190 L0 190 Z" fill="url(#home-wave-navy)" />
+          {/* gold stripe: thin at the middle, a little wider at the right edge */}
+          <path d="M150 112 C 240 86, 320 60, 400 34 L400 44 C 320 70, 240 94, 150 116 Z" fill="url(#home-wave-gold)" />
+          {/* light sweep below the stripe, so the tab bar sits on a soft edge */}
+          <path d="M0 160 C 120 140, 260 112, 400 74 L400 190 L0 190 Z" fill="#F3F6FB" />
+        </svg>
+      </div>
+
       {switching && <ChildSheet onClose={() => setSwitching(false)} />}
     </div>
   );
