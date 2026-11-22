@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import { HomeWave } from "@/components/HomeWave";
 import { BookOpen, CalendarDays, ChevronLeft, Home, IndianRupee, Menu as MenuIcon, Plus, UserRound, type LucideIcon } from "lucide-react";
 import { useParent } from "@/lib/parent";
 import { SahayakButton } from "./SahayakButton";
@@ -177,41 +178,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <>
       {/* Home only (user, 2026-11-22): a navy wave with a gold stripe fixed to the bottom of the screen, edge to
           edge, with the tab bar sitting on it as a white sheet with rounded top corners. Decoration only. */}
-      {isHome && (
-        <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 z-[19] mx-auto h-[calc(64px+72px+env(safe-area-inset-bottom,0px))] max-w-[560px]">
-          <svg viewBox="0 0 400 72" preserveAspectRatio="none" className="absolute inset-x-0 top-0 h-[72px] w-full">
-            <defs>
-              <linearGradient id="hw-navy" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#173E80" />
-                <stop offset="1" stopColor="#0B2250" />
-              </linearGradient>
-              <linearGradient id="hw-back" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="#3C6CC0" stopOpacity="0.10" />
-                <stop offset="1" stopColor="#3C6CC0" stopOpacity="0.32" />
-              </linearGradient>
-              <linearGradient id="hw-gold" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="#E39A2D" stopOpacity="0" />
-                <stop offset="0.28" stopColor="#E8A93A" />
-                <stop offset="0.75" stopColor="#F3C259" />
-                <stop offset="1" stopColor="#FFD978" />
-              </linearGradient>
-              <filter id="hw-glow" x="-10%" y="-200%" width="120%" height="500%">
-                <feGaussianBlur stdDeviation="2.2" />
-              </filter>
-            </defs>
-            {/* back wave: a soft lighter blue sweep behind, for depth */}
-            <path d="M0 30 C 90 22, 190 34, 270 30 C 330 27, 370 16, 400 8 L400 72 L0 72 Z" fill="url(#hw-back)" />
-            {/* main navy body: from the left, dipping, then rising to meet the gold on the right */}
-            <path d="M0 30 C 70 36, 130 50, 175 56 C 280 53, 345 40, 400 26 L400 72 L0 72 Z" fill="url(#hw-navy)" />
-            {/* gold stripe with a soft glow, from the middle up to the right edge */}
-            <path d="M165 54 C 250 51, 330 36, 400 14 L400 23 C 340 40, 270 53, 165 56 Z" fill="#F2C45A" opacity="0.55" filter="url(#hw-glow)" />
-            <path d="M165 54 C 250 51, 330 36, 400 14 L400 23 C 340 40, 270 53, 165 56 Z" fill="url(#hw-gold)" />
-            {/* a hairline of light along the navy's top edge */}
-            <path d="M0 30 C 70 36, 130 50, 175 56" stroke="#FFFFFF" strokeOpacity="0.35" strokeWidth="1" fill="none" />
-          </svg>
-          <div className="absolute inset-x-0 bottom-0 top-[71px] bg-[#0B2250]" />
-        </div>
-      )}
+      {isHome && <HomeWave />}
       <nav className={clsx("fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] bg-white pb-[env(safe-area-inset-bottom,0px)]", isHome ? "rounded-t-[26px] shadow-[0_-8px_24px_rgba(11,34,80,0.28)]" : "border-t border-[#DFE5EF]")} aria-label="Main">
         <ul className="relative grid min-h-[64px] grid-cols-5">
           {TABS.map(({ href, text, icon: Icon }) => {
