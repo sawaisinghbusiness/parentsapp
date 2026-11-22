@@ -151,7 +151,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
       )}
 
-      <main className={clsx("relative z-10 flex-1", !page?.bare && (isHome ? "pb-40" : "pb-28"), !isHome && !own && "space-y-3.5 px-4", !isHome && !own && (big ? "pt-3" : "pt-1"))}>
+      <main className={clsx("relative z-10 flex-1", !page?.bare && (isHome ? "pb-44" : "pb-28"), !isHome && !own && "space-y-3.5 px-4", !isHome && !own && (big ? "pt-3" : "pt-1"))}>
         {!isHome && !own && <ResourceStatus />}
         {error && error.status !== 401 ? (
           <div className={clsx(isHome && "px-4 pt-6")}>
@@ -178,30 +178,48 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Home only (user, 2026-11-22): a navy wave with a gold stripe fixed to the bottom of the screen, edge to
           edge, with the tab bar sitting on it as a white sheet with rounded top corners. Decoration only. */}
       {isHome && (
-        <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 z-[19] mx-auto h-[calc(64px+56px+env(safe-area-inset-bottom,0px))] max-w-[560px]">
-          <svg viewBox="0 0 400 56" preserveAspectRatio="none" className="absolute inset-x-0 top-0 h-[56px] w-full">
+        <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 z-[19] mx-auto h-[calc(64px+72px+env(safe-area-inset-bottom,0px))] max-w-[560px]">
+          <svg viewBox="0 0 400 72" preserveAspectRatio="none" className="absolute inset-x-0 top-0 h-[72px] w-full">
             <defs>
-              <linearGradient id="home-wave-gold" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="#E8A93A" stopOpacity="0" />
-                <stop offset="0.3" stopColor="#E8A93A" />
-                <stop offset="1" stopColor="#F2C45A" />
+              <linearGradient id="hw-navy" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#173E80" />
+                <stop offset="1" stopColor="#0B2250" />
               </linearGradient>
+              <linearGradient id="hw-back" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#3C6CC0" stopOpacity="0.10" />
+                <stop offset="1" stopColor="#3C6CC0" stopOpacity="0.32" />
+              </linearGradient>
+              <linearGradient id="hw-gold" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#E39A2D" stopOpacity="0" />
+                <stop offset="0.28" stopColor="#E8A93A" />
+                <stop offset="0.75" stopColor="#F3C259" />
+                <stop offset="1" stopColor="#FFD978" />
+              </linearGradient>
+              <filter id="hw-glow" x="-10%" y="-200%" width="120%" height="500%">
+                <feGaussianBlur stdDeviation="2.2" />
+              </filter>
             </defs>
-            {/* navy: from the left, dipping a little, then rising to meet the gold on the right (no white corner) */}
-            <path d="M0 14 C 70 22, 130 36, 170 42 C 280 38, 345 26, 400 12 L400 56 L0 56 Z" fill="#0D2A5E" />
-            {/* gold stripe riding the navy's top edge from the middle up to the right edge */}
-            <path d="M170 40 C 250 38, 330 22, 400 2 L400 12 C 345 26, 280 38, 170 42 Z" fill="url(#home-wave-gold)" />
+            {/* back wave: a soft lighter blue sweep behind, for depth */}
+            <path d="M0 30 C 90 22, 190 34, 270 30 C 330 27, 370 16, 400 8 L400 72 L0 72 Z" fill="url(#hw-back)" />
+            {/* main navy body: from the left, dipping, then rising to meet the gold on the right */}
+            <path d="M0 30 C 70 36, 130 50, 175 56 C 280 53, 345 40, 400 26 L400 72 L0 72 Z" fill="url(#hw-navy)" />
+            {/* gold stripe with a soft glow, from the middle up to the right edge */}
+            <path d="M165 54 C 250 51, 330 36, 400 14 L400 23 C 340 40, 270 53, 165 56 Z" fill="#F2C45A" opacity="0.55" filter="url(#hw-glow)" />
+            <path d="M165 54 C 250 51, 330 36, 400 14 L400 23 C 340 40, 270 53, 165 56 Z" fill="url(#hw-gold)" />
+            {/* a hairline of light along the navy's top edge */}
+            <path d="M0 30 C 70 36, 130 50, 175 56" stroke="#FFFFFF" strokeOpacity="0.35" strokeWidth="1" fill="none" />
           </svg>
-          <div className="absolute inset-x-0 bottom-0 top-[55px] bg-[#0D2A5E]" />
+          <div className="absolute inset-x-0 bottom-0 top-[71px] bg-[#0B2250]" />
         </div>
       )}
-      <nav className={clsx("fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] bg-white pb-[env(safe-area-inset-bottom,0px)]", isHome ? "rounded-t-[24px] shadow-[0_-6px_18px_rgba(13,42,94,0.18)]" : "border-t border-[#DFE5EF]")} aria-label="Main">
+      <nav className={clsx("fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[560px] bg-white pb-[env(safe-area-inset-bottom,0px)]", isHome ? "rounded-t-[26px] shadow-[0_-8px_24px_rgba(11,34,80,0.28)]" : "border-t border-[#DFE5EF]")} aria-label="Main">
         <ul className="relative grid min-h-[64px] grid-cols-5">
           {TABS.map(({ href, text, icon: Icon }) => {
             const on = lit === href;
             return (
               <li key={href} className="relative">
-                {on && <span className="absolute inset-x-1 top-[-1px] h-[3px] rounded-b bg-[#0D2A5E]" aria-hidden />}
+                {/* On Home the lit icon (filled navy) is enough: a line on the rounded top edge would sit on the wave. */}
+                {on && !isHome && <span className="absolute inset-x-1 top-[-1px] h-[3px] rounded-b bg-[#0D2A5E]" aria-hidden />}
                 <Link href={href} aria-current={on ? "page" : undefined} className={clsx("flex h-full min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 py-2 text-[12px] transition-colors duration-300", on ? "font-bold text-[#0D2A5E]" : "font-medium text-[#5B6478]")}>
                   <Icon className="h-6 w-6" strokeWidth={on ? 2.2 : 1.7} fill={on ? "currentColor" : "none"} aria-hidden />
                   <span className="block w-full min-w-0 break-words text-center leading-snug">{L(text)}</span>
