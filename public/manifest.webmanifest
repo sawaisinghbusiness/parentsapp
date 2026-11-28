@@ -1,6 +1,6 @@
 {
-  "name": "St. Paul School — Parents",
-  "short_name": "SPS Parents",
+  "name": "SchoolDesk Parents",
+  "short_name": "SchoolDesk",
   "description": "Attendance, fees, homework and notices for your child.",
   "start_url": "/",
   "scope": "/",
